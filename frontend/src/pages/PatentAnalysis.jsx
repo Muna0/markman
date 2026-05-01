@@ -88,6 +88,26 @@ export default function PatentAnalysis() {
   const [apiError, setApiError] = useState('')
   const [page, setPage] = useState(0)
   const [perPage] = useState(25)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+
+  async function loadMore() {
+    if (!liveResults || !searchQuery) return
+    setLoadingMore(true)
+    try {
+      const nextStart = liveResults.results.length
+      const data = await api.searchPatents(searchQuery, 50, nextStart)
+      if (data.results && data.results.length > 0) {
+        setLiveResults(prev => ({
+          ...prev,
+          results: [...prev.results, ...data.results],
+        }))
+      }
+    } catch (err) {
+      setApiError(err.message)
+    }
+    setLoadingMore(false)
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -99,10 +119,11 @@ export default function PatentAnalysis() {
     setClaims([])
     setApiError('')
     setPage(0)
+    setSearchQuery(input.trim())
 
     try {
       if (inputType === 'number') {
-        const data = await api.searchPatents(input.trim(), 50)
+        const data = await api.searchPatents(input.trim(), 50, 0)
         if (data.error) throw new Error(data.error)
         if (data.results && data.results.length > 0) {
           setLiveResults(data)
@@ -268,7 +289,7 @@ export default function PatentAnalysis() {
             </table>
           </div>
           {/* Pagination */}
-          <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center justify-between mt-4 flex-wrap gap-3">
             <span className={`mono text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
               Showing {page * perPage + 1}-{Math.min((page + 1) * perPage, liveResults.results.length)} of {liveResults.results.length} loaded ({liveResults.totalResults.toLocaleString()} total in USPTO)
             </span>
@@ -280,11 +301,24 @@ export default function PatentAnalysis() {
               <span className={`mono text-[12px] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>
                 Page {page + 1} of {Math.ceil(liveResults.results.length / perPage)}
               </span>
-              <button onClick={() => setPage(p => Math.min(Math.ceil(liveResults.results.length / perPage) - 1, p + 1))}
-                disabled={(page + 1) * perPage >= liveResults.results.length}
+              <button onClick={() => {
+                  const nextPage = page + 1
+                  if ((nextPage + 1) * perPage > liveResults.results.length && liveResults.results.length < liveResults.totalResults) {
+                    loadMore().then(() => setPage(nextPage))
+                  } else {
+                    setPage(Math.min(Math.ceil(liveResults.results.length / perPage) - 1, nextPage))
+                  }
+                }}
+                disabled={(page + 1) * perPage >= liveResults.totalResults}
                 className={`mono text-[12px] px-3 py-1.5 rounded transition disabled:opacity-30 ${dark ? 'bg-ink-800 text-ink-300 hover:bg-ink-700' : 'bg-ink-100 text-ink-600 hover:bg-ink-200'}`}>
                 Next
               </button>
+              {liveResults.results.length < liveResults.totalResults && (
+                <button onClick={loadMore} disabled={loadingMore}
+                  className={`mono text-[12px] px-3 py-1.5 rounded transition ${dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25' : 'bg-blu-50 text-blu-500 hover:bg-blu-100'}`}>
+                  {loadingMore ? 'Loading...' : `Load 50 more`}
+                </button>
+              )}
             </div>
           </div>
         </div>

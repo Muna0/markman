@@ -78,10 +78,10 @@ app.use(express.json());
 // ─── Patent search ───
 app.post("/api/patents/search", async (req, res) => {
   try {
-    const { query, rows = 20 } = req.body;
+    const { query, rows = 20, start = 0 } = req.body;
     if (!query) return res.status(400).json({ error: "query is required" });
 
-    const params = new URLSearchParams({ q: query, rows: String(rows), start: "0" });
+    const params = new URLSearchParams({ q: query, rows: String(rows), start: String(start) });
     const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/search?${params}`);
 
     const bag = data.patentFileWrapperDataBag || [];
