@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { FileSearch, AlertTriangle, Clock, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { runTriage } from '../store/analyzer'
+import { api } from '../store/api'
+import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const IP_TYPES = ['Patent', 'Trademark', 'Trade Secret', 'Copyright']
 
@@ -282,6 +284,13 @@ export default function IpTriage({ addMatter }) {
               ))}
             </ol>
           </div>
+
+          {/* Deep Analysis with Claude */}
+          <ClaudeAnalysis
+            query={`Perform a detailed IP matter triage for this situation: ${description}. Classify the IP type (patent, trademark, trade secret, copyright), extract all key facts, identify every relevant deadline with specific dates where possible, assign a risk level (HIGH/MEDIUM/LOW) with rationale, list missing information needed for a complete assessment, and provide specific recommended next steps. Follow the matter intake skill definition exactly.`}
+            skillType="intake"
+            context={`User description: ${description}\nPreliminary classification: ${result.classification.primary}\nSecondary types: ${result.classification.secondary.join(', ')}\nPreliminary risk: ${result.risk}`}
+          />
         </div>
       )}
     </div>

@@ -108,13 +108,20 @@ export default function PatentAnalysis() {
           setApiError('No results found. Try different keywords.')
         }
       } else {
-        // Pasted claims mode — show analysis template
-        setResult(SAMPLE_RESULT)
+        // Pasted claims mode — select as pasted input for Claude analysis
+        setSelectedPatent({
+          applicationNumber: 'Pasted Claims',
+          title: input.trim().slice(0, 80),
+          filingDate: 'N/A',
+          type: 'Manual Input',
+          class: 'N/A',
+          firstInventor: 'N/A',
+          assignee: 'N/A',
+        })
+        setClaims([])
       }
     } catch (err) {
       setApiError(err.message)
-      // Fall back to sample if API fails
-      setResult(SAMPLE_RESULT)
     }
 
     setLoading(false)
@@ -336,126 +343,6 @@ export default function PatentAnalysis() {
             skillType="patent"
             context={`Patent: ${selectedPatent.applicationNumber}\nTitle: ${selectedPatent.title}\nFiling Date: ${selectedPatent.filingDate}\nType: ${selectedPatent.type}\nClass: ${selectedPatent.class}\nInventor: ${selectedPatent.firstInventor}\nAssignee: ${selectedPatent.assignee}`}
           />
-        </div>
-      )}
-
-      {result && (
-        <div className="space-y-6">
-          {/* Header */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-1">{result.patent}</h2>
-            <p className={`text-sm mb-3 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{result.title}</p>
-            <div className="flex gap-6 text-sm">
-              <div><span className="text-ink-500">Filing Date:</span> <span className="font-medium">{result.filingDate}</span></div>
-              <div><span className="text-ink-500">Priority Date:</span> <span className="font-medium">{result.priorityDate}</span></div>
-            </div>
-          </div>
-
-          {/* Claim Map */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Claim Map</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Claim #</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Type</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Ind/Dep</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Depends On</th>
-                    <th className="text-left py-2 font-medium text-ink-500">Category</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.claims.map(c => (
-                    <tr key={c.num} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
-                      <td className="py-3 pr-4 font-bold">{c.num}</td>
-                      <td className="py-3 pr-4">{c.type}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          c.indDep === 'Independent'
-                            ? dark ? 'bg-blu-950 text-blu-400' : 'bg-blu-100 text-blu-700'
-                            : dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-100 text-ink-600'
-                        }`}>{c.indDep}</span>
-                      </td>
-                      <td className="py-3 pr-4 text-ink-500">{c.dependsOn}</td>
-                      <td className={`py-3 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{c.category}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Scope Assessment */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Scope Assessment</h2>
-            <div className="space-y-6">
-              {result.scope.map(s => (
-                <div key={s.claim}>
-                  <h3 className={`font-semibold text-sm mb-3 ${dark ? 'text-blu-400' : 'text-blu-700'}`}>
-                    Claim {s.claim} {s.claim <= 1 ? '(Independent - Method)' : s.claim === 5 ? '(Independent - System)' : '(Independent - CRM)'}
-                  </h3>
-                  <div className="space-y-2">
-                    {s.limitations.map((l, i) => (
-                      <div key={i} className={`rounded-lg p-4 border ${dark ? 'bg-ink-800 border-ink-700' : 'bg-ink-50 border-ink-200'}`}>
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <span className="text-sm font-medium">{l.element}</span>
-                          <BreadthBadge breadth={l.breadth} dark={dark} />
-                        </div>
-                        <p className={`text-xs flex items-start gap-1.5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-                          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                          {l.flag}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Prior Art Red Flags */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Prior Art Red Flags</h2>
-            <div className="space-y-3">
-              {result.priorArt.map((p, i) => (
-                <div key={i} className={`rounded-lg p-4 border ${
-                  p.severity === 'HIGH' ? dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200' :
-                  p.severity === 'MEDIUM' ? dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200' :
-                  dark ? 'bg-grn-950/30 border-grn-900' : 'bg-grn-50 border-grn-200'
-                }`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <AlertTriangle className={`w-4 h-4 ${
-                      p.severity === 'HIGH' ? dark ? 'text-red-400' : 'text-red-600' :
-                      p.severity === 'MEDIUM' ? dark ? 'text-amb-400' : 'text-amb-600' :
-                      dark ? 'text-grn-400' : 'text-grn-600'
-                    }`} />
-                    <span className="text-sm font-semibold">{p.issue}</span>
-                    <SeverityBadge severity={p.severity} dark={dark} />
-                  </div>
-                  <p className="text-sm ml-7">{p.detail}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Recommendations */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Recommendations</h2>
-            <ol className="space-y-3">
-              {result.recommendations.map((r, i) => (
-                <li key={i} className="flex items-start gap-3 text-sm">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${dark ? 'bg-blu-950 text-blu-300' : 'bg-blu-100 text-blu-700'}`}>{i + 1}</span>
-                  <span>{r}</span>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          {/* Disclaimer */}
-          <div className={`rounded-lg border p-4 text-xs italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
-            This analysis assists patent counsel and does not constitute legal advice. All patent numbers, prior art references, and claim constructions should be verified against the full specification and prosecution history by licensed counsel.
-          </div>
         </div>
       )}
     </div>
