@@ -47,4 +47,45 @@ export const api = {
 
   // Export
   exportMemo: (title, content, memoType) => post('/export', { title, content, memoType }),
+
+  // Claude Analysis (streaming)
+  // Returns an async generator that yields text chunks
+  analyze: async function* (query, skillType, context) {
+    const res = await fetch(`${BASE}/analyze`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, skillType, context }),
+    })
+
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Analysis failed')
+    }
+
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6))
+            if (data.error) throw new Error(data.error)
+            if (data.text) yield data.text
+            if (data.done) return
+          } catch (e) {
+            if (e.message !== 'Unexpected end of JSON input') throw e
+          }
+        }
+      }
+    }
+  },
 }

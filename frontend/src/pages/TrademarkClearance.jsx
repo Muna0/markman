@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Stamp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, MinusCircle, ExternalLink } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const JURISDICTIONS = ['US', 'EU', 'UK', 'CA', 'AU', 'JP', 'KR', 'IN', 'BR', 'MX']
 
@@ -108,16 +109,16 @@ export default function TrademarkClearance() {
   function assessJurisdictions(markText, jurisdictions) {
     return jurisdictions.map(code => {
       const info = {
-        US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/bin/gate.exe?f=tess&state=4805:1.1.1&p_s_PARA1=${encodeURIComponent(markText)}&p_taession=&p_L=50&p_plural=yes&p_s_PARA2=&p_op_ALL=AND&a_default=search&a_search=Submit+Query&a_search=Submit+Query` },
+        US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/search/search-results?query=${encodeURIComponent(markText)}&section=default` },
         EU: { system: 'First-to-file', office: 'EUIPO', searchUrl: `https://euipo.europa.eu/eSearch/#basic/${encodeURIComponent(markText)}` },
-        UK: { system: 'First-to-file', office: 'UKIPO', searchUrl: `https://trademarks.ipo.gov.uk/ipo-tmtext/page/Results/1/UK00000000000/1/F/0/0/0/0/0/${encodeURIComponent(markText)}` },
-        CA: { system: 'First-to-file (since 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search` },
-        AU: { system: 'First-to-use', office: 'IP Australia', searchUrl: `https://search.ipaustralia.gov.au/trademarks/search/quick` },
-        JP: { system: 'First-to-file', office: 'JPO', searchUrl: null },
-        KR: { system: 'First-to-file', office: 'KIPO', searchUrl: null },
-        IN: { system: 'First-to-use', office: 'Indian TM Registry', searchUrl: null },
-        BR: { system: 'First-to-file', office: 'INPI Brazil', searchUrl: null },
-        MX: { system: 'First-to-file', office: 'IMPI Mexico', searchUrl: null },
+        UK: { system: 'First-to-file', office: 'UKIPO', searchUrl: `https://www.gov.uk/search-for-trademark` },
+        CA: { system: 'First-to-file (since 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search?searchType=basic&keyword=${encodeURIComponent(markText)}` },
+        AU: { system: 'First-to-use', office: 'IP Australia', searchUrl: `https://search.ipaustralia.gov.au/trademarks/search/quick/result?q=${encodeURIComponent(markText)}` },
+        JP: { system: 'First-to-file', office: 'JPO', searchUrl: `https://www.j-platpat.inpit.go.jp/` },
+        KR: { system: 'First-to-file', office: 'KIPO', searchUrl: `https://engdtj.kipris.or.kr/engdtj/grrt1000a.do?method=basicSearch` },
+        IN: { system: 'First-to-use', office: 'Indian TM Registry', searchUrl: `https://iprsearch.ipindia.gov.in/TMRPublicSearch/tmsearch` },
+        BR: { system: 'First-to-file', office: 'INPI Brazil', searchUrl: `https://busca.inpi.gov.br/pePI/servlet/MarcaServletController` },
+        MX: { system: 'First-to-file', office: 'IMPI Mexico', searchUrl: `https://marcanet.impi.gob.mx/marcanet/vistas/common/datos/bsqMarcas.pgi` },
       }
       return { code, ...info[code], status: 'SEARCH REQUIRED', note: `Search ${info[code]?.office || code} database directly` }
     })
@@ -351,8 +352,15 @@ export default function TrademarkClearance() {
             </div>
           </div>
 
+          {/* Claude Full Analysis */}
+          <ClaudeAnalysis
+            query={`Run a full trademark clearance analysis for the mark "${result.mark}" for goods/services: "${result.selectedGoods}". Target jurisdictions: ${selectedJurisdictions.join(', ')}. The mark appears to be ${result.distinctiveness}. Nice classes: ${result.niceClasses.join(', ')}. Provide DuPont factor analysis, likelihood of confusion assessment, and a CLEAR / CLEAR WITH RISK / DO NOT USE recommendation per jurisdiction.`}
+            skillType="trademark"
+            context={`Mark: ${result.mark}\nGoods: ${result.selectedGoods}\nDistinctiveness: ${result.distinctiveness}\nNice Classes: ${result.niceClasses.join(', ')}\nJurisdictions: ${selectedJurisdictions.join(', ')}\nPhonetic variants: ${result.variants.map(v => v.mark).join(', ')}`}
+          />
+
           {/* Disclaimer */}
-          <div className={`rounded-lg border p-4 text-xs italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
+          <div className={`rounded-lg border p-4 text-[13px] italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
             This is a preliminary clearance screen, not a comprehensive trademark search. Common law marks, state registrations, and domain name conflicts require separate investigation. This analysis does not constitute legal advice.
           </div>
         </div>

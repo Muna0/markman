@@ -11,6 +11,7 @@
     "dev": "node server.js & cd frontend && npx vite --port 5173"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.92.0",
     "@modelcontextprotocol/sdk": "^1.12.0",
     "cors": "^2.8.6",
     "docx": "^9.6.1",
