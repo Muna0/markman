@@ -86,6 +86,8 @@ export default function PatentAnalysis() {
 
   const [liveResults, setLiveResults] = useState(null)
   const [apiError, setApiError] = useState('')
+  const [page, setPage] = useState(0)
+  const [perPage] = useState(25)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -96,10 +98,11 @@ export default function PatentAnalysis() {
     setSelectedPatent(null)
     setClaims([])
     setApiError('')
+    setPage(0)
 
     try {
       if (inputType === 'number') {
-        const data = await api.searchPatents(input.trim(), 15)
+        const data = await api.searchPatents(input.trim(), 50)
         if (data.error) throw new Error(data.error)
         if (data.results && data.results.length > 0) {
           setLiveResults(data)
@@ -242,7 +245,7 @@ export default function PatentAnalysis() {
                 </tr>
               </thead>
               <tbody>
-                {liveResults.results.slice(0, 10).map((p, i) => (
+                {liveResults.results.slice(page * perPage, (page + 1) * perPage).map((p, i) => (
                   <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
                     <td className="py-2.5 pr-4">
                       <a href={`https://patentcenter.uspto.gov/applications/${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
@@ -264,6 +267,26 @@ export default function PatentAnalysis() {
               </tbody>
             </table>
           </div>
+          {/* Pagination */}
+          <div className="flex items-center justify-between mt-4">
+            <span className={`mono text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              Showing {page * perPage + 1}-{Math.min((page + 1) * perPage, liveResults.results.length)} of {liveResults.results.length} loaded ({liveResults.totalResults.toLocaleString()} total in USPTO)
+            </span>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setPage(p => Math.max(0, p - 1))} disabled={page === 0}
+                className={`mono text-[12px] px-3 py-1.5 rounded transition disabled:opacity-30 ${dark ? 'bg-ink-800 text-ink-300 hover:bg-ink-700' : 'bg-ink-100 text-ink-600 hover:bg-ink-200'}`}>
+                Previous
+              </button>
+              <span className={`mono text-[12px] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>
+                Page {page + 1} of {Math.ceil(liveResults.results.length / perPage)}
+              </span>
+              <button onClick={() => setPage(p => Math.min(Math.ceil(liveResults.results.length / perPage) - 1, p + 1))}
+                disabled={(page + 1) * perPage >= liveResults.results.length}
+                className={`mono text-[12px] px-3 py-1.5 rounded transition disabled:opacity-30 ${dark ? 'bg-ink-800 text-ink-300 hover:bg-ink-700' : 'bg-ink-100 text-ink-600 hover:bg-ink-200'}`}>
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -283,8 +306,24 @@ export default function PatentAnalysis() {
                 View on USPTO →
               </a>
             </div>
-            <div className="flex flex-wrap gap-6 text-[14px]">
-              <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Filing Date:</span> <span className={`font-medium mono ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.filingDate || 'Not available'}</span></div>
+            <div className="flex flex-wrap gap-4 text-[14px]">
+              <div className="flex items-center gap-2">
+                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Filing Date:</span>
+                <input type="date" defaultValue={selectedPatent.filingDate || ''} onChange={e => setSelectedPatent(p => ({...p, filingDate: e.target.value}))}
+                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Priority Date:</span>
+                <input type="date" defaultValue={selectedPatent.filingDate || ''} onChange={e => setSelectedPatent(p => ({...p, priorityDate: e.target.value}))}
+                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Expiration:</span>
+                <input type="date" onChange={e => setSelectedPatent(p => ({...p, expirationDate: e.target.value}))}
+                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-6 text-[14px] mt-3">
               <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Type:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.type || 'Utility'}</span></div>
               <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Class:</span> <span className={`font-medium mono ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.class || 'N/A'}</span></div>
               <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Inventor:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.firstInventor || 'N/A'}</span></div>
