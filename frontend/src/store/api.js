@@ -29,7 +29,7 @@ export const api = {
   status: () => get('/status'),
 
   // Patents
-  searchPatents: (query, rows = 20) => post('/patents/search', { query, rows }),
+  searchPatents: (query, rows = 20, start = 0) => post('/patents/search', { query, rows, start }),
   getPatentDetails: (patentNumber) => post('/patents/details', { patentNumber }),
 
   // Trademarks
