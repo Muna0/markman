@@ -449,7 +449,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
 
         <H3 dark={dark}>USPTO Open Data Portal API</H3>
         <P dark={dark}>
-          This single API key gives you access to <strong>both patent and trademark data</strong>. It powers 4 of the 6 MCP tools.
+          This API key gives you access to patent application data. It powers the patent search and patent details tools. Trademark search uses the separate TESS system (no API key needed, web interface only).
         </P>
         <Table dark={dark}
           headers={['What it covers', 'Tools it powers', 'Endpoint']}
@@ -464,11 +464,11 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
           <p className={`text-[15px] font-semibold mb-3 ${dark ? 'text-white' : 'text-ink-950'}`}>How to get your USPTO API key (free):</p>
           <ol className="space-y-2">
             {[
-              'Go to data.uspto.gov',
-              'Click "Get Started" or "API Keys"',
-              'Create an account with your email',
-              'Request an API key.approval is usually instant',
-              'Copy the key and add it to your .env file or Settings page',
+              'Go to data.uspto.gov/myodp',
+              'Create a USPTO.gov account if you do not have one',
+              'Verify your identity through ID.me (required for API access)',
+              'Link your ID.me account to your USPTO.gov account',
+              'Your API key will appear on the MyODP page. Copy it and add to your .env file or Settings page.',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className={`text-[15px] font-bold mono w-4 shrink-0 mt-0.5 ${dark ? 'text-blu-400' : 'text-blu-500'}`}>{i + 1}.</span>
@@ -507,9 +507,9 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
           </ol>
         </div>
 
-        <H3 dark={dark}>What about trademark search specifically?</H3>
+        <H3 dark={dark}>What about trademark search?</H3>
         <P dark={dark}>
-          There is no separate "trademark API." The <strong>USPTO Open Data Portal API</strong> covers both patents and trademarks with one key. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code>, Markman calls <Code dark={dark}>search_trademarks</Code> (which hits <Code dark={dark}>data.uspto.gov/api/v1/trademarks/search</Code>) and <Code dark={dark}>check_trademark_status</Code> (which hits the main API with a TSDR fallback). For international trademarks, you would currently need to check the Madrid Monitor manually.a future version of Markman may add this.
+          The USPTO does not offer a public API for trademark text search. Trademark searching is done through the TESS web interface at tmsearch.uspto.gov. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code> in Markman, the tool generates phonetic variants, assesses distinctiveness, identifies Nice classifications, and provides direct links to TESS and other jurisdiction search databases (EUIPO, UKIPO, CIPO, etc.) so you can verify conflicts manually. Claude then runs a full DuPont factor analysis based on the mark and goods description. For trademark status checks by serial number, Markman uses the TSDR API which does not require a separate key. For international trademarks, check the Madrid Monitor at wipo.int/madrid/monitor.
         </P>
 
         <H3 dark={dark}>Testing with real API keys</H3>
