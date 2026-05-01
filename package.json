@@ -1,15 +1,21 @@
 {
-  "name": "ip-law-mcp-servers",
-  "version": "1.0.0",
-  "description": "MCP servers for USPTO and WIPO API access",
+  "name": "markman",
+  "version": "1.1.0",
+  "description": "Markman — Claude Code Plugin for IP Law. MCP servers, backend API, and local data store.",
   "type": "module",
   "scripts": {
+    "start": "node server.js",
     "start:uspto": "node mcp/uspto-server.js",
-    "start:wipo": "node mcp/wipo-server.js"
+    "start:wipo": "node mcp/wipo-server.js",
+    "start:store": "node mcp/markman-store.js",
+    "dev": "node server.js & cd frontend && npx vite --port 5173"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "docx": "^9.6.1"
+    "cors": "^2.8.6",
+    "docx": "^9.6.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
   },
   "engines": {
     "node": ">=18.0.0"

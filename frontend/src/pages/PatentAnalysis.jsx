@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { FlaskConical, ChevronRight, Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
+import { api } from '../store/api'
 
 const SAMPLE_RESULT = {
   patent: 'US 11,987,654',
@@ -80,15 +81,35 @@ export default function PatentAnalysis() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
 
-  function handleSubmit(e) {
+  const [liveResults, setLiveResults] = useState(null)
+  const [apiError, setApiError] = useState('')
+
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!input.trim()) return
     setLoading(true)
     setResult(null)
-    setTimeout(() => {
-      setResult(SAMPLE_RESULT)
-      setLoading(false)
-    }, 2000)
+    setLiveResults(null)
+    setApiError('')
+
+    try {
+      if (inputType === 'number') {
+        // Try live USPTO search
+        const data = await api.searchPatents(input.trim(), 10)
+        if (data.error) throw new Error(data.error)
+        if (data.results && data.results.length > 0) {
+          setLiveResults(data)
+          // Log to history
+          api.logMatter('patent-analysis', `Patent Search: ${input.trim()}`, `${data.totalResults} results found`, 'UNKNOWN', input.trim())
+        }
+      }
+    } catch (err) {
+      setApiError(err.message)
+    }
+
+    // Always show the structured analysis demo too
+    setResult(SAMPLE_RESULT)
+    setLoading(false)
   }
 
   return (
@@ -155,6 +176,48 @@ export default function PatentAnalysis() {
       </form>
 
       {/* Results */}
+      {/* Live USPTO Results */}
+      {apiError && (
+        <div className={`mb-4 px-4 py-3 rounded-xl text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+          API Error: {apiError}. Showing sample analysis below.
+        </div>
+      )}
+
+      {liveResults && liveResults.results && liveResults.results.length > 0 && (
+        <div className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Live USPTO Results</h2>
+            <span className={`mono text-[12px] px-2 py-0.5 rounded ${dark ? 'bg-grn-400/15 text-grn-400' : 'bg-grn-100 text-grn-500'}`}>
+              {liveResults.totalResults.toLocaleString()} total
+            </span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[13px]">
+              <thead>
+                <tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
+                  <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>App #</th>
+                  <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Title</th>
+                  <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Filed</th>
+                  <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Inventor</th>
+                  <th className={`text-left py-2 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Assignee</th>
+                </tr>
+              </thead>
+              <tbody>
+                {liveResults.results.slice(0, 10).map((p, i) => (
+                  <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
+                    <td className={`py-2.5 pr-4 mono text-[12px] ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{p.applicationNumber}</td>
+                    <td className={`py-2.5 pr-4 font-medium truncate max-w-[250px] ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{p.title}</td>
+                    <td className={`py-2.5 pr-4 mono text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.filingDate}</td>
+                    <td className={`py-2.5 pr-4 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{p.firstInventor}</td>
+                    <td className={`py-2.5 truncate max-w-[200px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.assignee}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {result && (
         <div className="space-y-6">
           {/* Header */}

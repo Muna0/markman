@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../store/ThemeContext'
+import { api } from '../store/api'
 import {
   FileSearch, FlaskConical, Stamp, ShieldCheck,
   ArrowRight, Server, Key, CheckCircle2, AlertTriangle, Clock, Settings, Trash2,
@@ -7,9 +9,18 @@ import {
 
 export default function Dashboard({ analyses }) {
   const { dark } = useTheme()
+  const [serverStatus, setServerStatus] = useState(null)
+  const [deadlines, setDeadlines] = useState([])
+  const [history, setHistory] = useState([])
 
-  const usptoKey = localStorage.getItem('markman-uspto-key') || ''
-  const wipoKey = localStorage.getItem('markman-wipo-key') || ''
+  useEffect(() => {
+    api.status().then(setServerStatus).catch(() => setServerStatus(null))
+    api.listDeadlines().then(setDeadlines).catch(() => {})
+    api.searchHistory().then(setHistory).catch(() => {})
+  }, [])
+
+  const usptoKey = serverStatus?.uspto === 'configured' ? 'yes' : ''
+  const wipoKey = serverStatus?.wipo === 'configured' ? 'yes' : ''
 
   const tools = [
     { to: '/app/intake', label: 'Matter Intake', desc: 'Classify an IP matter, extract facts, flag deadlines', icon: FileSearch, color: 'from-blu-500 to-vio-500' },
