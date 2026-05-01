@@ -118,25 +118,36 @@ async function searchPatents(query, dateRange) {
   });
 
   if (dateRange?.start) {
-    params.set("fq", `grantDate:[${dateRange.start} TO ${dateRange.end || "*"}]`);
+    params.set("fq", `filingDate:[${dateRange.start} TO ${dateRange.end || "*"}]`);
   }
 
   const url = `${ODP_BASE}/patent/applications/search?${params}`;
   const data = await fetchWithRetry(url);
 
-  const results = (data.results || data.patents || []).map((p) => ({
-    patentNumber: p.patentNumber || p.documentId || p.id,
-    title: p.inventionTitle || p.title,
-    abstract: p.abstractText || p.abstract,
-    grantDate: p.grantDate || p.dateGranted,
-    filingDate: p.filingDate || p.datePublished,
-    assignee: p.assigneeEntityName || p.assignee,
-    inventors: p.inventorNameArrayText || p.inventors,
-    claims: p.claimsCount || p.numberOfClaims,
-  }));
+  // ODP API returns patentFileWrapperDataBag with applicationMetaData inside each item
+  const bag = data.patentFileWrapperDataBag || data.results || data.patents || [];
+  const results = bag.map((p) => {
+    const meta = p.applicationMetaData || {};
+    const inventors = (meta.inventorBag || []).map(i => i.inventorNameText).filter(Boolean);
+    const assignees = (meta.applicantBag || []).map(a => a.applicantNameText || a.organizationNameText).filter(Boolean);
+    return {
+      applicationNumber: p.applicationNumberText || meta.applicationNumber,
+      patentNumber: meta.patentNumber || meta.publicationNumber || p.applicationNumberText,
+      title: meta.inventionTitle || meta.inventionSubjectMatterCategory || "",
+      filingDate: meta.filingDate || meta.effectiveFilingDate,
+      status: meta.applicationStatusCode,
+      statusDescription: meta.applicationTypeLabelName,
+      type: meta.applicationTypeCategory,
+      class: meta.class,
+      uspcSymbol: meta.uspcSymbolText,
+      firstInventor: meta.firstInventorName,
+      inventors: inventors.length > 0 ? inventors : (meta.firstInventorName ? [meta.firstInventorName] : []),
+      assignee: assignees.length > 0 ? assignees.join("; ") : "",
+    };
+  });
 
   return {
-    totalResults: data.totalCount || data.numFound || results.length,
+    totalResults: data.count || results.length,
     query,
     dateRange: dateRange || "all dates",
     results,
