@@ -12,6 +12,7 @@ import FtoAnalysis from './pages/FtoAnalysis'
 import Settings from './pages/Settings'
 import Files from './pages/Files'
 import Docs from './pages/Docs'
+import Privacy from './pages/Privacy'
 
 function AppLayout() {
   const { dark } = useTheme()
@@ -34,6 +35,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/privacy" element={<Privacy />} />
       <Route path="/app" element={<AppLayout />}>
         <Route index element={<Dashboard analyses={store.analyses} />} />
         <Route path="intake" element={<IpTriage addMatter={store.addMatter} />} />
