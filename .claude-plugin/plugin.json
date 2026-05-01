@@ -1,0 +1,20 @@
+{
+  "name": "markman",
+  "version": "1.0.0",
+  "description": "IP law practice plugin for patent analysis, freedom-to-operate memos, trademark clearance, and matter intake. Connects to USPTO and WIPO APIs for live data. Configurable playbook for firm-specific risk thresholds, deadline rules, and drafting preferences.",
+  "author": {
+    "name": "M"
+  },
+  "skills": [
+    "skills/patent-analysis.md",
+    "skills/fto-memo.md",
+    "skills/trademark-screen.md",
+    "skills/ip-triage.md"
+  ],
+  "commands": [
+    "commands/review-claims.md",
+    "commands/fto-analysis.md",
+    "commands/tm-clearance.md"
+  ],
+  "playbook": "playbooks/ip-playbook.md"
+}

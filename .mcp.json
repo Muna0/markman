@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "uspto": {
+      "command": "node",
+      "args": ["mcp/uspto-server.js"],
+      "env": {
+        "USPTO_API_KEY": "test"
+      }
+    },
+    "wipo": {
+      "command": "node",
+      "args": ["mcp/wipo-server.js"],
+      "env": {
+        "WIPO_API_KEY": "test"
+      }
+    }
+  }
+}
