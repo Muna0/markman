@@ -122,13 +122,40 @@ export default function FtoAnalysis() {
   const [description, setDescription] = useState('')
   const [submitted, setSubmitted] = useState(false)
   const [submittedQuery, setSubmittedQuery] = useState('')
+  const [searching, setSearching] = useState(false)
+  const [foundPatents, setFoundPatents] = useState([])
+  const [patentContext, setPatentContext] = useState('')
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!description.trim()) return
     setSubmittedQuery(description)
+    setSearching(true)
+    setFoundPatents([])
+    setPatentContext('')
+    setSubmitted(false)
+
+    // Step 1: Extract key terms and search USPTO for real blocking patents
+    const terms = description.replace(/[^a-zA-Z0-9 ]/g, ' ').split(' ').filter(w => w.length > 4).slice(0, 6).join(' ')
+    try {
+      const data = await api.searchPatents(terms, 20, 0)
+      if (data.results && data.results.length > 0) {
+        // Filter to utility patents only
+        const utilities = data.results.filter(r => r.type === 'REGULAR' || !r.type).slice(0, 10)
+        setFoundPatents(utilities)
+        // Build context string of real patents for Claude
+        const ctx = utilities.map(p =>
+          `Patent App ${p.applicationNumber}: "${p.title}" | Filed: ${p.filingDate} | Inventor: ${p.firstInventor} | Assignee: ${p.assignee} | Class: ${p.class}`
+        ).join('\n')
+        setPatentContext(ctx)
+      }
+    } catch (err) {
+      // If search fails, Claude will use training knowledge
+    }
+
+    setSearching(false)
     setSubmitted(true)
-    api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis submitted', 'UNKNOWN', description)
+    api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis with USPTO search', 'UNKNOWN', description)
   }
 
   return (
@@ -172,7 +199,15 @@ export default function FtoAnalysis() {
         </div>
       </form>
 
-      {/* Results — Claude Analysis Only */}
+      {/* Searching */}
+      {searching && (
+        <div className={`rounded-xl border p-6 flex items-center gap-3 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+          <Loader2 className="w-5 h-5 animate-spin text-blu-400" />
+          <span className={`text-[14px] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>Searching USPTO for potentially blocking patents...</span>
+        </div>
+      )}
+
+      {/* Results */}
       {submitted && (
         <div className="space-y-6">
           {/* Privilege Banner */}
@@ -180,11 +215,46 @@ export default function FtoAnalysis() {
             Attorney Work Product / Privileged and Confidential
           </div>
 
-          {/* Claude FTO Analysis */}
+          {/* Real Patents Found */}
+          {foundPatents.length > 0 && (
+            <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Potentially Relevant Patents from USPTO</h2>
+                <span className={`mono text-[12px] px-2 py-0.5 rounded ${dark ? 'bg-grn-400/15 text-grn-400' : 'bg-grn-100 text-grn-500'}`}>
+                  {foundPatents.length} found
+                </span>
+              </div>
+              <div className="space-y-2">
+                {foundPatents.map((p, i) => (
+                  <div key={i} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`mono text-[12px] ${dark ? 'text-blu-400' : 'text-blu-500'}`}>{p.applicationNumber}</span>
+                        <span className={`text-[13px] font-medium truncate ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{p.title}</span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className={`mono text-[11px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{p.filingDate}</span>
+                        {p.assignee && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.assignee}</span>}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className={`mt-3 text-[12px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
+                These real patents from the USPTO database will be included in the Claude analysis below.
+              </p>
+            </div>
+          )}
+
+          {/* Claude FTO Analysis — with real patent data */}
           <ClaudeAnalysis
-            query={`Run a full freedom-to-operate analysis for this technology: ${submittedQuery}. Identify potentially blocking U.S. patents, map each claim limitation against the technology element-by-element, assess literal infringement and doctrine of equivalents, rate non-infringement arguments as STRONG/MODERATE/WEAK, propose specific design-around options for any HIGH or MEDIUM risk claims, and provide an overall FTO risk rating (HIGH/MEDIUM/LOW) with rationale. Follow the FTO memo skill definition exactly.`}
+            query={`Run a full freedom-to-operate analysis for this technology: ${submittedQuery}.
+
+${patentContext ? `The following REAL patents were found in the USPTO database that may be relevant. Analyze these specific patents for potential infringement:\n\n${patentContext}\n\nFor each relevant patent above, map its claim limitations against the described technology element-by-element.` : 'Search the USPTO database for potentially blocking patents based on the technology description.'}
+
+Assess literal infringement and doctrine of equivalents for each relevant patent. Rate non-infringement arguments as STRONG/MODERATE/WEAK. Propose specific design-around options for any HIGH or MEDIUM risk claims. Provide an overall FTO risk rating (HIGH/MEDIUM/LOW) with rationale. Follow the FTO memo skill definition exactly.`}
             skillType="fto"
-            context={`Technology description: ${submittedQuery}`}
+            context={`Technology description: ${submittedQuery}${patentContext ? '\n\nReal USPTO patents found:\n' + patentContext : ''}`}
           />
 
           {/* Disclaimer */}
