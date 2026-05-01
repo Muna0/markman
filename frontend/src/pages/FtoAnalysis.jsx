@@ -120,19 +120,15 @@ function StatusIcon({ status }) {
 export default function FtoAnalysis() {
   const { dark } = useTheme()
   const [description, setDescription] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
+  const [submitted, setSubmitted] = useState(false)
+  const [submittedQuery, setSubmittedQuery] = useState('')
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!description.trim()) return
-    setLoading(true)
-    setResult(null)
-    setTimeout(() => {
-      setResult({ ...SAMPLE_RESULT, userQuery: description })
-      setLoading(false)
-      api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis started', 'UNKNOWN', description)
-    }, 1000)
+    setSubmittedQuery(description)
+    setSubmitted(true)
+    api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis submitted', 'UNKNOWN', description)
   }
 
   return (
@@ -176,140 +172,19 @@ export default function FtoAnalysis() {
         </div>
       </form>
 
-      {/* Results */}
-      {result && (
+      {/* Results — Claude Analysis Only */}
+      {submitted && (
         <div className="space-y-6">
           {/* Privilege Banner */}
-          <div className={`rounded-lg px-4 py-2.5 text-xs font-semibold text-center tracking-wide uppercase ${dark ? 'bg-ink-100 text-ink-900' : 'bg-ink-900 text-white'}`}>
+          <div className={`rounded-lg px-4 py-2.5 text-[13px] font-semibold text-center tracking-wide uppercase ${dark ? 'bg-ink-100 text-ink-900' : 'bg-ink-900 text-white'}`}>
             Attorney Work Product / Privileged and Confidential
           </div>
 
-          {/* Risk */}
-          <RiskBanner risk={result.risk} />
-
-          {/* Technology Description */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Technology Under Analysis</h2>
-            <p className="font-medium text-sm mb-3">{result.technology.name}</p>
-            <div className="space-y-2">
-              {result.technology.elements.map((el, i) => (
-                <div key={i} className="flex items-start gap-2 text-sm">
-                  <ArrowRight className="w-4 h-4 text-blu-500 mt-0.5 shrink-0" />
-                  <span>{el}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Patent Analysis Cards */}
-          {result.patents.map(p => (
-            <div key={p.number} className={`rounded-xl border overflow-hidden ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-              {/* Patent Header */}
-              <div className={`px-6 py-4 border-b flex items-center justify-between ${
-                p.risk === 'HIGH' ? (dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200') :
-                p.risk === 'MEDIUM' ? (dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200') :
-                (dark ? 'bg-grn-950/30 border-grn-900' : 'bg-grn-50 border-grn-200')
-              }`}>
-                <div>
-                  <h3 className="font-bold text-sm">{p.number}</h3>
-                  <p className={`text-xs mt-0.5 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{p.title}</p>
-                </div>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  p.risk === 'HIGH' ? (dark ? 'bg-red-900 text-red-300' : 'bg-red-200 text-red-800') :
-                  p.risk === 'MEDIUM' ? (dark ? 'bg-amb-900 text-amb-300' : 'bg-amb-200 text-amb-800') :
-                  (dark ? 'bg-grn-900 text-grn-300' : 'bg-grn-200 text-grn-800')
-                }`}>{p.risk} RISK</span>
-              </div>
-
-              <div className="p-6 space-y-6">
-                {/* Patent Info */}
-                <div className="flex flex-wrap gap-6 text-sm">
-                  <div><span className="text-ink-500">Assignee:</span> <span className="font-medium">{p.assignee}</span></div>
-                  <div><span className="text-ink-500">Expires:</span> <span className="font-medium">{p.expires}</span></div>
-                  <div><span className="text-ink-500">Maintained:</span> <span className="font-medium">{p.maintained ? 'Yes' : 'No'}</span></div>
-                </div>
-
-                {/* Claim Mapping */}
-                <div>
-                  <h4 className="font-semibold text-sm mb-3">Claim-by-Claim Analysis</h4>
-                  {p.claims.map(c => (
-                    <div key={c.num} className="mb-4">
-                      <p className={`text-xs font-semibold mb-2 ${dark ? 'text-blu-400' : 'text-blu-600'}`}>Claim {c.num}</p>
-                      <div className="space-y-2">
-                        {c.elements.map((el, i) => (
-                          <div key={i} className={`rounded-lg p-3 border ${dark ? 'bg-ink-800 border-ink-700' : 'bg-ink-50 border-ink-200'}`}>
-                            <div className="flex items-start gap-3">
-                              <StatusIcon status={el.status} />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between gap-2 mb-1">
-                                  <p className="text-xs font-medium">{el.claimElement}</p>
-                                  <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold ${
-                                    el.status === 'MEETS' ? (dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700') :
-                                    (dark ? 'bg-grn-950 text-grn-400' : 'bg-grn-100 text-grn-700')
-                                  }`}>{el.status}</span>
-                                </div>
-                                <p className={`text-xs ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{el.techElement}</p>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Non-Infringement Arguments */}
-                <div>
-                  <h4 className="font-semibold text-sm mb-3">Non-Infringement Arguments</h4>
-                  <div className="space-y-2">
-                    {p.nonInfringement.map((a, i) => (
-                      <div key={i} className={`flex items-center justify-between gap-3 rounded-lg p-3 border ${dark ? 'bg-ink-800 border-ink-700' : 'bg-ink-50 border-ink-200'}`}>
-                        <span className="text-sm">{a.argument}</span>
-                        <StrengthBadge strength={a.strength} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Design-Around Options */}
-                {p.designArounds.length > 0 && (
-                  <div>
-                    <h4 className="font-semibold text-sm mb-3">Design-Around Options</h4>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
-                            <th className="text-left py-2 pr-4 font-medium text-ink-500">Option</th>
-                            <th className="text-left py-2 pr-4 font-medium text-ink-500">Feasibility</th>
-                            <th className="text-left py-2 pr-4 font-medium text-ink-500">Impact</th>
-                            <th className="text-left py-2 font-medium text-ink-500">New Risk?</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {p.designArounds.map((d, i) => (
-                            <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
-                              <td className="py-3 pr-4">{d.option}</td>
-                              <td className={`py-3 pr-4 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{d.feasibility}</td>
-                              <td className={`py-3 pr-4 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{d.impact}</td>
-                              <td className="py-3">
-                                {d.newRisk ? <AlertTriangle className="w-4 h-4 text-amb-500" /> : <CheckCircle2 className="w-4 h-4 text-grn-500" />}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {/* Claude Full FTO Analysis */}
+          {/* Claude FTO Analysis */}
           <ClaudeAnalysis
-            query={`Run a full freedom-to-operate analysis for this technology: ${result.userQuery || description}. Identify potentially blocking patents, map claim limitations against the technology element-by-element, rate non-infringement arguments, propose design-arounds, and provide an overall FTO risk rating (HIGH/MEDIUM/LOW).`}
+            query={`Run a full freedom-to-operate analysis for this technology: ${submittedQuery}. Identify potentially blocking U.S. patents, map each claim limitation against the technology element-by-element, assess literal infringement and doctrine of equivalents, rate non-infringement arguments as STRONG/MODERATE/WEAK, propose specific design-around options for any HIGH or MEDIUM risk claims, and provide an overall FTO risk rating (HIGH/MEDIUM/LOW) with rationale. Follow the FTO memo skill definition exactly.`}
             skillType="fto"
-            context={`Technology description: ${result.userQuery || description}`}
+            context={`Technology description: ${submittedQuery}`}
           />
 
           {/* Disclaimer */}
