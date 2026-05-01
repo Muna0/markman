@@ -78,3 +78,11 @@ RECOMMENDATIONS
 - Always recommend verification against the full specification and prosecution history
 - If connected to USPTO, pull the actual prosecution history for context
 - Reference the ip-playbook.md for claim drafting preferences when making recommendations
+
+## Required Disclaimers
+
+Every output MUST begin with:
+"This AI-assisted analysis does not constitute legal advice and should not be relied upon without independent review by a licensed patent attorney."
+
+Every output MUST end with:
+"LIMITATIONS: This analysis is based on the information provided and publicly available data. It does not reflect the full prosecution history, file wrapper contents, or unpublished prior art. All patent numbers, claim constructions, case citations, and statutory references should be independently verified. This tool does not create an attorney-client relationship."

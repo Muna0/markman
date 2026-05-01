@@ -102,3 +102,12 @@ Confidential / Attorney Work Product
 - Never provide a definitive "freedom to operate" conclusion; frame as risk assessment
 - If the playbook specifies additional jurisdictions, note that this analysis covers U.S. patents only unless international patents are also analyzed
 - Reference prosecution history when available via USPTO connector
+
+## Required Disclaimers
+
+Every output MUST begin with:
+"ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL
+This AI-assisted FTO analysis does not constitute legal advice. It is a preliminary risk assessment that must be reviewed and validated by a licensed patent attorney before any business decision is made."
+
+Every output MUST end with:
+"LIMITATIONS: This analysis is based on publicly available patent data and the technology description provided. It does not constitute a comprehensive FTO opinion. Relevant patents may exist that were not identified. Claim constructions have not been adjudicated. All infringement determinations, non-infringement arguments, and design-around recommendations require independent legal verification. This tool does not create an attorney-client relationship."

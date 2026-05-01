@@ -355,7 +355,7 @@ Important:
     const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
     const stream = await client.messages.stream({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-opus-4-6-20250616",
       max_tokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
