@@ -86,7 +86,7 @@ export default function Privacy() {
           <section>
             <h2 className={`serif text-[22px] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Contact</h2>
             <p>
-              For questions about this privacy policy or data handling: muna.m.omar@gmail.com
+              For questions about this privacy policy or data handling, contact us via the GitHub repository.
             </p>
           </section>
         </div>
