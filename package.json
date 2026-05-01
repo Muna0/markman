@@ -1,0 +1,16 @@
+{
+  "name": "ip-law-mcp-servers",
+  "version": "1.0.0",
+  "description": "MCP servers for USPTO and WIPO API access",
+  "type": "module",
+  "scripts": {
+    "start:uspto": "node mcp/uspto-server.js",
+    "start:wipo": "node mcp/wipo-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

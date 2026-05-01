@@ -1,0 +1,161 @@
+@import "tailwindcss";
+
+@theme {
+  /* Oxidized Copper Editorial palette */
+  --color-ink-950: #0A1F15;
+  --color-ink-900: #0D2B1C;
+  --color-ink-800: #112E1E;
+  --color-ink-700: #1A3D28;
+  --color-ink-600: #2A4D38;
+  --color-ink-500: #3D5F4F;
+  --color-ink-400: #8FA898;
+  --color-ink-300: #A8BFA8;
+  --color-ink-200: #C8D8C8;
+  --color-ink-100: #E8E4D8;
+  --color-ink-50: #F0EBD8;
+  --color-ink-25: #F5F0E0;
+
+  --color-blu-600: #A46930;
+  --color-blu-500: #C4793A;
+  --color-blu-400: #D4894A;
+  --color-blu-300: #E0A06A;
+  --color-blu-200: #ECBF96;
+  --color-blu-100: #F5DCC0;
+  --color-blu-50: #FDF3E8;
+
+  --color-grn-500: #3AB54A;
+  --color-grn-400: #4EC97B;
+  --color-grn-100: #D1FAE5;
+
+  --color-red-500: #dc2626;
+  --color-red-400: #f87171;
+  --color-red-100: #fee2e2;
+
+  --color-amb-500: #d97706;
+  --color-amb-400: #fbbf24;
+  --color-amb-100: #fef3c7;
+
+  --color-vio-500: #7c3aed;
+  --color-vio-400: #a78bfa;
+}
+
+* { scrollbar-width: thin; scrollbar-color: #1A3D28 transparent; }
+
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  background: #0A1F15;
+  color: #8FA898;
+}
+#root { min-height: 100vh; }
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.serif { font-family: 'Cormorant Garamond', Georgia, serif; }
+.text-balance { text-wrap: balance; }
+
+/* ---- Marquee ---- */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 30s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ---- Animations ---- */
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.97) translateY(12px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes blink-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.18; }
+}
+@keyframes slide-up-items {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes progress-fill {
+  0% { width: 0%; }
+  100% { width: var(--fill); }
+}
+
+.anim-reveal { animation: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-reveal-scale { animation: reveal-scale 0.7s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.anim-float { animation: subtle-float 5s ease-in-out infinite; }
+.anim-glow { animation: glow-pulse 4s ease-in-out infinite; }
+.d1 { animation-delay: 0.1s; } .d2 { animation-delay: 0.2s; } .d3 { animation-delay: 0.3s; }
+.d4 { animation-delay: 0.4s; } .d5 { animation-delay: 0.5s; } .d6 { animation-delay: 0.6s; }
+
+/* ---- Buttons ---- */
+.btn-shadow {
+  box-shadow:
+    rgba(0,0,0,0.5) 0 0.6px 0.6px -1.25px,
+    rgba(0,0,0,0.4) 0 2.3px 2.3px -2.5px,
+    rgba(0,0,0,0.2) 0 8px 8px -3.75px;
+}
+
+/* ---- Cards ---- */
+.card-glow { position: relative; }
+.card-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(196,121,58,0.25), transparent 40%, transparent 60%, rgba(78,201,123,0.15));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+.card-glow:hover::before { opacity: 1; }
+
+/* ---- Glass ---- */
+.glass-dark {
+  background: rgba(10, 31, 21, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.glass-light {
+  background: rgba(245, 240, 224, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* ---- Grid bg ---- */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(196,121,58,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(196,121,58,0.02) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.progress-bar {
+  animation: progress-fill 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Markman — IP Legal AI Plugin for Claude Code</title>
+<meta name="description" content="Patent analysis, trademark clearance, FTO memos, and matter intake — connected to live USPTO & WIPO data, inside Claude Code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,500;0,700;1,500;1,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚖</text></svg>">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#0A1F15;--bg2:#0D2B1C;--surface:#112E1E;
+--border:rgba(255,255,255,0.07);
+--text:#E8E4D8;--text2:#8FA898;
+--copper:#C4793A;--copper-dim:rgba(196,121,58,0.12);
+--green-lit:#4EC97B;--cream:#F0EBD8;
+--nav-h:56px;
+--serif:'Cormorant Garamond',Georgia,serif;
+--mono:'JetBrains Mono',ui-monospace,monospace;
+--sans:'Inter',system-ui,sans-serif;
+}
+html{scroll-behavior:smooth;scroll-padding-top:var(--nav-h)}
+body{font-family:var(--sans);background:var(--bg);color:var(--text2);line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2,h3,h4,h5,h6{font-family:var(--serif);color:var(--cream);font-weight:700;line-height:1.12}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+/* --- READING PROGRESS --- */
+#progress{position:fixed;top:0;left:0;height:2px;background:var(--copper);width:0;z-index:1000;transition:width .1s}
+/* --- NAV --- */
+nav{position:fixed;top:0;left:0;right:0;z-index:99;height:var(--nav-h);background:rgba(10,31,21,0.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;width:100%}
+.nav-logo{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.nav-links{display:flex;align-items:center;gap:28px}
+.nav-links a{font-family:var(--mono);font-size:13px;color:var(--text2);position:relative;transition:color .2s}
+.nav-links a::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:1.5px;background:var(--copper);transition:width .3s}
+.nav-links a:hover{color:var(--text)}
+.nav-links a:hover::after{width:100%}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-right .docs-link{font-family:var(--mono);font-size:13px;color:var(--text2);transition:color .2s}
+.nav-right .docs-link:hover{color:var(--copper)}
+.btn-copper{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:var(--copper);color:#0A1F15;font-family:var(--mono);font-size:13px;font-weight:700;border:none;border-radius:6px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-copper:hover{background:#d4884a}
+.btn-copper:active{transform:scale(0.97)}
+.btn-outline{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;background:transparent;color:var(--text);font-family:var(--mono);font-size:13px;font-weight:500;border:1px solid var(--border);border-radius:6px;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-outline:hover{border-color:var(--copper);color:var(--copper)}
+.hamburger{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:8px}
+.hamburger svg{width:22px;height:22px}
+/* --- HERO --- */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding-top:calc(var(--nav-h) + 40px);padding-bottom:60px;position:relative}
+.hero-bg{position:absolute;inset:0;opacity:.04;pointer-events:none;overflow:hidden}
+.hero-bg svg{width:100%;height:100%}
+.hero-eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--copper);margin-bottom:24px}
+.hero h1{font-size:clamp(40px,7vw,80px);color:var(--cream);margin-bottom:24px;max-width:720px}
+.hero h1 em{font-style:italic;color:var(--copper)}
+.hero-sub{font-size:17px;color:var(--text2);max-width:520px;margin-bottom:36px;line-height:1.7}
+.hero-ctas{display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap}
+.hero-install{display:inline-flex;align-items:center;gap:12px;padding:10px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:999px;font-family:var(--mono);font-size:13px;color:var(--text2);cursor:pointer;transition:border-color .2s;margin-bottom:48px}
+.hero-install:hover{border-color:var(--copper)}
+.hero-install code{color:var(--text)}
+.hero-install .copy-btn{background:none;border:none;color:var(--text2);cursor:pointer;font-family:var(--mono);font-size:12px;padding:2px 8px;border-radius:4px;transition:color .2s}
+.hero-install .copy-btn:hover{color:var(--green-lit)}
+.hero-rule{width:100%;height:1px;background:var(--copper);opacity:.3;margin-bottom:24px}
+.hero-stats{display:flex;gap:40px;flex-wrap:wrap}
+.hero-stats .stat{font-family:var(--mono);font-size:13px;color:var(--text2)}
+.hero-stats .stat strong{color:var(--cream);font-weight:700;margin-right:4px}
+/* --- SECTIONS --- */
+section{padding:100px 0}
+.section-label{font-family:var(--mono);font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--copper);margin-bottom:12px}
+.section-heading{font-size:clamp(28px,4vw,44px);margin-bottom:20px;max-width:600px}
+.section-sub{font-size:15px;color:var(--text2);max-width:520px;line-height:1.7;margin-bottom:40px}
+/* --- WHAT IT DOES --- */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+.split-text .check-list{list-style:none;margin-top:24px}
+.split-text .check-list li{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;font-size:14px;color:var(--text2);line-height:1.6}
+.split-text .check-list li .ck{color:var(--green-lit);font-weight:700;font-size:16px;flex-shrink:0;margin-top:2px}
+.arch-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px;overflow:hidden}
+.arch-card .arch-label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.arch-row{padding:14px 0;border-bottom:1px solid var(--border)}
+.arch-row:last-child{border-bottom:none}
+.arch-row .arch-cat{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+.arch-row .arch-cat.sk{color:var(--copper)}
+.arch-row .arch-cat.cmd{color:#a78bfa}
+.arch-row .arch-cat.mcp{color:var(--green-lit)}
+.arch-row .arch-cat.pb{color:#fbbf24}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-family:var(--mono);font-size:11px;padding:4px 10px;background:rgba(255,255,255,0.05);border-radius:4px;color:var(--text2)}
+/* --- TOOLS --- */
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:0}
+.tab-btn{font-family:var(--mono);font-size:13px;padding:12px 20px;background:none;border:none;color:var(--text2);cursor:pointer;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap}
+.tab-btn.active{color:var(--cream);border-bottom-color:var(--copper)}
+.tab-btn:hover:not(.active){color:var(--text)}
+.tab-panel{display:none;grid-template-columns:1fr 1fr;gap:0;background:var(--surface);border:1px solid var(--border);border-top:none;border-radius:0 0 10px 10px;overflow:hidden;min-height:340px}
+.tab-panel.active{display:grid}
+.tab-desc{padding:40px;display:flex;flex-direction:column;justify-content:center}
+.tab-desc h3{font-family:var(--serif);font-size:22px;color:var(--cream);margin-bottom:12px}
+.tab-desc p{font-size:14px;color:var(--text2);line-height:1.7;margin-bottom:20px}
+.tab-desc .try-link{font-family:var(--mono);font-size:13px;color:var(--copper);display:inline-flex;align-items:center;gap:4px;transition:gap .2s}
+.tab-desc .try-link:hover{gap:8px}
+.tab-terminal{background:#080E09;padding:0;display:flex;flex-direction:column}
+.term-bar{display:flex;align-items:center;gap:6px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.term-dot{width:10px;height:10px;border-radius:50%}
+.term-dot.r{background:#ff5f56}.term-dot.y{background:#ffbd2e}.term-dot.g{background:#27c93f}
+.term-bar span{font-family:var(--mono);font-size:10px;color:var(--text2);margin-left:8px}
+.term-body{padding:20px;flex:1;font-family:var(--mono);font-size:12px;line-height:1.8;overflow-x:auto;white-space:pre-wrap}
+.term-body .cmd{color:var(--copper)}
+.term-body .out{color:var(--text2)}
+.term-body .grn{color:var(--green-lit)}
+.term-body .warn{color:#fbbf24}
+.term-body .red{color:#f87171}
+/* --- INSTALL --- */
+.steps-row{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:40px}
+.step-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:28px}
+.step-num{font-family:var(--mono);font-size:11px;color:var(--copper);letter-spacing:.1em;margin-bottom:12px}
+.step-card h4{font-family:var(--serif);font-size:18px;color:var(--cream);margin-bottom:8px}
+.step-card p{font-size:13px;color:var(--text2);line-height:1.6}
+.install-terminal{background:#080E09;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.install-terminal .term-body{padding:24px 28px}
+/* --- FOOTER --- */
+footer{padding:48px 0;border-top:1px solid var(--border)}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-family:var(--mono);font-size:12px;color:var(--text2);transition:color .2s}
+.footer-links a:hover{color:var(--copper)}
+.footer-right{font-family:var(--mono);font-size:11px;color:var(--text2)}
+.footer-copy{margin-top:24px;padding-top:20px;border-top:1px solid rgba(196,121,58,0.15);font-family:var(--mono);font-size:11px;color:var(--text2);opacity:.6}
+/* --- BACK TO TOP --- */
+#btt{position:fixed;bottom:28px;right:28px;width:40px;height:40px;border-radius:8px;background:var(--copper);color:#0A1F15;border:none;cursor:pointer;font-size:18px;display:none;align-items:center;justify-content:center;z-index:90;transition:opacity .2s,transform .2s}
+#btt:hover{transform:translateY(-2px)}
+/* --- REVEAL --- */
+.reveal{opacity:0;transform:translateY(12px);transition:opacity .6s ease,transform .6s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+/* --- RESPONSIVE --- */
+@media(max-width:900px){
+.nav-links{display:none}
+.hamburger{display:block}
+.nav-links.open{display:flex;flex-direction:column;position:fixed;top:var(--nav-h);left:0;right:0;background:var(--bg);border-bottom:1px solid var(--border);padding:20px 24px;gap:16px;z-index:98}
+.split{grid-template-columns:1fr;gap:32px}
+.tab-panel.active{grid-template-columns:1fr}
+.steps-row{grid-template-columns:1fr}
+.hero-stats{gap:20px}
+.hero h1{font-size:clamp(32px,8vw,56px)}
+.tabs{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.footer-inner{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<!-- READING PROGRESS -->
+<div id="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+
+<!-- NAV -->
+<nav aria-label="Main navigation">
+<div class="wrap">
+  <a href="#" class="nav-logo" aria-label="Markman home">
+    <svg width="180" height="48" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- M + checkmark mark -->
+      <path d="M6 40 L6 10 L18 26 L26 16" stroke="#E8E4D8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M26 16 L34 28 L46 8" stroke="#4EC97B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+      <!-- Wordmark -->
+      <text x="58" y="32" font-family="'JetBrains Mono',monospace" font-weight="700" font-size="18" fill="#E8E4D8" letter-spacing="0.08em">MARKMAN</text>
+    </svg>
+  </a>
+  <div class="nav-links" id="navLinks" role="menubar">
+    <a href="#what" role="menuitem">What it does</a>
+    <a href="#tools" role="menuitem">Tools</a>
+    <a href="#install" role="menuitem">Install</a>
+  </div>
+  <div class="nav-right">
+    <a href="#install" class="docs-link">Docs</a>
+    <a href="#tools" class="btn-copper">Open App →</a>
+  </div>
+  <button class="hamburger" id="menuToggle" aria-label="Toggle menu" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
+</div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+      <pattern id="claimLines" x="0" y="0" width="120" height="80" patternUnits="userSpaceOnUse">
+        <line x1="20" y1="10" x2="100" y2="10" stroke="#E8E4D8" stroke-width="0.5"/>
+        <line x1="30" y1="25" x2="90" y2="25" stroke="#E8E4D8" stroke-width="0.3"/>
+        <line x1="30" y1="35" x2="80" y2="35" stroke="#E8E4D8" stroke-width="0.3"/>
+        <line x1="16" y1="8" x2="16" y2="40" stroke="#E8E4D8" stroke-width="0.3"/>
+        <line x1="16" y1="8" x2="20" y2="8" stroke="#E8E4D8" stroke-width="0.3"/>
+        <line x1="16" y1="40" x2="20" y2="40" stroke="#E8E4D8" stroke-width="0.3"/>
+        <line x1="20" y1="55" x2="100" y2="55" stroke="#E8E4D8" stroke-width="0.5"/>
+        <line x1="30" y1="68" x2="75" y2="68" stroke="#E8E4D8" stroke-width="0.3"/>
+      </pattern>
+      <rect width="100%" height="100%" fill="url(#claimLines)"/>
+    </svg>
+  </div>
+  <div class="wrap" style="position:relative">
+    <div class="hero-eyebrow reveal">&gt;_ Claude Code Plugin for IP Law</div>
+    <h1 class="reveal">Patent analysis &amp;<br>trademark clearance,<br><em>at the command line.</em></h1>
+    <p class="hero-sub reveal">Markman connects Claude Code to live USPTO &amp; WIPO data. Analyze patent claims, screen trademarks, draft FTO memos, and intake IP matters — without leaving your terminal.</p>
+    <div class="hero-ctas reveal">
+      <a href="#tools" class="btn-copper">Open the App →</a>
+      <a href="#install" class="btn-outline">&gt;_ Install Guide</a>
+    </div>
+    <div class="hero-install reveal" id="installPill">
+      <code>$ claude plugin install markman</code>
+      <button class="copy-btn" onclick="copyInstall()" id="copyBtn" aria-label="Copy install command">Copy</button>
+    </div>
+    <div class="hero-rule reveal"></div>
+    <div class="hero-stats reveal">
+      <div class="stat"><strong class="counter" data-target="6">0</strong>Components</div>
+      <div class="stat"><strong class="counter" data-target="7">0</strong>Connectors</div>
+      <div class="stat"><strong class="counter" data-target="5">0</strong>Commands</div>
+      <div class="stat"><strong class="counter" data-target="4">0</strong>Claim Types</div>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT IT DOES -->
+<section id="what" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="section-label reveal">What it does</div>
+    <div class="split">
+      <div class="split-text">
+        <h2 class="section-heading reveal">Four IP analysis tools.<br>Two live API connections.</h2>
+        <p class="section-sub reveal">Markman is a Claude Code plugin that gives you structured IP analysis skills backed by real-time patent and trademark data from the USPTO and WIPO. It includes a configurable playbook for your firm's risk thresholds, deadline rules, and drafting preferences.</p>
+        <ul class="check-list reveal">
+          <li><span class="ck">✓</span>Skills fire automatically when you discuss IP matters</li>
+          <li><span class="ck">✓</span>Slash commands for on-demand analysis (<code style="font-family:var(--mono);font-size:12px;color:var(--text)">/review-claims</code>, <code style="font-family:var(--mono);font-size:12px;color:var(--text)">/tm-clearance</code>, <code style="font-family:var(--mono);font-size:12px;color:var(--text)">/fto-analysis</code>)</li>
+          <li><span class="ck">✓</span>MCP servers handle rate limiting, retries, and data normalization</li>
+          <li><span class="ck">✓</span>Playbook is fully editable — match your firm's standards</li>
+        </ul>
+      </div>
+      <div class="arch-card reveal">
+        <div class="arch-label">Plugin Architecture</div>
+        <div class="arch-row"><div class="arch-cat sk">Skills</div><div class="chips"><span class="chip">patent-analysis</span><span class="chip">fto-memo</span><span class="chip">trademark-screen</span><span class="chip">matter-intake</span></div></div>
+        <div class="arch-row"><div class="arch-cat cmd">Commands</div><div class="chips"><span class="chip">/review-claims</span><span class="chip">/fto-analysis</span><span class="chip">/tm-clearance</span></div></div>
+        <div class="arch-row"><div class="arch-cat mcp">MCP Servers</div><div class="chips"><span class="chip">uspto-server (4 tools)</span><span class="chip">wipo-server (2 tools)</span></div></div>
+        <div class="arch-row"><div class="arch-cat pb">Playbook</div><div class="chips"><span class="chip">FTO thresholds</span><span class="chip">TM jurisdictions</span><span class="chip">Claim drafting</span><span class="chip">Deadlines</span></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS -->
+<section id="tools">
+  <div class="wrap">
+    <div class="section-label reveal">Tools</div>
+    <h2 class="section-heading reveal" style="margin-bottom:32px">See what each tool produces.</h2>
+    <div class="tabs reveal" role="tablist">
+      <button class="tab-btn active" role="tab" aria-selected="true" data-tab="patent">Patent Analysis</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="tm">TM Clearance</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="fto">FTO Assessment</button>
+      <button class="tab-btn" role="tab" aria-selected="false" data-tab="intake">Matter Intake</button>
+    </div>
+
+    <div class="tab-panel active" id="panel-patent" role="tabpanel">
+      <div class="tab-desc">
+        <h3>Parse claims. Map scope. Surface risks.</h3>
+        <p>Drop in a patent number — Markman maps the full dependency tree, assesses breadth per limitation, and flags Alice/KSR issues with specific recommendations.</p>
+        <a href="#install" class="try-link">Try it now →</a>
+      </div>
+      <div class="tab-terminal">
+        <div class="term-bar"><span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span><span>claude</span></div>
+        <div class="term-body"><span class="cmd">&gt; /review-claims US11,234,567</span>
+
+<span class="out">Retrieving patent from USPTO...</span>
+
+<span class="grn">PATENT ANALYSIS — US 11,987,654</span>
+<span class="out">Filing: 2024-03-15 | Priority: 2024-03-15</span>
+
+<span class="out">CLAIM MAP</span>
+<span class="out">  Claim 1 (Independent, Method)  </span><span class="red">Alice 101 risk</span>
+<span class="out">  Claim 2 (Dependent → 1)        Medium breadth</span>
+<span class="out">  Claim 5 (Independent, System)  </span><span class="warn">Rewrite standalone</span>
+
+<span class="out">RECOMMENDATION</span>
+<span class="out">  Amend Claim 1: recite specific</span>
+<span class="out">  technical improvement to address § 101.</span></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-tm" role="tabpanel">
+      <div class="tab-desc">
+        <h3>Screen marks across jurisdictions.</h3>
+        <p>Enter a mark and goods. Markman searches identical and phonetically similar marks, scores all 8 DuPont factors, and delivers CLEAR / RISK / BLOCK per jurisdiction.</p>
+        <a href="#install" class="try-link">Try it now →</a>
+      </div>
+      <div class="tab-terminal">
+        <div class="term-bar"><span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span><span>claude</span></div>
+        <div class="term-body"><span class="cmd">&gt; /tm-clearance NEXAFLOW | SaaS workflow | US, EU, UK</span>
+
+<span class="out">Searching USPTO for identical marks...</span>
+<span class="out">Generating phonetic variants...</span>
+
+<span class="grn">TRADEMARK CLEARANCE — NEXAFLOW</span>
+<span class="out">  US  — NEXFLOW (Cls 042)    </span><span class="red">CONFLICT  85% similar</span>
+<span class="out">  EU  — No conflicts          </span><span class="grn">CLEAR</span>
+<span class="out">  UK  — No conflicts          </span><span class="grn">CLEAR</span>
+
+<span class="warn">Overall: CLEAR WITH RISK</span>
+<span class="out">  US conflict requires further investigation.</span></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-fto" role="tabpanel">
+      <div class="tab-desc">
+        <h3>Claim-by-claim mapping with design-arounds.</h3>
+        <p>Describe your technology. Markman identifies blocking patents, maps each limitation against your product, and rates non-infringement arguments by strength.</p>
+        <a href="#install" class="try-link">Try it now →</a>
+      </div>
+      <div class="tab-terminal">
+        <div class="term-bar"><span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span><span>claude</span></div>
+        <div class="term-body"><span class="cmd">&gt; /fto-analysis Transformer-based medical NER</span>
+
+<span class="out">PRIVILEGED — ATTORNEY WORK PRODUCT</span>
+
+<span class="grn">FTO ASSESSMENT — Transformer Medical NER</span>
+<span class="out">  Overall Risk: </span><span class="warn">MEDIUM</span>
+
+<span class="out">  US 10,456,789 Claim 1:</span>
+<span class="out">    "recurrent NN" →   </span><span class="grn">DOES NOT MEET</span><span class="out"> (transformer)</span>
+<span class="out">    "remote server" →  </span><span class="grn">DOES NOT MEET</span><span class="out"> (on-device)</span>
+
+<span class="out">  Non-infringement:    </span><span class="grn">STRONG</span></div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-intake" role="tabpanel">
+      <div class="tab-desc">
+        <h3>Classify, extract facts, flag deadlines.</h3>
+        <p>Describe any IP matter. Markman classifies the type, extracts key facts, identifies deadlines, and assigns risk level — in seconds.</p>
+        <a href="#install" class="try-link">Try it now →</a>
+      </div>
+      <div class="tab-terminal">
+        <div class="term-bar"><span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span><span>claude</span></div>
+        <div class="term-body"><span class="cmd">&gt; NDA for algorithm disclosure to partner</span>
+
+<span class="grn">MATTER INTAKE</span>
+<span class="out">  Primary:   Trade Secret</span>
+<span class="out">  Secondary: Patent (no provisional on file)</span>
+
+<span class="out">  DEADLINE</span>
+<span class="out">    Execute NDA before disclosure  </span><span class="red">URGENT</span>
+
+<span class="out">  RISK: </span><span class="warn">MEDIUM</span>
+<span class="out">    NDA not yet signed. Trade secret</span>
+<span class="out">    status at risk if disclosed.</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section id="install" style="background:var(--bg2)">
+  <div class="wrap">
+    <div class="section-label reveal">Install</div>
+    <h2 class="section-heading reveal">Up and running in 5 minutes.</h2>
+    <p class="section-sub reveal">Requires Node.js 18+ and Claude Code. API keys from USPTO and WIPO are free.</p>
+    <div class="steps-row reveal">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <h4>Get the tools</h4>
+        <p>Install Node.js 18+ and Claude Code. Get free API keys from data.uspto.gov and wipo.int/case.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <h4>Install the plugin</h4>
+        <p>Run <code style="font-family:var(--mono);color:var(--text)">claude plugin install markman</code> in your terminal. Configure your API keys.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <h4>Start analyzing</h4>
+        <p>Open Claude Code and type <code style="font-family:var(--mono);color:var(--text)">/review-claims</code> with any patent number. Or just describe an IP matter.</p>
+      </div>
+    </div>
+    <div class="install-terminal reveal">
+      <div class="term-bar"><span class="term-dot r"></span><span class="term-dot y"></span><span class="term-dot g"></span><span>terminal</span></div>
+      <div class="term-body"><span class="out"># Clone and install</span>
+<span class="cmd">$ git clone https://github.com/markman-ip/markman.git</span>
+<span class="cmd">$ cd markman && npm install</span>
+<span class="grn">added 91 packages in 3s</span>
+
+<span class="out"># Configure API keys</span>
+<span class="cmd">$ echo "USPTO_API_KEY=your_key" > .env</span>
+<span class="cmd">$ echo "WIPO_API_KEY=your_key" >> .env</span>
+
+<span class="out"># Install plugin</span>
+<span class="cmd">$ claude plugin install ./</span>
+<span class="grn">✓ Plugin "markman" installed successfully</span>
+<span class="grn">  4 skills · 3 commands · 2 MCP servers</span>
+
+<span class="out"># Verify</span>
+<span class="cmd">$ claude doctor</span>
+<span class="grn">✓ All checks passed</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap">
+    <div class="footer-inner">
+      <a href="#" class="nav-logo" aria-label="Markman home">
+        <svg width="140" height="36" viewBox="0 0 180 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6 40 L6 10 L18 26 L26 16" stroke="#E8E4D8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M26 16 L34 28 L46 8" stroke="#4EC97B" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <text x="58" y="32" font-family="'JetBrains Mono',monospace" font-weight="700" font-size="18" fill="#E8E4D8" letter-spacing="0.08em">MARKMAN</text>
+        </svg>
+      </a>
+      <div class="footer-links">
+        <a href="#what">What it does</a>
+        <a href="#tools">Tools</a>
+        <a href="#install">Install</a>
+      </div>
+      <div class="footer-right">§ Built on Claude Code · MCP Standard</div>
+    </div>
+    <div class="footer-copy">© 2026 Markman. Apache-2.0 License.</div>
+  </div>
+</footer>
+
+<!-- BACK TO TOP -->
+<button id="btt" aria-label="Back to top" onclick="window.scrollTo({top:0})">↑</button>
+
+<script>
+// --- MOBILE MENU ---
+const toggle=document.getElementById('menuToggle'),links=document.getElementById('navLinks');
+toggle.addEventListener('click',()=>{
+  const open=links.classList.toggle('open');
+  toggle.setAttribute('aria-expanded',open);
+});
+links.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>links.classList.remove('open')));
+
+// --- READING PROGRESS ---
+const bar=document.getElementById('progress');
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement.scrollHeight-window.innerHeight;
+  bar.style.width=(window.scrollY/h*100)+'%';
+},{passive:true});
+
+// --- BACK TO TOP ---
+const btt=document.getElementById('btt');
+window.addEventListener('scroll',()=>{
+  btt.style.display=window.scrollY>400?'flex':'none';
+},{passive:true});
+
+// --- REVEAL ON SCROLL ---
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}});
+},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
+
+// --- TABS ---
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>{b.classList.remove('active');b.setAttribute('aria-selected','false')});
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    btn.setAttribute('aria-selected','true');
+    const panel=document.getElementById('panel-'+btn.dataset.tab);
+    panel.classList.add('active');
+    panel.style.opacity='0';
+    requestAnimationFrame(()=>{panel.style.transition='opacity .2s';panel.style.opacity='1'});
+  });
+});
+
+// --- COPY INSTALL ---
+function copyInstall(){
+  navigator.clipboard.writeText('claude plugin install markman').then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='✓ Copied';btn.style.color='var(--green-lit)';
+    setTimeout(()=>{btn.textContent='Copy';btn.style.color=''},2000);
+  });
+}
+
+// --- COUNTER ANIMATION ---
+const counterObserver=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      const el=e.target;
+      const target=parseInt(el.dataset.target);
+      let current=0;
+      const step=Math.ceil(target/30);
+      const timer=setInterval(()=>{
+        current+=step;
+        if(current>=target){current=target;clearInterval(timer)}
+        el.textContent=current;
+      },40);
+      counterObserver.unobserve(el);
+    }
+  });
+},{threshold:0.5});
+document.querySelectorAll('.counter').forEach(c=>counterObserver.observe(c));
+</script>
+</body>
+</html>
