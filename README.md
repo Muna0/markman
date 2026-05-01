@@ -4,6 +4,14 @@ A Claude Code plugin for intellectual property law. Patent claim analysis, trade
 
 **This plugin does not provide legal advice.** All AI-generated analysis must be reviewed by licensed attorneys before reliance.
 
+![Markman Landing Page](docs/images/01-landing.jpeg)
+
+![Markman Dashboard](docs/images/02-dashboard.jpeg)
+
+![Markman Documentation](docs/images/03-patent-analysis.jpeg)
+
+![Markman Settings](docs/images/04-trademark.jpeg)
+
 ## What it does
 
 Markman teaches Claude Code how to do structured IP work. You describe what you need in natural language. Claude reads the skill definitions, calls the USPTO and WIPO APIs through MCP servers, references your firm's playbook for risk thresholds and standards, and produces formatted legal analysis output.
