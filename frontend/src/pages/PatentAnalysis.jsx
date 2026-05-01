@@ -269,7 +269,7 @@ export default function PatentAnalysis() {
                 {liveResults.results.slice(page * perPage, (page + 1) * perPage).map((p, i) => (
                   <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
                     <td className="py-2.5 pr-4">
-                      <a href={`https://ppubs.uspto.gov/pubwebapp/external.html?q=${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                      <a href={`https://patentcenter.uspto.gov/applications/${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                         className={`mono text-[12px] underline decoration-dotted underline-offset-2 transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
                         {p.applicationNumber}
                       </a>
@@ -334,7 +334,7 @@ export default function PatentAnalysis() {
                 <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
                 <p className={`text-[14px] mt-1 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{selectedPatent.title}</p>
               </div>
-              <a href={`https://ppubs.uspto.gov/pubwebapp/external.html?q=${selectedPatent.applicationNumber}`}
+              <a href={`https://patentcenter.uspto.gov/applications/${selectedPatent.applicationNumber}`}
                 target="_blank" rel="noopener noreferrer"
                 className={`mono text-[11px] px-3 py-1.5 rounded border transition ${dark ? 'border-ink-700 text-blu-400 hover:border-blu-500' : 'border-ink-200 text-blu-500 hover:border-blu-400'}`}>
                 View on USPTO →
