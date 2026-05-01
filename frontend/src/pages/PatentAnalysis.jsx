@@ -80,6 +80,8 @@ export default function PatentAnalysis() {
   const [inputType, setInputType] = useState('number')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
+  const [selectedPatent, setSelectedPatent] = useState(null)
+  const [claims, setClaims] = useState([])
 
   const [liveResults, setLiveResults] = useState(null)
   const [apiError, setApiError] = useState('')
@@ -90,26 +92,55 @@ export default function PatentAnalysis() {
     setLoading(true)
     setResult(null)
     setLiveResults(null)
+    setSelectedPatent(null)
+    setClaims([])
     setApiError('')
 
     try {
       if (inputType === 'number') {
-        // Try live USPTO search
-        const data = await api.searchPatents(input.trim(), 10)
+        const data = await api.searchPatents(input.trim(), 15)
         if (data.error) throw new Error(data.error)
         if (data.results && data.results.length > 0) {
           setLiveResults(data)
-          // Log to history
           api.logMatter('patent-analysis', `Patent Search: ${input.trim()}`, `${data.totalResults} results found`, 'UNKNOWN', input.trim())
+        } else {
+          setApiError('No results found. Try different keywords.')
         }
+      } else {
+        // Pasted claims mode — show analysis template
+        setResult(SAMPLE_RESULT)
       }
     } catch (err) {
       setApiError(err.message)
+      // Fall back to sample if API fails
+      setResult(SAMPLE_RESULT)
     }
 
-    // Always show the structured analysis demo too
-    setResult(SAMPLE_RESULT)
     setLoading(false)
+  }
+
+  function selectPatent(patent) {
+    setSelectedPatent(patent)
+    setResult(null)
+    // Initialize editable claims workspace
+    setClaims([
+      { num: 1, type: 'Method', indDep: 'Independent', dependsOn: '', category: 'Process', notes: '' },
+    ])
+  }
+
+  function addClaim() {
+    const num = claims.length + 1
+    setClaims([...claims, { num, type: 'Method', indDep: 'Dependent', dependsOn: String(num - 1), category: 'Process', notes: '' }])
+  }
+
+  function updateClaim(index, field, value) {
+    const next = [...claims]
+    next[index] = { ...next[index], [field]: value }
+    setClaims(next)
+  }
+
+  function removeClaim(index) {
+    setClaims(claims.filter((_, i) => i !== index))
   }
 
   return (
@@ -199,21 +230,111 @@ export default function PatentAnalysis() {
                   <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Title</th>
                   <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Filed</th>
                   <th className={`text-left py-2 pr-4 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Inventor</th>
-                  <th className={`text-left py-2 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Assignee</th>
+                  <th className={`text-left py-2 font-medium ${dark ? 'text-ink-400' : 'text-ink-500'}`}></th>
                 </tr>
               </thead>
               <tbody>
                 {liveResults.results.slice(0, 10).map((p, i) => (
-                  <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
-                    <td className={`py-2.5 pr-4 mono text-[12px] ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{p.applicationNumber}</td>
+                  <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
+                    <td className="py-2.5 pr-4">
+                      <a href={`https://patentcenter.uspto.gov/applications/${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                        className={`mono text-[12px] underline decoration-dotted underline-offset-2 transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
+                        {p.applicationNumber}
+                      </a>
+                    </td>
                     <td className={`py-2.5 pr-4 font-medium truncate max-w-[250px] ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{p.title}</td>
                     <td className={`py-2.5 pr-4 mono text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.filingDate}</td>
                     <td className={`py-2.5 pr-4 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{p.firstInventor}</td>
-                    <td className={`py-2.5 truncate max-w-[200px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.assignee}</td>
+                    <td className="py-2.5">
+                      <button onClick={(e) => { e.stopPropagation(); selectPatent(p) }}
+                        className={`mono text-[11px] font-medium px-2.5 py-1 rounded transition ${dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25' : 'bg-blu-50 text-blu-500 hover:bg-blu-100'}`}>
+                        Analyze
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Patent — Dynamic Analysis Workspace */}
+      {selectedPatent && (
+        <div className="space-y-6 mb-6">
+          {/* Patent Header — real data */}
+          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
+                <p className={`text-[14px] mt-1 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{selectedPatent.title}</p>
+              </div>
+              <a href={`https://patentcenter.uspto.gov/applications/${selectedPatent.applicationNumber}`}
+                target="_blank" rel="noopener noreferrer"
+                className={`mono text-[11px] px-3 py-1.5 rounded border transition ${dark ? 'border-ink-700 text-blu-400 hover:border-blu-500' : 'border-ink-200 text-blu-500 hover:border-blu-400'}`}>
+                View on USPTO →
+              </a>
+            </div>
+            <div className="flex flex-wrap gap-6 text-[14px]">
+              <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Filing Date:</span> <span className={`font-medium mono ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.filingDate || 'Not available'}</span></div>
+              <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Type:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.type || 'Utility'}</span></div>
+              <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Class:</span> <span className={`font-medium mono ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.class || 'N/A'}</span></div>
+              <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Inventor:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.firstInventor || 'N/A'}</span></div>
+              {selectedPatent.assignee && <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Assignee:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.assignee}</span></div>}
+            </div>
+          </div>
+
+          {/* Editable Claim Map */}
+          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Claim Map</h2>
+              <button onClick={addClaim}
+                className={`mono text-[12px] font-medium px-3 py-1.5 rounded transition ${dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25' : 'bg-blu-50 text-blu-500 hover:bg-blu-100'}`}>
+                + Add Claim
+              </button>
+            </div>
+            <div className="space-y-2">
+              {claims.map((c, i) => (
+                <div key={i} className={`rounded-lg p-3 flex items-center gap-3 flex-wrap ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
+                  <span className={`mono text-[12px] font-bold w-6 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{c.num}</span>
+                  <select value={c.indDep} onChange={e => updateClaim(i, 'indDep', e.target.value)}
+                    className={`rounded px-2 py-1 text-[12px] border ${dark ? 'bg-ink-800 border-ink-700 text-ink-200' : 'bg-white border-ink-200 text-ink-800'}`}>
+                    <option value="Independent">Independent</option>
+                    <option value="Dependent">Dependent</option>
+                  </select>
+                  <select value={c.type} onChange={e => updateClaim(i, 'type', e.target.value)}
+                    className={`rounded px-2 py-1 text-[12px] border ${dark ? 'bg-ink-800 border-ink-700 text-ink-200' : 'bg-white border-ink-200 text-ink-800'}`}>
+                    <option value="Method">Method</option>
+                    <option value="System">System</option>
+                    <option value="Apparatus">Apparatus</option>
+                    <option value="CRM">CRM</option>
+                    <option value="Composition">Composition</option>
+                  </select>
+                  {c.indDep === 'Dependent' && (
+                    <input type="text" value={c.dependsOn} onChange={e => updateClaim(i, 'dependsOn', e.target.value)}
+                      placeholder="Depends on #"
+                      className={`rounded px-2 py-1 text-[12px] border w-20 mono ${dark ? 'bg-ink-800 border-ink-700 text-ink-200' : 'bg-white border-ink-200 text-ink-800'}`} />
+                  )}
+                  <input type="text" value={c.notes} onChange={e => updateClaim(i, 'notes', e.target.value)}
+                    placeholder="Notes (scope, flags, breadth...)"
+                    className={`rounded px-2 py-1 text-[12px] border flex-1 min-w-[150px] ${dark ? 'bg-ink-800 border-ink-700 text-ink-200 placeholder:text-ink-600' : 'bg-white border-ink-200 text-ink-800 placeholder:text-ink-400'}`} />
+                  <button onClick={() => removeClaim(i)} className={`text-[11px] px-2 py-1 rounded transition ${dark ? 'text-red-400 hover:bg-red-400/10' : 'text-red-500 hover:bg-red-50'}`}>✕</button>
+                </div>
+              ))}
+            </div>
+            {claims.length === 0 && (
+              <p className={`text-[13px] text-center py-6 ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
+                Click "+ Add Claim" to start building the claim map, or use <span className="mono">claude /review-claims {selectedPatent.applicationNumber}</span> for automated analysis.
+              </p>
+            )}
+          </div>
+
+          {/* Tip */}
+          <div className={`rounded-xl border p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+            <Info className={`w-4 h-4 mt-0.5 shrink-0 ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
+            <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>
+              For full automated claim analysis with scope assessment, prior art flags, and recommendations, run <span className={`mono font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>/review-claims {selectedPatent.applicationNumber}</span> inside Claude Code with the Markman plugin installed.
+            </p>
           </div>
         </div>
       )}
