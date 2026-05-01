@@ -368,6 +368,23 @@ extract structured data from medical records. Fine-tuned on
 clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
         <P dark={dark}>Searches both USPTO and WIPO for relevant patents, then runs fto-memo skill. Output marked as Attorney Work Product.</P>
 
+        <H3 dark={dark}>/deadlines</H3>
+        <Block dark={dark}>{`/deadlines                    # List all upcoming deadlines
+/deadlines add "ML Patent" "Provisional filing" "2026-05-15"
+/deadlines remove dl-1714500000-a1b2`}</Block>
+        <P dark={dark}>Manages persistent IP deadlines stored locally in <Code dark={dark}>markman-data/deadlines.json</Code>. Shows days remaining and urgency status (OVERDUE, URGENT, UPCOMING, APPROACHING, OK). Skills automatically offer to track deadlines after triage.</P>
+
+        <H3 dark={dark}>/history</H3>
+        <Block dark={dark}>{`/history                      # Show last 10 analyses
+/history patent               # Filter to patent analyses
+/history NEXAFLOW             # Search by keyword`}</Block>
+        <P dark={dark}>Every analysis is logged to <Code dark={dark}>markman-data/history.json</Code> with type, title, summary, risk level, and original input. Search across all past work. Keeps the last 500 entries.</P>
+
+        <H3 dark={dark}>/export-memo</H3>
+        <Block dark={dark}>{`/export-memo                  # Export last analysis as .docx
+/export-memo "Custom Title"   # Export with custom title`}</Block>
+        <P dark={dark}>Generates a formatted Word document with Times New Roman body text, proper heading hierarchy, and a standard AI-assistance disclaimer. FTO memos automatically get "ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL" header. Files saved to <Code dark={dark}>markman-data/exports/</Code>.</P>
+
         {/* ── MCP TOOLS ── */}
         <H2 dark={dark} id="mcp-tools">MCP Tools Reference</H2>
 
@@ -391,7 +408,21 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
           ]}
         />
 
-        <P dark={dark}>Both servers include: rate limiting (50/min USPTO, 30/min WIPO), exponential backoff retry (3 attempts), 429 handling with Retry-After, and fallback endpoints (TSDR for USPTO, PATENTSCOPE for WIPO).</P>
+        <P dark={dark}>Both API servers include rate limiting (50/min USPTO, 30/min WIPO), exponential backoff retry (3 attempts), 429 handling with Retry-After, and fallback endpoints (TSDR for USPTO, PATENTSCOPE for WIPO).</P>
+
+        <H3 dark={dark}>Markman Store: 6 tools</H3>
+        <Table dark={dark}
+          headers={['Tool', 'What it does']}
+          rows={[
+            ['add_deadline', 'Store a tracked IP deadline with matter name, description, date, and risk level'],
+            ['list_deadlines', 'List all deadlines sorted by date with days remaining and urgency status'],
+            ['remove_deadline', 'Remove a tracked deadline by ID'],
+            ['log_matter', 'Record an analysis to persistent history (type, title, summary, risk, input)'],
+            ['search_history', 'Search past analyses by keyword and/or type filter'],
+            ['export_memo', 'Generate a formatted .docx with privilege markings, heading hierarchy, and disclaimer'],
+          ]}
+        />
+        <P dark={dark}>The store server requires no API keys. Data is stored locally in <Code dark={dark}>markman-data/</Code> as JSON files. Word documents export to <Code dark={dark}>markman-data/exports/</Code>.</P>
 
         {/* ── PLAYBOOK ── */}
         <H2 dark={dark} id="playbook">Playbook Configuration</H2>

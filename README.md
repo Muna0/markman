@@ -1,145 +1,139 @@
-# IP Law Plugin for Claude Cowork
+# Markman
 
-An IP law practice plugin for Claude Cowork (also compatible with Claude Code). Provides patent analysis, freedom-to-operate memo drafting, trademark clearance screening, and matter intake triage, with live data from USPTO and WIPO APIs.
+A Claude Code plugin for intellectual property law. Patent claim analysis, trademark clearance, FTO memos, matter intake, deadline tracking, matter history, and Word document export. Connected to live USPTO and WIPO data.
 
-**Disclaimer:** This plugin assists with IP workflows but does not provide legal advice. All AI-generated analysis must be reviewed by licensed attorneys before reliance.
+**This plugin does not provide legal advice.** All AI-generated analysis must be reviewed by licensed attorneys before reliance.
 
-## What's Included
+## What it does
 
-**Skills** (fire automatically when relevant):
-- `patent-analysis` — Compare patent claims, identify independent vs. dependent claims, flag scope issues and prior art red flags
-- `fto-memo` — Structure a freedom-to-operate analysis with claim mapping, non-infringement arguments, design-around options, and risk rating
-- `trademark-screen` — Conduct preliminary trademark clearance with identical/similar mark searches, DuPont factor analysis, and jurisdiction gap assessment
-- `ip-triage` — Intake a new IP matter, classify it, extract key facts, identify deadlines, and assign risk level
+Markman teaches Claude Code how to do structured IP work. You describe what you need in natural language. Claude reads the skill definitions, calls the USPTO and WIPO APIs through MCP servers, references your firm's playbook for risk thresholds and standards, and produces formatted legal analysis output.
 
-**Slash Commands** (invoke explicitly):
-- `/ip:review-claims` — Analyze a patent by number or pasted claims
-- `/ip:fto-analysis` — Run an FTO analysis for a described technology
-- `/ip:tm-clearance` — Screen a proposed mark for clearance
+```
+You: Analyze the claims in US11,234,567
 
-**MCP Connectors** (live API access):
-- `uspto` — USPTO Open Data Portal (patent search, patent details, trademark search, trademark status)
-- `wipo` — WIPO CASE / PATENTSCOPE (international patent search, PCT application details)
+Claude: [reads patent-analysis skill]
+        [calls get_patent_details via USPTO MCP server]
+        [references playbook for claim drafting preferences]
+        [outputs structured claim map, scope assessment, prior art flags]
+```
 
-**Playbook** (customizable practice standards):
-- FTO risk thresholds (HIGH/MEDIUM/LOW)
-- Trademark clearance jurisdiction requirements
+## Components
+
+**Skills** (fire automatically):
+- `patent-analysis` — parse claims, map scope, flag Alice/KSR issues
+- `fto-memo` — element-by-element claim mapping, non-infringement arguments, design-arounds
+- `trademark-screen` — identical/similar mark search, DuPont factor scoring, jurisdiction coverage
+- `ip-triage` — classify IP type, extract facts, identify deadlines, assign risk
+
+**Commands** (invoke explicitly):
+- `/review-claims` — analyze a patent by number or pasted claims
+- `/fto-analysis` — FTO assessment for a described technology
+- `/tm-clearance` — screen a proposed trademark
+- `/deadlines` — view, add, and manage tracked IP deadlines
+- `/history` — search past analyses
+- `/export-memo` — export analysis as formatted Word document
+
+**MCP Servers** (3 servers, 12 tools):
+- `uspto-server` — patent search, patent details, trademark search, trademark status (api.uspto.gov)
+- `wipo-server` — international patent search, PCT application details (wipocase.wipo.int)
+- `markman-store` — deadline tracking, matter history, Word export (local storage)
+
+**Playbook** (configurable):
+- FTO risk thresholds (HIGH/MEDIUM/LOW with required actions)
+- Trademark clearance jurisdictions and recommendation thresholds
 - Patent claim drafting preferences
-- Deadline rules for patents and trademarks
+- Deadline rules with alert intervals (90/60/30/7 days)
 
 ## Installation
 
-### Prerequisites
+Requires Node.js 18+ and Claude Code.
 
-- Node.js 18 or later
-- Claude Desktop app with Cowork enabled (Pro, Max, Team, or Enterprise plan)
-- API keys for USPTO and WIPO (see below)
-
-### Step 1: Install the Plugin
-
-**From Cowork:**
-Upload the plugin folder through the Cowork plugin installer, or use Plugin Create to import it.
-
-**From Claude Code:**
 ```bash
-# Clone or copy the plugin to your local machine
-cd ip-law-plugin
-
-# Install MCP server dependencies
+# Clone and install
+git clone https://github.com/Muna0/markman.git
+cd markman
 npm install
 
-# Install the plugin in Claude Code
+# Add your API keys
+echo "USPTO_API_KEY=your_key" > .env
+echo "WIPO_API_KEY=your_key" >> .env
+
+# Update .mcp.json with your key values
+
+# Install the plugin
 claude plugin install ./
 ```
 
-### Step 2: Get API Keys
+### Getting API keys
 
-**USPTO Open Data Portal:**
-1. Go to https://data.uspto.gov/apis/getting-started
-2. Create an account and request an API key
-3. Set the environment variable: `USPTO_API_KEY=your_key_here`
+**USPTO** (free): Go to data.uspto.gov/myodp. Create a USPTO.gov account, verify with ID.me, and request an API key. The key covers both patent and trademark data.
 
-**WIPO CASE:**
-1. Go to https://www.wipo.int/case/en/
-2. Apply for API access
-3. Set the environment variable: `WIPO_API_KEY=your_key_here`
+**WIPO** (free): Go to wipo.int/case/en. Apply for API access. Approval may take 1-3 business days.
 
-### Step 3: Register MCP Servers with Claude Desktop
+### Testing without API keys
 
-Add the following to your Claude Desktop configuration file:
+The skills still work without API keys. Claude uses its training knowledge to analyze patents and trademarks you paste in directly. The APIs add real-time data lookup by patent number or trademark serial number.
 
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+## Usage
 
-```json
-{
-  "mcpServers": {
-    "uspto": {
-      "command": "node",
-      "args": ["/absolute/path/to/ip-law-plugin/mcp/uspto-server.js"],
-      "env": {
-        "USPTO_API_KEY": "your_uspto_api_key"
-      }
-    },
-    "wipo": {
-      "command": "node",
-      "args": ["/absolute/path/to/ip-law-plugin/mcp/wipo-server.js"],
-      "env": {
-        "WIPO_API_KEY": "your_wipo_api_key"
-      }
-    }
-  }
-}
+Once installed, use Markman by talking to Claude Code naturally or using slash commands:
+
+```
+# Natural language (skills fire automatically)
+You: We're developing an ML recommendation engine. Need to check
+     if it infringes any existing patents.
+
+# Slash commands (explicit invocation)
+You: /review-claims US11,234,567
+You: /tm-clearance NEXAFLOW | SaaS workflow software | US, EU, UK
+You: /fto-analysis Transformer-based medical NER with FHIR output
+
+# Deadline management
+You: /deadlines
+You: /deadlines add "ML Patent" "Provisional filing" "2026-05-15"
+
+# Search past work
+You: /history patent
+You: /history NEXAFLOW
+
+# Export to Word
+You: /export-memo
 ```
 
-Replace `/absolute/path/to/` with the actual path to the plugin directory.
+## Project structure
 
-### Step 4: Restart Claude Desktop
-
-Restart the Claude Desktop app. The MCP servers will start automatically. You should see the tools icon in Cowork indicating the USPTO and WIPO connectors are active.
+```
+markman/
+├── .claude-plugin/plugin.json    # Plugin manifest (v1.1.0)
+├── .mcp.json                     # MCP server configuration
+├── mcp/
+│   ├── uspto-server.js           # USPTO API (4 tools)
+│   ├── wipo-server.js            # WIPO API (2 tools)
+│   └── markman-store.js          # Local store (6 tools)
+├── skills/
+│   ├── patent-analysis.md
+│   ├── fto-memo.md
+│   ├── trademark-screen.md
+│   └── ip-triage.md
+├── commands/
+│   ├── review-claims.md
+│   ├── fto-analysis.md
+│   ├── tm-clearance.md
+│   ├── deadlines.md
+│   ├── history.md
+│   └── export-memo.md
+├── playbooks/ip-playbook.md
+├── markman-data/                 # Local storage (gitignored)
+│   ├── deadlines.json
+│   ├── history.json
+│   └── exports/
+├── frontend/                     # Web dashboard (optional)
+└── markman.html                  # Standalone marketing page
+```
 
 ## Customization
 
-### Playbook
-
-Edit `playbooks/ip-playbook.md` to match your firm's practices:
-- Adjust FTO risk thresholds
-- Change jurisdiction requirements for trademark clearance
-- Modify claim drafting preferences
-- Add or adjust deadline rules
-
-### Skills
-
-Edit the files in `skills/` to adjust analysis workflows, output formats, or add firm-specific instructions.
-
-### Local Overrides
-
-Create a `ip-law.local.md` file in your Cowork shared folder (or `.claude/` directory for Claude Code) to add organization-specific context such as client lists, standard clauses, or internal terminology that should not be committed to the plugin itself.
-
-## Plugin Structure
-
-```
-ip-law-plugin/
-├── .claude-plugin/
-│   └── plugin.json          # Plugin manifest
-├── .mcp.json                # MCP server configuration
-├── skills/
-│   ├── patent-analysis.md   # Patent claim analysis skill
-│   ├── fto-memo.md          # Freedom-to-operate memo skill
-│   ├── trademark-screen.md  # Trademark clearance skill
-│   └── ip-triage.md         # IP matter triage skill
-├── commands/
-│   ├── review-claims.md     # /ip:review-claims command
-│   ├── fto-analysis.md      # /ip:fto-analysis command
-│   └── tm-clearance.md      # /ip:tm-clearance command
-├── mcp/
-│   ├── uspto-server.js      # USPTO Open Data Portal MCP server
-│   └── wipo-server.js       # WIPO CASE API MCP server
-├── playbooks/
-│   └── ip-playbook.md       # Practice standards and thresholds
-├── package.json             # Node.js dependencies
-└── README.md                # This file
-```
+Edit `playbooks/ip-playbook.md` to match your firm's standards. The playbook controls risk thresholds, jurisdiction requirements, claim drafting preferences, deadline rules, and output formatting across all skills.
 
 ## License
 
