@@ -13,6 +13,10 @@
       "env": {
         "WIPO_API_KEY": "test"
       }
+    },
+    "markman-store": {
+      "command": "node",
+      "args": ["mcp/markman-store.js"]
     }
   }
 }
