@@ -111,3 +111,11 @@ Jurisdictions: [list]
 - Common law marks and state registrations require separate investigation
 - If the mark raises descriptiveness issues, note the potential need for a 2(f) acquired distinctiveness showing
 - Reference the ip-playbook.md for jurisdiction minimums and clearance standards
+
+## Required Disclaimers
+
+Every output MUST begin with:
+"This AI-assisted trademark screen does not constitute legal advice and is not a comprehensive clearance search. It must be reviewed by a licensed trademark attorney before filing or commercial use."
+
+Every output MUST end with:
+"LIMITATIONS: This is a preliminary screen based on available data. It does not cover common law marks, state registrations, pending applications not yet published, domain name conflicts, or social media usage. A comprehensive clearance search conducted by a trademark search firm is recommended before filing. This tool does not create an attorney-client relationship."

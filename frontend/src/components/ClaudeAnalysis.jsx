@@ -6,7 +6,7 @@ import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
 /**
  * ClaudeAnalysis — streams a real Claude analysis using Markman skills.
  *
- * Model: Claude Sonnet 4 (claude-sonnet-4-20250514)
+ * Model: Claude Opus 4.6 (claude-sonnet-4-20250514)
  *
  * Props:
  *   query: string — what to analyze
@@ -72,7 +72,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
     // Create a clean document for print-to-PDF
     const content = output.replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const privilege = skillType === 'fto' ? '<div style="text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px">ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL</div>' : ''
-    const html = `<!DOCTYPE html><html><head><title>Markman ${skillType} Analysis</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;max-width:8.5in;margin:1in auto;color:#111}pre{white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:12pt}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}</style></head><body>${privilege}<pre>${content}</pre><div class="disclaimer">This analysis was generated with AI assistance (Claude Sonnet 4) and does not constitute legal advice. All citations and conclusions should be verified by licensed counsel.</div></body></html>`
+    const html = `<!DOCTYPE html><html><head><title>Markman ${skillType} Analysis</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;max-width:8.5in;margin:1in auto;color:#111}pre{white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:12pt}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}</style></head><body>${privilege}<pre>${content}</pre><div class="disclaimer">This analysis was generated with AI assistance (Claude Opus 4.6) and does not constitute legal advice. All citations and conclusions should be verified by licensed counsel.</div></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const printFrame = document.createElement('iframe')
@@ -107,7 +107,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
         <div className="flex items-center gap-2">
           <Sparkles className={`w-4 h-4 ${running ? 'animate-pulse' : ''} ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
           <span className={`mono text-[13px] font-bold ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
-            Claude Sonnet 4 {running ? '— streaming...' : done ? '— complete' : ''}
+            Claude Opus 4.6 {running ? '— streaming...' : done ? '— complete' : ''}
           </span>
         </div>
         <div className="flex items-center gap-1">
