@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Stamp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, MinusCircle } from 'lucide-react'
+import { Stamp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, MinusCircle, ExternalLink } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
+import { api } from '../store/api'
 
 const JURISDICTIONS = ['US', 'EU', 'UK', 'CA', 'AU', 'JP', 'KR', 'IN', 'BR', 'MX']
 
@@ -67,15 +68,116 @@ export default function TrademarkClearance() {
     )
   }
 
-  function handleSubmit(e) {
+  const [liveNote, setLiveNote] = useState('')
+
+  // Generate phonetic variants of a mark
+  function generateVariants(markText) {
+    const m = markText.toUpperCase()
+    const variants = new Set()
+    // Drop vowels
+    variants.add(m.replace(/[AEIOU]/g, ''))
+    // Double letters
+    for (let i = 0; i < m.length; i++) {
+      variants.add(m.slice(0, i) + m[i] + m.slice(i))
+    }
+    // Common substitutions
+    const subs = { 'PH': 'F', 'F': 'PH', 'CK': 'K', 'K': 'CK', 'X': 'CKS', 'C': 'K', 'EE': 'EA', 'I': 'Y', 'Y': 'I' }
+    for (const [from, to] of Object.entries(subs)) {
+      if (m.includes(from)) variants.add(m.replace(from, to))
+    }
+    // Drop last letter
+    variants.add(m.slice(0, -1))
+    // Add common suffixes
+    variants.add(m + 'LY')
+    variants.add(m + 'IO')
+    variants.delete(m) // Remove exact match
+    return [...variants].slice(0, 6)
+  }
+
+  // Calculate string similarity (Levenshtein-based)
+  function similarity(a, b) {
+    const la = a.length, lb = b.length
+    const dp = Array.from({ length: la + 1 }, (_, i) => Array.from({ length: lb + 1 }, (_, j) => i || j))
+    for (let i = 1; i <= la; i++)
+      for (let j = 1; j <= lb; j++)
+        dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] !== b[j-1] ? 1 : 0))
+    return 1 - dp[la][lb] / Math.max(la, lb)
+  }
+
+  // Assess jurisdiction (real logic based on trademark registration systems)
+  function assessJurisdictions(markText, jurisdictions) {
+    return jurisdictions.map(code => {
+      const info = {
+        US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/bin/gate.exe?f=tess&state=4805:1.1.1&p_s_PARA1=${encodeURIComponent(markText)}&p_taession=&p_L=50&p_plural=yes&p_s_PARA2=&p_op_ALL=AND&a_default=search&a_search=Submit+Query&a_search=Submit+Query` },
+        EU: { system: 'First-to-file', office: 'EUIPO', searchUrl: `https://euipo.europa.eu/eSearch/#basic/${encodeURIComponent(markText)}` },
+        UK: { system: 'First-to-file', office: 'UKIPO', searchUrl: `https://trademarks.ipo.gov.uk/ipo-tmtext/page/Results/1/UK00000000000/1/F/0/0/0/0/0/${encodeURIComponent(markText)}` },
+        CA: { system: 'First-to-file (since 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search` },
+        AU: { system: 'First-to-use', office: 'IP Australia', searchUrl: `https://search.ipaustralia.gov.au/trademarks/search/quick` },
+        JP: { system: 'First-to-file', office: 'JPO', searchUrl: null },
+        KR: { system: 'First-to-file', office: 'KIPO', searchUrl: null },
+        IN: { system: 'First-to-use', office: 'Indian TM Registry', searchUrl: null },
+        BR: { system: 'First-to-file', office: 'INPI Brazil', searchUrl: null },
+        MX: { system: 'First-to-file', office: 'IMPI Mexico', searchUrl: null },
+      }
+      return { code, ...info[code], status: 'SEARCH REQUIRED', note: `Search ${info[code]?.office || code} database directly` }
+    })
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!mark.trim() || !goods.trim()) return
     setLoading(true)
     setResult(null)
-    setTimeout(() => {
-      setResult(SAMPLE_RESULT)
-      setLoading(false)
-    }, 2000)
+    setLiveNote('')
+
+    // Generate real analysis
+    const variants = generateVariants(mark.trim())
+    const jurisdictionResults = assessJurisdictions(mark.trim(), selectedJurisdictions)
+
+    // Try live TSDR search
+    try {
+      const data = await api.searchTrademarks(mark.trim())
+      if (data.note) setLiveNote(data.note)
+    } catch {}
+
+    // Build dynamic result
+    const markUpper = mark.trim().toUpperCase()
+    const distinctiveness = /^[A-Z]+$/.test(markUpper) && markUpper.length <= 4 ? 'Arbitrary/Fanciful'
+      : markUpper.includes(' ') ? 'Descriptive (assess further)'
+      : 'Suggestive'
+
+    // Determine Nice classes from goods description
+    const goodsLower = goods.toLowerCase()
+    const niceClasses = []
+    if (goodsLower.includes('software') || goodsLower.includes('app') || goodsLower.includes('download')) niceClasses.push('009')
+    if (goodsLower.includes('saas') || goodsLower.includes('cloud') || goodsLower.includes('platform')) niceClasses.push('042')
+    if (goodsLower.includes('education') || goodsLower.includes('training')) niceClasses.push('041')
+    if (goodsLower.includes('financial') || goodsLower.includes('insurance')) niceClasses.push('036')
+    if (goodsLower.includes('medical') || goodsLower.includes('health')) niceClasses.push('044')
+    if (niceClasses.length === 0) niceClasses.push('042') // default
+
+    const dynamicResult = {
+      mark: markUpper,
+      markType: markUpper.includes(' ') ? 'Word Mark (multiple words)' : 'Word Mark (Standard Characters)',
+      distinctiveness,
+      niceClasses: niceClasses.map(c => `Class ${c}`),
+      registrability: distinctiveness === 'Arbitrary/Fanciful'
+        ? `${markUpper} appears to be a coined or arbitrary term. Strong inherent distinctiveness. Likely registrable.`
+        : distinctiveness === 'Suggestive'
+        ? `${markUpper} may be suggestive of the goods/services. Generally registrable without showing acquired distinctiveness.`
+        : `${markUpper} may be descriptive. May require evidence of acquired distinctiveness (Section 2(f)) for registration.`,
+      variants: variants.map(v => ({ mark: v, similarity: Math.round(similarity(markUpper, v) * 100) })),
+      jurisdictions: jurisdictionResults,
+      selectedGoods: goods,
+      overall: 'SEARCH REQUIRED',
+      recommendation: `Preliminary analysis complete for ${markUpper}. Distinctiveness: ${distinctiveness}. ${variants.length} phonetic variants generated. ${selectedJurisdictions.length} jurisdictions selected. To complete clearance, search each jurisdiction database using the links below. For automated search, run /tm-clearance ${markUpper} | ${goods} | ${selectedJurisdictions.join(', ')} in Claude Code with Markman installed.`,
+    }
+
+    // Log to history
+    api.logMatter('trademark-screen', `TM Clearance: ${markUpper}`, `${distinctiveness} mark in ${niceClasses.join(', ')}. ${selectedJurisdictions.length} jurisdictions.`, 'UNKNOWN', `${mark} | ${goods} | ${selectedJurisdictions.join(', ')}`)
+
+    setResult(dynamicResult)
+    setLoading(false)
   }
 
   return (
@@ -156,164 +258,94 @@ export default function TrademarkClearance() {
       {/* Results */}
       {result && (
         <div className="space-y-6">
-          {/* Overall Assessment Banner */}
-          <div className={`rounded-xl p-6 border ${
-            result.overall === 'DO NOT USE'
-              ? dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200'
-              : result.overall === 'CLEAR WITH RISK'
-                ? dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200'
-                : dark ? 'bg-grn-950/30 border-grn-900' : 'bg-grn-50 border-grn-200'
-          }`}>
-            <div className="flex items-center gap-3 mb-3">
-              {result.overall === 'DO NOT USE' ? <XCircle className={`w-6 h-6 ${dark ? 'text-red-400' : 'text-red-600'}`} /> :
-               result.overall === 'CLEAR WITH RISK' ? <AlertTriangle className={`w-6 h-6 ${dark ? 'text-amb-400' : 'text-amb-600'}`} /> :
-               <CheckCircle2 className={`w-6 h-6 ${dark ? 'text-grn-400' : 'text-grn-600'}`} />}
-              <h2 className="text-xl font-bold">Overall: {result.overall}</h2>
+          {/* Live API note */}
+          {liveNote && (
+            <div className={`rounded-xl p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border border-ink-700/40' : 'bg-ink-50 border border-ink-200'}`}>
+              <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${dark ? 'text-amb-400' : 'text-amb-500'}`} />
+              <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>{liveNote}</p>
             </div>
-            <p className="text-sm">{result.recommendation}</p>
+          )}
+
+          {/* Summary */}
+          <div className={`rounded-xl p-6 border ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+            <p className={`text-[15px] leading-[1.7] ${dark ? 'text-ink-200' : 'text-ink-600'}`}>{result.recommendation}</p>
           </div>
 
           {/* Mark Assessment */}
           <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Mark Assessment</h2>
+            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-ink-950'}`}>Mark Assessment</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className={`rounded-lg p-4 ${dark ? 'bg-ink-800' : 'bg-ink-50'}`}>
-                <p className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold mb-1">Mark Type</p>
-                <p className="text-sm font-medium">{result.markType}</p>
+                <p className={`mono text-[11px] uppercase tracking-wider font-semibold mb-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Mark Type</p>
+                <p className={`text-[14px] font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{result.markType}</p>
               </div>
               <div className={`rounded-lg p-4 ${dark ? 'bg-ink-800' : 'bg-ink-50'}`}>
-                <p className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold mb-1">Distinctiveness</p>
-                <p className="text-sm font-medium">{result.distinctiveness}</p>
+                <p className={`mono text-[11px] uppercase tracking-wider font-semibold mb-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Distinctiveness</p>
+                <p className={`text-[14px] font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{result.distinctiveness}</p>
               </div>
               <div className={`rounded-lg p-4 ${dark ? 'bg-ink-800' : 'bg-ink-50'}`}>
-                <p className="text-[11px] uppercase tracking-wider text-ink-500 font-semibold mb-1">Nice Classes</p>
-                <p className="text-sm font-medium">{result.niceClasses.length} classes</p>
+                <p className={`mono text-[11px] uppercase tracking-wider font-semibold mb-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Nice Classes</p>
+                <p className={`text-[14px] font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{result.niceClasses.join(', ')}</p>
               </div>
             </div>
-            <p className={`text-sm ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{result.registrability}</p>
+            <p className={`text-[14px] leading-[1.6] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{result.registrability}</p>
           </div>
 
-          {/* Identical Marks */}
+          {/* Phonetic Variants — dynamically generated */}
           <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Identical Marks</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Mark</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Serial #</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Owner</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Status</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Class</th>
-                    <th className="text-left py-2 font-medium text-ink-500">Risk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.identicalMarks.map((m, i) => (
-                    <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
-                      <td className="py-3 pr-4 font-bold">{m.mark}</td>
-                      <td className="py-3 pr-4 font-mono text-xs">{m.serial}</td>
-                      <td className="py-3 pr-4">{m.owner}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-100 text-ink-600'}`}>{m.status}</span>
-                      </td>
-                      <td className="py-3 pr-4">{m.class}</td>
-                      <td className="py-3"><RiskIcon risk={m.risk} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Similar Marks */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Similar Marks</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Mark</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Serial #</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Owner</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Status</th>
-                    <th className="text-left py-2 pr-4 font-medium text-ink-500">Similarity</th>
-                    <th className="text-left py-2 font-medium text-ink-500">Risk</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.similarMarks.map((m, i) => (
-                    <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
-                      <td className="py-3 pr-4 font-bold">{m.mark}</td>
-                      <td className="py-3 pr-4 font-mono text-xs">{m.serial}</td>
-                      <td className="py-3 pr-4">{m.owner}</td>
-                      <td className="py-3 pr-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          m.status === 'REGISTERED'
-                            ? dark ? 'bg-grn-950 text-grn-400' : 'bg-grn-100 text-grn-700'
-                            : dark ? 'bg-blu-950 text-blu-400' : 'bg-blu-100 text-blu-700'
-                        }`}>{m.status}</span>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-16 h-2 rounded-full overflow-hidden ${dark ? 'bg-ink-700' : 'bg-ink-200'}`}>
-                            <div
-                              className={`h-full rounded-full ${
-                                m.similarity > 0.7 ? 'bg-red-500' : m.similarity > 0.4 ? 'bg-amb-500' : 'bg-grn-500'
-                              }`}
-                              style={{ width: `${m.similarity * 100}%` }}
-                            />
-                          </div>
-                          <span className="text-xs font-mono">{Math.round(m.similarity * 100)}%</span>
-                        </div>
-                      </td>
-                      <td className="py-3"><RiskIcon risk={m.risk} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* DuPont Factors */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Likelihood of Confusion (DuPont Factors)</h2>
-            <div className="space-y-3">
-              {result.dupontFactors.map((f, i) => (
-                <div key={i} className={`rounded-lg p-4 border ${dark ? 'bg-ink-800 border-ink-700' : 'bg-ink-50 border-ink-200'}`}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{f.factor}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      f.score === 'HIGH'
-                        ? dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700'
-                        : f.score === 'MEDIUM'
-                          ? dark ? 'bg-amb-950 text-amb-400' : 'bg-amb-100 text-amb-700'
-                          : f.score === 'LOW'
-                            ? dark ? 'bg-grn-950 text-grn-400' : 'bg-grn-100 text-grn-700'
-                            : dark ? 'bg-ink-700 text-ink-400' : 'bg-ink-200 text-ink-500'
-                    }`}>{f.score}</span>
+            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-ink-950'}`}>Phonetic Variants to Search</h2>
+            <p className={`text-[13px] mb-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              These are automatically generated variants that should be searched for conflicts (sound-alikes, misspellings, common substitutions):
+            </p>
+            <div className="space-y-2">
+              {result.variants.map((v, i) => (
+                <div key={i} className={`flex items-center justify-between rounded-lg px-4 py-2.5 ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
+                  <span className={`mono text-[14px] font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{v.mark}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 w-28">
+                      <div className={`flex-1 h-2 rounded-full overflow-hidden ${dark ? 'bg-ink-700' : 'bg-ink-200'}`}>
+                        <div className={`h-full rounded-full ${v.similarity > 80 ? 'bg-red-400' : v.similarity > 60 ? 'bg-amb-400' : 'bg-grn-400'}`} style={{ width: `${v.similarity}%` }} />
+                      </div>
+                      <span className={`mono text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{v.similarity}%</span>
+                    </div>
+                    <span className={`mono text-[10px] px-2 py-0.5 rounded font-bold ${
+                      v.similarity > 80 ? (dark ? 'bg-red-400/15 text-red-400' : 'bg-red-100 text-red-500')
+                      : v.similarity > 60 ? (dark ? 'bg-amb-400/15 text-amb-400' : 'bg-amb-100 text-amb-500')
+                      : (dark ? 'bg-grn-400/15 text-grn-400' : 'bg-grn-100 text-grn-500')
+                    }`}>{v.similarity > 80 ? 'HIGH' : v.similarity > 60 ? 'MEDIUM' : 'LOW'}</span>
                   </div>
-                  <p className={`text-xs ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{f.detail}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Jurisdiction Map */}
+          {/* Jurisdiction Coverage — with live search links */}
           <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className="text-lg font-semibold mb-4">Jurisdiction Coverage</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <h2 className={`text-lg font-semibold mb-2 ${dark ? 'text-white' : 'text-ink-950'}`}>Jurisdiction Coverage</h2>
+            <p className={`text-[13px] mb-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              Click "Search" to open each trademark office database directly. First-to-file jurisdictions require registration for priority. First-to-use jurisdictions recognize rights from commercial use.
+            </p>
+            <div className="space-y-2">
               {result.jurisdictions.map(j => (
-                <div key={j.code} className={`rounded-lg p-4 border text-center ${
-                  j.status === 'CLEAR'
-                    ? dark ? 'bg-grn-950/30 border-grn-900' : 'bg-grn-50 border-grn-200'
-                    : j.status === 'CONFLICT'
-                      ? dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200'
-                      : dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200'
-                }`}>
-                  <p className="text-2xl font-bold mb-1">{j.code}</p>
-                  <JurisdictionStatus status={j.status} dark={dark} />
-                  <p className={`text-xs mt-2 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{j.detail}</p>
+                <div key={j.code} className={`flex items-center justify-between rounded-lg px-4 py-3 ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
+                  <div className="flex items-center gap-3">
+                    <span className={`mono text-[14px] font-bold w-8 ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{j.code}</span>
+                    <div>
+                      <span className={`text-[13px] ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{j.office}</span>
+                      <span className={`text-[12px] ml-2 ${dark ? 'text-ink-500' : 'text-ink-400'}`}>({j.system})</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`mono text-[10px] px-2 py-0.5 rounded font-bold ${dark ? 'bg-amb-400/15 text-amb-400' : 'bg-amb-100 text-amb-500'}`}>
+                      SEARCH REQUIRED
+                    </span>
+                    {j.searchUrl && (
+                      <a href={j.searchUrl} target="_blank" rel="noopener noreferrer"
+                        className={`mono text-[11px] font-medium px-2.5 py-1 rounded flex items-center gap-1 transition ${dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25' : 'bg-blu-50 text-blu-500 hover:bg-blu-100'}`}>
+                        Search <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
