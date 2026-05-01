@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FlaskConical, ChevronRight, Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const SAMPLE_RESULT = {
   patent: 'US 11,987,654',
@@ -329,13 +330,12 @@ export default function PatentAnalysis() {
             )}
           </div>
 
-          {/* Tip */}
-          <div className={`rounded-xl border p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
-            <Info className={`w-4 h-4 mt-0.5 shrink-0 ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
-            <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>
-              For full automated claim analysis with scope assessment, prior art flags, and recommendations, run <span className={`mono font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>/review-claims {selectedPatent.applicationNumber}</span> inside Claude Code with the Markman plugin installed.
-            </p>
-          </div>
+          {/* Claude Analysis */}
+          <ClaudeAnalysis
+            query={`Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}
+            skillType="patent"
+            context={`Patent: ${selectedPatent.applicationNumber}\nTitle: ${selectedPatent.title}\nFiling Date: ${selectedPatent.filingDate}\nType: ${selectedPatent.type}\nClass: ${selectedPatent.class}\nInventor: ${selectedPatent.firstInventor}\nAssignee: ${selectedPatent.assignee}`}
+          />
         </div>
       )}
 

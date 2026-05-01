@@ -75,16 +75,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ─── Status ───
-app.get("/api/status", (req, res) => {
-  res.json({
-    uspto: USPTO_API_KEY ? "configured" : "missing",
-    wipo: WIPO_API_KEY ? "configured" : "missing",
-    deadlines: readJSON(DEADLINES_FILE).length,
-    history: readJSON(HISTORY_FILE).length,
-  });
-});
-
 // ─── Patent search ───
 app.post("/api/patents/search", async (req, res) => {
   try {
@@ -305,9 +295,119 @@ app.get("/api/export/download/:filename", (req, res) => {
   res.download(filepath);
 });
 
+// ─── Claude Analysis (the bridge) ───
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
+
+// Load skill files as system prompts
+function loadSkill(skillType) {
+  const skillMap = {
+    "patent": "skills/patent-analysis.md",
+    "trademark": "skills/trademark-screen.md",
+    "fto": "skills/fto-memo.md",
+    "intake": "skills/ip-triage.md",
+  };
+  const filepath = path.join(__dirname, skillMap[skillType] || skillMap["patent"]);
+  if (!fs.existsSync(filepath)) return "";
+  return fs.readFileSync(filepath, "utf-8");
+}
+
+function loadPlaybook() {
+  const filepath = path.join(__dirname, "playbooks/ip-playbook.md");
+  if (!fs.existsSync(filepath)) return "";
+  return fs.readFileSync(filepath, "utf-8");
+}
+
+app.post("/api/analyze", async (req, res) => {
+  if (!ANTHROPIC_API_KEY) {
+    return res.status(400).json({ error: "ANTHROPIC_API_KEY not configured. Add it to your .env file." });
+  }
+
+  const { query, skillType, context } = req.body;
+  if (!query) return res.status(400).json({ error: "query is required" });
+
+  const skill = loadSkill(skillType || "patent");
+  const playbook = loadPlaybook();
+
+  const systemPrompt = `You are Markman, an IP law analysis assistant. Follow this skill definition exactly:
+
+${skill}
+
+Reference these practice standards:
+
+${playbook}
+
+${context ? `Additional context:\n${context}` : ""}
+
+Important:
+- Produce structured, formatted output following the skill's output template
+- Use Bluebook citation format where applicable
+- Include a limitations section
+- Be specific and actionable`;
+
+  // Set up SSE streaming
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  try {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
+
+    const stream = await client.messages.stream({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 4096,
+      system: systemPrompt,
+      messages: [{ role: "user", content: query }],
+    });
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta?.text) {
+        res.write(`data: ${JSON.stringify({ text: event.delta.text })}\n\n`);
+      }
+    }
+
+    // Final message
+    const finalMessage = await stream.finalMessage();
+    res.write(`data: ${JSON.stringify({ done: true, usage: finalMessage.usage })}\n\n`);
+    res.end();
+
+    // Log to history
+    const fullText = finalMessage.content.map(c => c.text || "").join("");
+    const historyAll = readJSON(HISTORY_FILE);
+    historyAll.unshift({
+      id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      type: `${skillType || "patent"}-analysis`,
+      title: query.slice(0, 80),
+      summary: fullText.slice(0, 200),
+      risk: "ANALYZED",
+      input: query,
+      timestamp: new Date().toISOString(),
+    });
+    if (historyAll.length > 500) historyAll.length = 500;
+    writeJSON(HISTORY_FILE, historyAll);
+
+  } catch (err) {
+    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+    res.end();
+  }
+});
+
+// Check if Claude API is configured
+app.get("/api/status", (req, res) => {
+  res.json({
+    uspto: USPTO_API_KEY ? "configured" : "missing",
+    wipo: WIPO_API_KEY ? "configured" : "missing",
+    claude: ANTHROPIC_API_KEY ? "configured" : "missing",
+    deadlines: readJSON(DEADLINES_FILE).length,
+    history: readJSON(HISTORY_FILE).length,
+  });
+});
+
 // ─── Start ───
 app.listen(PORT, () => {
   console.log(`Markman API server running on http://localhost:${PORT}`);
-  console.log(`  USPTO API: ${USPTO_API_KEY ? "configured" : "NOT SET"}`);
-  console.log(`  WIPO API:  ${WIPO_API_KEY ? "configured" : "NOT SET"}`);
+  console.log(`  USPTO API:    ${USPTO_API_KEY ? "configured" : "NOT SET"}`);
+  console.log(`  WIPO API:     ${WIPO_API_KEY ? "configured" : "NOT SET"}`);
+  console.log(`  Claude API:   ${ANTHROPIC_API_KEY ? "configured" : "NOT SET"}`);
 });

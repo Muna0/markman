@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { ShieldCheck, ChevronRight, Loader2, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
+import { api } from '../store/api'
+import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const SAMPLE_RESULT = {
   risk: 'MEDIUM',
@@ -127,9 +129,10 @@ export default function FtoAnalysis() {
     setLoading(true)
     setResult(null)
     setTimeout(() => {
-      setResult(SAMPLE_RESULT)
+      setResult({ ...SAMPLE_RESULT, userQuery: description })
       setLoading(false)
-    }, 2500)
+      api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis started', 'UNKNOWN', description)
+    }, 1000)
   }
 
   return (
@@ -302,8 +305,15 @@ export default function FtoAnalysis() {
             </div>
           ))}
 
+          {/* Claude Full FTO Analysis */}
+          <ClaudeAnalysis
+            query={`Run a full freedom-to-operate analysis for this technology: ${result.userQuery || description}. Identify potentially blocking patents, map claim limitations against the technology element-by-element, rate non-infringement arguments, propose design-arounds, and provide an overall FTO risk rating (HIGH/MEDIUM/LOW).`}
+            skillType="fto"
+            context={`Technology description: ${result.userQuery || description}`}
+          />
+
           {/* Disclaimer */}
-          <div className={`rounded-lg border p-4 text-xs italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
+          <div className={`rounded-lg border p-4 text-[13px] italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
             This FTO analysis is a risk assessment and does not constitute a definitive "freedom to operate" opinion. Analysis covers U.S. patents only. All patent numbers, claim constructions, and legal conclusions should be verified by licensed patent counsel before reliance.
           </div>
         </div>
