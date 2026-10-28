@@ -37,8 +37,10 @@ export const api = {
     const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'markman-memo.docx'
     const url = URL.createObjectURL(await res.blob())
     const a = Object.assign(document.createElement('a'), { href: url, download: name })
+    document.body.appendChild(a)
     a.click()
-    URL.revokeObjectURL(url)
+    a.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 1000)
   },
 
   // Claude Analysis (streaming)
