@@ -2,13 +2,12 @@ import { useState } from 'react'
 import { useTheme } from '../store/ThemeContext'
 import {
   BookOpen, Terminal, Server, Layers, ArrowUpRight,
-  FlaskConical, Stamp, ShieldCheck, FileSearch, Zap, Clock, Shield, Check, X,
+  FlaskConical, Stamp, ShieldCheck, FileSearch, Zap, Clock, Shield,
 } from 'lucide-react'
 
 const sections = [
   { id: 'why', label: 'Why Markman' },
   { id: 'how-claude', label: 'How It Works with Claude' },
-  { id: 'comparison', label: 'vs. Competitors' },
   { id: 'architecture', label: 'Architecture' },
   { id: 'skills', label: 'Skills (4)' },
   { id: 'commands', label: 'Commands (3)' },
@@ -56,12 +55,6 @@ function Table({ dark, headers, rows }) {
   )
 }
 
-function ComparisonCheck({ yes }) {
-  return yes
-    ? <Check className="w-4 h-4 text-grn-400" />
-    : <X className="w-4 h-4 text-ink-600" />
-}
-
 export default function Docs() {
   const { dark } = useTheme()
   const [activeSection, setActiveSection] = useState('why')
@@ -101,23 +94,20 @@ export default function Docs() {
           Every IP attorney does the same research: search USPTO Trademark Search for conflicting marks, parse patent claims into a dependency tree, map claim limitations against a product for FTO, classify incoming matters by type and deadline. They do it in browser tabs, Word documents, and spreadsheets. Disconnected from each other and disconnected from the data sources.
         </P>
         <P dark={dark}>
-          The existing tools (PatSnap, Derwent, IPlytics, Clarivate) are built for large enterprises. They cost $20,000 to $100,000 or more per year, require separate logins, and do not integrate into an attorney's actual workflow. They are databases with graphical interfaces, not workflow tools.
-        </P>
-        <P dark={dark}>
-          Markman takes a fundamentally different approach. It is a <strong>Claude Code plugin</strong> that brings IP analysis into the environment where attorneys already work. Instead of switching to a separate platform, you describe what you need in natural language and get structured, citation ready output connected to live USPTO and WIPO data through MCP servers.
+          Markman is a free, open-source <strong>Claude Code plugin</strong> that brings structured IP workflows into the terminal or editor. You describe what you need in natural language and Markman drafts structured analysis for attorney review, using USPTO patent data (and WIPO data, if you add a WIPO key) through MCP servers. Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney.
         </P>
 
         <div className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
-          <p className={`text-[17px] font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>What makes Markman different:</p>
+          <p className={`text-[17px] font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>What Markman offers:</p>
           <div className="space-y-3">
             {[
-              'Runs inside Claude Code with no separate login and no context switching',
+              'Runs inside Claude Code, with no separate login',
               'Skills fire automatically when you discuss IP matters in conversation',
-              'Connected to live USPTO and WIPO APIs, not a stale database snapshot',
-              'Outputs are structured for attorney use: Bluebook citations, privilege markings, limitations sections',
+              'Uses the USPTO API for patent data; WIPO data requires your own WIPO key and is not available on the public demo',
+              'Drafts are structured for attorney review, with citations to check and a limitations section',
               'Fully configurable playbook to match your firm\'s specific thresholds and standards',
               'Open source (Apache 2.0) so you can inspect every line, self host, and modify freely',
-              'Free API keys because USPTO and WIPO data access costs nothing',
+              'USPTO and WIPO API keys are free to request',
             ].map(item => (
               <div key={item} className="flex items-start gap-3">
                 <Zap className={`w-4 h-4 mt-1 shrink-0 ${dark ? 'text-grn-400' : 'text-grn-500'}`} />
@@ -130,7 +120,7 @@ export default function Docs() {
         {/* ── HOW IT WORKS WITH CLAUDE ── */}
         <H2 dark={dark} id="how-claude">How It Works with Claude</H2>
         <P dark={dark}>
-          Markman is a <strong>Claude Code plugin</strong>. It does not run as a standalone app. It extends Claude Code with IP-specific capabilities. Here's the exact flow from your prompt to structured legal output:
+          Markman is a <strong>Claude Code plugin</strong>. It does not run as a standalone app. It extends Claude Code with IP-specific capabilities. Here is the flow from your prompt to a structured draft:
         </P>
 
         <H3 dark={dark}>Step 1: You talk to Claude normally</H3>
@@ -155,9 +145,9 @@ similarity search.`}</Block>
               'Claude reads the fto-memo skill definition (skills/fto-memo.md)',
               'Claude reads the playbook (playbooks/ip-playbook.md) for your firm\'s risk thresholds',
               'Claude calls the USPTO MCP server → search_patents tool to find relevant patents',
-              'Claude calls the WIPO MCP server → search_international_patents for PCT coverage',
+              'If a WIPO key is set, Claude calls the WIPO MCP server → search_international_patents for PCT coverage',
               'Claude maps each claim limitation against your technology description',
-              'Claude generates a structured FTO memo with risk rating, non-infringement arguments, and design-arounds',
+              'Claude drafts a structured FTO analysis for attorney review, with a preliminary risk rating, possible non-infringement positions, and design-around ideas',
             ].map((step, i) => (
               <div key={i} className="flex items-start gap-2">
                 <span className={`text-[15px] font-bold mono w-4 shrink-0 mt-0.5 ${dark ? 'text-blu-400' : 'text-blu-500'}`}>{i + 1}.</span>
@@ -167,9 +157,9 @@ similarity search.`}</Block>
           </div>
         </div>
 
-        <H3 dark={dark}>Step 3: MCP servers fetch live data</H3>
+        <H3 dark={dark}>Step 3: MCP servers fetch patent data</H3>
         <P dark={dark}>
-          When Claude needs real patent or trademark data, it calls the MCP servers. These are Node.js processes that run locally on your machine, connecting to the USPTO and WIPO APIs with your API keys. Claude does not make the API calls directly. The MCP protocol handles this separation.
+          When Claude needs patent data or a trademark status record, it calls the MCP servers. These are Node.js processes that run locally on your machine, connecting to the USPTO API (and the WIPO API, if you have a key) with your API keys. Claude does not make the API calls directly. The MCP protocol handles this separation.
         </P>
         <Block dark={dark}>{`Claude ──────► MCP Server (local) ──────► USPTO API
                    │                         │
@@ -179,13 +169,13 @@ similarity search.`}</Block>
                    │                         │
                    ◄────── structured JSON ◄──┘`}</Block>
 
-        <H3 dark={dark}>Step 4: You get structured output</H3>
+        <H3 dark={dark}>Step 4: You review a structured draft</H3>
         <P dark={dark}>
-          Claude responds with a formatted analysis: not a wall of text, but a structured document following IP legal conventions. The output respects your playbook settings: risk thresholds, citation format, privilege markings, and deadline rules.
+          Claude responds with a structured draft that follows your playbook settings: risk thresholds, citation format, and deadline rules. The draft is a starting point for attorney review, not a finished opinion. You decide how to label and protect your own work product.
         </P>
-        <Block dark={dark}>{`Claude: Based on my analysis, here is your FTO assessment:
+        <Block dark={dark}>{`Claude: Here is a draft FTO analysis for your review:
 
-ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL
+DRAFT FOR ATTORNEY REVIEW
 
 EXECUTIVE SUMMARY
 Overall Risk: MEDIUM
@@ -228,61 +218,19 @@ Claim 5 (Independent, System)   Machine
 
 You: /tm-clearance NEXAFLOW | AI workflow software | US, EU, UK
 
-Claude: Searching USPTO for identical and similar marks...
-[calls search_trademarks via MCP]
+Claude: USPTO has no trademark text search API.
+Search NEXAFLOW at tmsearch.uspto.gov and paste any
+similar marks you find. Drafting the screen now...
 
-TRADEMARK CLEARANCE: NEXAFLOW
-Overall: CLEAR WITH RISK
-US: CONFLICT / NEXFLOW (Class 042, 85% similar)
-EU: CLEAR
-UK: CLEAR
+DRAFT TRADEMARK SCREEN: NEXAFLOW
+Distinctiveness: likely fanciful
+Phonetic variants to search: NEXFLOW, NEXA FLOW, NEKSAFLOW
+DuPont factors: assessed against marks you provide
 ...`}</Block>
 
-        <H3 dark={dark}>The key insight</H3>
+        <H3 dark={dark}>How the pieces fit</H3>
         <P dark={dark}>
-          Markman does not replace Claude. It teaches Claude how to do IP work properly. The skills are structured prompts. The MCP servers are data pipes. The playbook is configuration. Claude does the reasoning, Markman provides the structure and the data. That's why it's a plugin, not a separate product.
-        </P>
-
-        {/* ── COMPARISON ── */}
-        <H2 dark={dark} id="comparison">Markman vs. Existing IP Tools</H2>
-        <P dark={dark}>
-          Here's how Markman compares to the established IP intelligence platforms. This is not about being "better." It is about being a fundamentally different kind of tool.
-        </P>
-
-        <div className="overflow-x-auto mb-6">
-          <table className="w-full text-[15px]">
-            <thead><tr className={`border-b ${dark ? 'border-ink-700' : 'border-ink-200'}`}>
-              {['Feature', 'Markman', 'PatSnap', 'Derwent / Clarivate', 'IPlytics'].map(h => (
-                <th key={h} className={`text-left py-2 pr-3 font-semibold ${h === 'Markman' ? 'text-grn-400' : dark ? 'text-ink-300' : 'text-ink-600'}`}>{h}</th>
-              ))}
-            </tr></thead>
-            <tbody>
-              {[
-                ['Live USPTO API', <ComparisonCheck yes />, <ComparisonCheck yes />, <ComparisonCheck yes />, <ComparisonCheck yes />],
-                ['Live WIPO API', <ComparisonCheck yes />, <ComparisonCheck yes />, <ComparisonCheck yes />, <ComparisonCheck yes />],
-                ['Claim parsing & scope analysis', <ComparisonCheck yes />, <ComparisonCheck yes />, <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />],
-                ['FTO memo generation', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['DuPont factor analysis', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Matter intake & triage', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Works inside CLI/editor', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Natural language interface', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Configurable playbook', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Open source', <ComparisonCheck yes />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />, <X className="w-4 h-4 text-ink-600" />],
-                ['Cost', '$0', '$15k–$50k/yr', '$20k–$100k/yr', '$10k–$30k/yr'],
-                ['Setup time', '5 minutes', 'Weeks', 'Weeks', 'Weeks'],
-              ].map((row, i) => (
-                <tr key={i} className={`border-b last:border-0 ${dark ? 'border-white/10' : 'border-ink-100'}`}>
-                  {row.map((cell, j) => (
-                    <td key={j} className={`py-2.5 pr-3 ${j === 0 ? 'font-semibold' : ''} ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{cell}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <P dark={dark}>
-          PatSnap and Derwent are powerful patent analytics platforms. They excel at landscape analysis, prior art search at scale, and portfolio management. IPlytics specializes in standard-essential patents. Markman doesn't try to replace these. It fills a gap they don't cover: <strong>structured legal analysis output</strong> (FTO memos, DuPont scoring, claim scope assessment) delivered inside the attorney's existing workflow, for free.
+          The skills are structured prompts. The MCP servers are data pipes. The playbook is configuration. Claude does the drafting, Markman provides the structure and the data, and the attorney reviews and decides. That is why it is a plugin, not a separate product.
         </P>
 
         {/* ── ARCHITECTURE ── */}
@@ -328,8 +276,8 @@ UK: CLEAR
 
         {[
           { name: 'patent-analysis', trigger: 'Patent review, claim comparison, patentability', steps: ['Parse claims → classify independent/dependent → map dependency chain', 'Assess scope per limitation → flag breadth issues, means-plus-function, §112(b)', 'Compare across patents → element mapping, double patenting risk', 'Surface prior art red flags → KSR obviousness, Alice/Mayo §101', 'Output: claim map, scope assessment, risks, recommendations'] },
-          { name: 'trademark-screen', trigger: 'Trademark search, clearance, brand naming', steps: ['Characterize mark type and distinctiveness → identify Nice classes', 'Search identical marks via USPTO → flag same-class BLOCKING hits', 'Generate phonetic variants → search each → sight/sound/meaning test', 'Score all 8 DuPont factors per conflict → HIGH/MEDIUM/LOW', 'Map jurisdiction coverage → flag first-to-file vs first-to-use gaps', 'Output: CLEAR / CLEAR WITH RISK / DO NOT USE per jurisdiction'] },
-          { name: 'fto-memo', trigger: 'FTO, freedom to operate, infringement risk', steps: ['Summarize technology under analysis → identify key elements', 'Search for patents with claims reading on technology', 'Map each claim limitation element-by-element → doctrine of equivalents', 'Rate non-infringement arguments STRONG / MODERATE / WEAK', 'Propose design-arounds for HIGH/MEDIUM risk claims', 'Output: privileged FTO memo with risk rating and recommendations'] },
+          { name: 'trademark-screen', trigger: 'Trademark search, clearance, brand naming', steps: ['Characterize mark type and distinctiveness → identify Nice classes', 'Point to USPTO Trademark Search for the knockout search → flag same-class conflicts in marks you provide', 'Generate phonetic variants to search → sight/sound/meaning test', 'Score all 8 DuPont factors per conflict → HIGH/MEDIUM/LOW', 'Map jurisdiction coverage → flag first-to-file vs first-to-use gaps', 'Output: draft screen with a preliminary CLEAR / CLEAR WITH RISK / DO NOT USE rating per jurisdiction, for attorney review'] },
+          { name: 'fto-memo', trigger: 'FTO, freedom to operate, infringement risk', steps: ['Summarize technology under analysis → identify key elements', 'Search for patents with claims reading on technology', 'Map each claim limitation element-by-element → doctrine of equivalents', 'Rate non-infringement arguments STRONG / MODERATE / WEAK', 'Propose design-arounds for HIGH/MEDIUM risk claims', 'Output: draft FTO analysis for attorney review, with a preliminary risk rating and suggested next steps'] },
           { name: 'ip-triage (matter intake)', trigger: 'New matter intake, IP question classification', steps: ['Classify as Patent / Trademark / Trade Secret / Copyright', 'Extract type-specific key facts (invention details, mark/goods, secrecy measures, or authorship)', 'Identify deadlines from playbook → flag <60 days as URGENT', 'Assign risk: HIGH (<30d deadline, active litigation) / MEDIUM / LOW', 'Output: classification, facts, deadline table, risk, next steps, routing'] },
         ].map(skill => (
           <div key={skill.name} className="mb-8">
@@ -359,13 +307,13 @@ UK: CLEAR
         <H3 dark={dark}>/tm-clearance</H3>
         <Block dark={dark}>{`/tm-clearance NEXAFLOW | SaaS workflow software | US, EU, UK, CA
 /tm-clearance BRIGHTPATH | Educational consulting`}</Block>
-        <P dark={dark}>Format: <Code dark={dark}>mark | goods_services | jurisdictions (optional)</Code>. Uses <Code dark={dark}>search_trademarks</Code> and <Code dark={dark}>check_trademark_status</Code>.</P>
+        <P dark={dark}>Format: <Code dark={dark}>mark | goods_services | jurisdictions (optional)</Code>. USPTO has no trademark text search API, so Markman links to USPTO Trademark Search for the knockout search. <Code dark={dark}>check_trademark_status</Code> looks up a mark by serial number.</P>
 
         <H3 dark={dark}>/fto-analysis</H3>
         <Block dark={dark}>{`/fto-analysis Our product uses a transformer-based model to
 extract structured data from medical records. Fine-tuned on
 clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
-        <P dark={dark}>Searches both USPTO and WIPO for relevant patents, then runs fto-memo skill. Output marked as Attorney Work Product.</P>
+        <P dark={dark}>Searches USPTO (and WIPO, if a WIPO key is set) for relevant patents, then runs the fto-memo skill. Output is a draft for attorney review.</P>
 
         <H3 dark={dark}>/deadlines</H3>
         <Block dark={dark}>{`/deadlines                    # List all upcoming deadlines
@@ -382,7 +330,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
         <H3 dark={dark}>/export-memo</H3>
         <Block dark={dark}>{`/export-memo                  # Export last analysis as .docx
 /export-memo "Custom Title"   # Export with custom title`}</Block>
-        <P dark={dark}>Generates a formatted Word document with Times New Roman body text, proper heading hierarchy, and a standard AI-assistance disclaimer. FTO memos automatically get "ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL" header. Files saved to <Code dark={dark}>markman-data/exports/</Code>.</P>
+        <P dark={dark}>Generates a Word document with Times New Roman body text, a heading hierarchy, and a disclaimer. Every export is marked "DRAFT FOR ATTORNEY REVIEW". Markman does not apply privilege or work-product labels; you decide how to label and protect your work. Files saved to <Code dark={dark}>markman-data/exports/</Code>.</P>
 
         {/* ── MCP TOOLS ── */}
         <H2 dark={dark} id="mcp-tools">MCP Tools Reference</H2>
@@ -393,7 +341,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
           rows={[
             ['search_patents', 'query: string', 'Patent results: number, title, abstract, dates, assignee, inventors, claim count'],
             ['get_patent_details', 'patent_number: string', 'Full patent: claims text, classifications (CPC/USPC), references, maintenance status'],
-            ['search_trademarks', 'mark_text: string', 'Trademark results: serial/reg number, mark, status, owner, Nice classes, goods/services'],
+            ['search_trademarks', 'mark_text: string', 'No results (USPTO has no trademark text search API); returns a link to USPTO Trademark Search'],
             ['check_trademark_status', 'serial_number: string', 'Full status: dates, owner, attorneys, renewal date, filing basis, live/dead'],
           ]}
         />
@@ -418,7 +366,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             ['remove_deadline', 'Remove a tracked deadline by ID'],
             ['log_matter', 'Record an analysis to persistent history (type, title, summary, risk, input)'],
             ['search_history', 'Search past analyses by keyword and/or type filter'],
-            ['export_memo', 'Generate a formatted .docx with privilege markings, heading hierarchy, and disclaimer'],
+            ['export_memo', 'Generate a .docx marked as a draft for attorney review, with heading hierarchy and disclaimer'],
           ]}
         />
         <P dark={dark}>The store server requires no API keys. Data is stored locally in <Code dark={dark}>markman-data/</Code> as JSON files. Word documents export to <Code dark={dark}>markman-data/exports/</Code>.</P>
@@ -436,14 +384,14 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             ['TM Clearance Standards', 'Jurisdictions, recommendation thresholds', 'Default: US, EU, UK, CA. CLEAR / CLEAR WITH RISK / DO NOT USE'],
             ['Patent Claim Drafting', 'Language preferences for claim output', '"comprising" (open), "configured to" over "adapted to", avoid means-plus-function'],
             ['Deadline Rules', 'Alert intervals and deadline definitions', 'Alerts at 90, 60, 30, 7 days. Patent + trademark deadlines with grace periods'],
-            ['General Standards', 'Output formatting', 'Bluebook citations, privilege markings, AI disclaimers, limitations sections'],
+            ['General Standards', 'Output formatting', 'Citation format, disclaimers, limitations sections'],
           ]}
         />
 
         {/* ── APIS & TESTING ── */}
         <H2 dark={dark} id="apis">APIs & Testing Guide</H2>
         <P dark={dark}>
-          Markman connects to two free APIs. Here's exactly what each one does, how to get keys, and how to test the full pipeline.
+          Markman connects to two APIs with free keys. Here is what each one does, how to get keys, and how to test the pipeline. WIPO data requires your own WIPO key and is not available on the public demo.
         </P>
 
         <H3 dark={dark}>USPTO Open Data Portal API</H3>
@@ -455,7 +403,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
           rows={[
             ['Patent full-text search', 'search_patents', 'data.uspto.gov/api/v1/patents/search'],
             ['Patent details (claims, classifications, prosecution)', 'get_patent_details', 'data.uspto.gov/api/v1/patents/{number}'],
-            ['Trademark registration search', 'search_trademarks', 'data.uspto.gov/api/v1/trademarks/search'],
+            ['Trademark search (not available by API)', 'search_trademarks', 'Links to tmsearch.uspto.gov'],
             ['Trademark status lookup', 'check_trademark_status', 'data.uspto.gov/api/v1/trademarks/{serial} + TSDR fallback'],
           ]}
         />
@@ -494,7 +442,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             {[
               'Go to wipo.int/case/en',
               'Click "Access" or "Apply for API Access"',
-              'Submit your organization details.approval may take 1-3 business days',
+              'Submit your organization details. Approval may take 1 to 3 business days.',
               'You\'ll receive a Bearer token for authentication',
               'Add the key to your .env file',
             ].map((step, i) => (
@@ -508,7 +456,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
 
         <H3 dark={dark}>What about trademark search?</H3>
         <P dark={dark}>
-          The USPTO does not offer a public API for trademark text search. Trademark searching is done through the USPTO Trademark Search web interface at tmsearch.uspto.gov. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code> in Markman, the tool generates phonetic variants, assesses distinctiveness, identifies Nice classifications, and provides direct links to TESS and other jurisdiction search databases (EUIPO, UKIPO, CIPO, etc.) so you can verify conflicts manually. Claude then runs a full DuPont factor analysis based on the mark and goods description. For trademark status checks by serial number, Markman uses the TSDR API, which requires its own key from account.uspto.gov/api-manager (set TSDR_API_KEY). For international trademarks, check the Madrid Monitor at wipo.int/madrid/monitor.
+          The USPTO does not offer a public API for trademark text search. Trademark searching is done through the USPTO Trademark Search web interface at tmsearch.uspto.gov. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code> in Markman, the tool generates phonetic variants, assesses distinctiveness, identifies Nice classifications, and provides direct links to USPTO Trademark Search and other jurisdiction search databases (EUIPO, UKIPO, CIPO, etc.) so you can check for conflicts yourself. Claude then drafts a DuPont factor analysis based on the mark, the goods description, and any marks you provide. For trademark status checks by serial number, Markman uses the TSDR API, which requires its own key from account.uspto.gov/api-manager (set TSDR_API_KEY). For international trademarks, check the Madrid Monitor at wipo.int/madrid/monitor.
         </P>
 
         <H3 dark={dark}>Testing with real API keys</H3>
@@ -527,10 +475,10 @@ WIPO_API_KEY=your_key node mcp/wipo-server.js
 claude
 # Then try:
 You: /review-claims US11,234,567
-# Claude should call get_patent_details and return a full claim analysis
+# Claude should call get_patent_details and draft a claim analysis
 
 You: /tm-clearance APPLE | Computers and software | US
-# Claude should call search_trademarks and return clearance results
+# Claude should link to USPTO Trademark Search and draft a clearance screen
 
 You: Search for patents related to "transformer neural network
      for medical record extraction"
@@ -538,7 +486,7 @@ You: Search for patents related to "transformer neural network
 
         <H3 dark={dark}>Testing without API keys</H3>
         <P dark={dark}>
-          Markman's skills still work without API keys.Claude uses its training knowledge to analyze patents and trademarks you paste in directly. The difference: without keys, you provide the data; with keys, Markman fetches it live. Both produce the same structured output format.
+          Markman's skills still work without API keys. Claude works from the patents and trademarks you paste in directly. The difference: without keys, you provide the data; with keys, Markman fetches patent data from USPTO. Both produce the same structured draft format.
         </P>
         <Block dark={dark}>{`# Without API keys, paste claims directly:
 You: Analyze these patent claims:
@@ -547,26 +495,17 @@ Claim 1. A method for recommending content, comprising:
   generating a multi-modal embedding vector...
 
 # Claude will still run the patent-analysis skill
-# and produce a full claim map, scope assessment, and recommendations.
+# and draft a claim map, scope assessment, and recommendations.
 # It just can't look up the patent by number.`}</Block>
 
         {/* ── INSTALL ── */}
         <H2 dark={dark} id="install">Installation</H2>
-        <P dark={dark}>Requirements: Node.js 18+, Claude Code. API keys are free from both USPTO and WIPO.</P>
-        <Block dark={dark}>{`# Clone and install
-git clone <repository> markman && cd markman
-npm install
-
-# Add API keys
-echo "USPTO_API_KEY=your_key" > .env
-echo "WIPO_API_KEY=your_key" >> .env
-
-# Update .mcp.json with your key values
-# Install plugin
-claude plugin install ./
-
-# Verify
-claude doctor`}</Block>
+        <P dark={dark}>Requirements: Node.js 18+, Claude Code. USPTO and WIPO API keys are free to request and optional. In Claude Code, run:</P>
+        <Block dark={dark}>{`/plugin marketplace add Muna0/markman
+/plugin install markman@markman`}</Block>
+        <P dark={dark}>To add live USPTO lookups, add your keys to your shell environment (for example <Code dark={dark}>~/.zshrc</Code>), then restart Claude Code:</P>
+        <Block dark={dark}>{`export USPTO_API_KEY="your_key"
+export WIPO_API_KEY="your_key"   # optional`}</Block>
 
         <H3 dark={dark}>Project Structure</H3>
         <Block dark={dark}>{`markman/
@@ -603,16 +542,16 @@ claude doctor`}</Block>
             { term: 'Prosecution', def: 'The back-and-forth process between a patent applicant and the USPTO to get a patent granted. Includes office actions, amendments, and arguments.' },
             { term: 'Office Action (OA)', def: 'A written communication from the USPTO examiner, typically rejecting or objecting to some or all claims. Applicants have 3 months (extendable to 6) to respond.' },
             { term: 'Provisional Application', def: 'A lower-cost, informal filing that establishes an early filing date. Must convert to a non-provisional within 12 months or it expires.' },
-            { term: 'PCT (Patent Cooperation Treaty)', def: 'An international filing system that lets you seek patent protection in 150+ countries with a single application. Does not grant a patent directly.you must enter "national phase" in each country by month 30.' },
+            { term: 'PCT (Patent Cooperation Treaty)', def: 'An international filing system that lets you seek patent protection in 150+ countries with a single application. Does not grant a patent directly; you must enter "national phase" in each country by month 30.' },
             { term: 'National Phase', def: 'The stage where a PCT application is filed in individual countries. Deadline: 30 months from the earliest priority date (31 months in some jurisdictions like EPO).' },
-            { term: 'CPC / IPC Classification', def: 'Cooperative Patent Classification (CPC) and International Patent Classification (IPC).taxonomy systems that categorize patents by technology area. Used for searching prior art.' },
+            { term: 'CPC / IPC Classification', def: 'Cooperative Patent Classification (CPC) and International Patent Classification (IPC): taxonomy systems that categorize patents by technology area. Used for searching prior art.' },
             { term: 'Maintenance Fees', def: 'Fees paid at 3.5, 7.5, and 11.5 years after a US patent grants to keep it in force. If not paid (with a 6-month grace period), the patent expires.' },
-            { term: 'Claim Construction (Markman Hearing)', def: 'The process of interpreting the meaning of patent claim terms. Named after Markman v. Westview Instruments (1996). A "Markman hearing" is where a judge decides what disputed claim terms mean.often the most critical moment in patent litigation.' },
+            { term: 'Claim Construction (Markman Hearing)', def: 'The process of interpreting the meaning of patent claim terms. Named after Markman v. Westview Instruments (1996). A "Markman hearing" is where a judge decides what disputed claim terms mean, often a critical critical moment in patent litigation.' },
           ]},
           { cat: 'Patentability & Validity', terms: [
-            { term: '35 U.S.C. § 101 (Eligibility)', def: 'Patent-eligible subject matter: process, machine, manufacture, or composition of matter. The Alice/Mayo framework tests whether a claim is directed to an abstract idea, law of nature, or natural phenomenon.and if so, whether it adds "significantly more."' },
+            { term: '35 U.S.C. § 101 (Eligibility)', def: 'Patent-eligible subject matter: process, machine, manufacture, or composition of matter. The Alice/Mayo framework tests whether a claim is directed to an abstract idea, law of nature, or natural phenomenon, and if so, whether it adds "significantly more."' },
             { term: 'Alice / Mayo Framework', def: 'Two-step test from Alice Corp. v. CLS Bank (2014): (1) Is the claim directed to an abstract idea? (2) Does it recite an "inventive concept" beyond the abstract idea? Software and AI patents frequently face Alice rejections.' },
-            { term: '35 U.S.C. § 103 (Obviousness)', def: 'A patent is invalid if the invention would have been obvious to a person skilled in the art. KSR v. Teleflex (2007) broadened this.combining known elements with predictable results is prima facie obvious.' },
+            { term: '35 U.S.C. § 103 (Obviousness)', def: 'A patent is invalid if the invention would have been obvious to a person skilled in the art. KSR v. Teleflex (2007) broadened this: combining known elements with predictable results may be obvious.' },
             { term: '35 U.S.C. § 112 (Definiteness)', def: 'Claims must be clear enough that a skilled person can understand their scope. § 112(a) requires enablement and written description. § 112(b) requires definiteness. § 112(f) covers means-plus-function claims.' },
             { term: 'Means-Plus-Function', def: 'A claim element written as a "means for [function]" rather than describing the structure. Interpreted to cover only the structures disclosed in the specification and their equivalents. Risky because it can narrow claims dramatically.' },
             { term: 'Doctrine of Equivalents', def: 'Even if a product doesn\'t literally infringe a claim, it may still infringe if differences are insubstantial. The "function-way-result" test: does it perform substantially the same function, in substantially the same way, to achieve substantially the same result?' },
@@ -622,18 +561,18 @@ claude doctor`}</Block>
             { term: 'Trademark', def: 'A word, phrase, symbol, design, or combination that identifies the source of goods or services. Protects consumers from confusion about who makes a product.' },
             { term: 'Service Mark', def: 'Same as a trademark, but for services rather than goods. Legally treated the same way.' },
             { term: 'Nice Classification', def: 'International system that categorizes goods and services into 45 classes (1-34 for goods, 35-45 for services). E.g., Class 009 = downloadable software, Class 042 = SaaS.' },
-            { term: 'Distinctiveness Spectrum', def: 'From weakest to strongest: Generic (never protectable) → Descriptive (protectable only with acquired distinctiveness) → Suggestive (protectable) → Arbitrary (strong) → Fanciful (strongest). "APPLE" for computers is arbitrary; "APPLE" for apples is generic.' },
+            { term: 'Distinctiveness Spectrum', def: 'From weakest to strongest: Generic (not protectable) → Descriptive (protectable only with acquired distinctiveness) → Suggestive (protectable) → Arbitrary (strong) → Fanciful (strongest). "APPLE" for computers is arbitrary; "APPLE" for apples is generic.' },
             { term: 'Likelihood of Confusion', def: 'The core test for trademark infringement. Would a consumer likely be confused about the source of goods? Analyzed using the DuPont factors (see below).' },
             { term: 'DuPont Factors', def: 'The 8 (sometimes 13) factors used to assess likelihood of confusion: (1) similarity of marks, (2) relatedness of goods/services, (3) similarity of trade channels, (4) conditions of purchase, (5) fame of prior mark, (6) number of similar marks in use, (7) actual confusion evidence, (8) length of concurrent use.' },
             { term: 'TESS', def: 'Trademark Electronic Search System. The USPTO\'s former trademark database, retired in 2023 and replaced by USPTO Trademark Search. Used for preliminary clearance searches.' },
-            { term: 'TSDR', def: 'Trademark Status & Document Retrieval.USPTO system for checking the current status of a trademark application or registration.' },
+            { term: 'TSDR', def: 'Trademark Status & Document Retrieval: the USPTO system for checking the current status of a trademark application or registration.' },
             { term: 'Section 8 Declaration', def: 'A declaration of continued use filed between years 5-6 after registration. Failure to file results in cancellation.' },
-            { term: 'Section 15 (Incontestability)', def: 'Filed after 5 years of continuous use. Makes the registration "incontestable".limits the grounds on which it can be challenged.' },
+            { term: 'Section 15 (Incontestability)', def: 'Filed after 5 years of continuous use. Makes the registration "incontestable", which limits the grounds on which it can be challenged.' },
             { term: 'Madrid Protocol', def: 'International trademark registration system administered by WIPO. File one application to seek protection in 100+ countries. Managed through the Madrid Monitor system.' },
             { term: 'Opposition', def: 'A proceeding where a third party challenges a trademark application before it registers. Filed within 30 days of publication (extendable). Heard by the Trademark Trial and Appeal Board (TTAB).' },
           ]},
           { cat: 'FTO & Infringement', terms: [
-            { term: 'Freedom to Operate (FTO)', def: 'An analysis of whether a product or technology can be commercialized without infringing third-party patent rights. Not the same as patentability.you can have a valid patent and still infringe someone else\'s.' },
+            { term: 'Freedom to Operate (FTO)', def: 'An analysis of whether a product or technology can be commercialized without infringing third-party patent rights. Not the same as patentability: you can have a valid patent and still infringe someone else\'s.' },
             { term: 'Literal Infringement', def: 'When every element of a patent claim is found in the accused product, word for word. The most straightforward form of infringement.' },
             { term: 'Design-Around', def: 'Modifying a product to avoid infringing a patent claim by changing one or more elements so they no longer meet the claim limitations. A key output of FTO analysis.' },
             { term: 'Non-Infringement Argument', def: 'A legal argument that a specific claim limitation is not met by the accused technology. Rated as STRONG (clear structural difference), MODERATE (arguable), or WEAK (risky to rely on).' },
@@ -643,17 +582,17 @@ claude doctor`}</Block>
             { term: 'Trade Secret', def: 'Information that derives value from being secret, is not generally known, and is subject to reasonable efforts to maintain secrecy. Protected under the Defend Trade Secrets Act (DTSA) and state UTSA laws.' },
             { term: 'NDA (Non-Disclosure Agreement)', def: 'A contract that establishes confidentiality obligations. Critical for maintaining trade secret status when sharing information with partners, investors, or employees.' },
             { term: 'Misappropriation', def: 'The improper acquisition, disclosure, or use of a trade secret. Can occur through breach of confidence, espionage, or reverse engineering (in some cases).' },
-            { term: 'Copyright', def: 'Protection for original works of authorship (code, text, images, music). Arises automatically at creation.registration is optional but required for statutory damages and attorney\'s fees in the US.' },
+            { term: 'Copyright', def: 'Protection for original works of authorship (code, text, images, music). Arises automatically at creation; registration is optional but required for statutory damages and attorney\'s fees in the US.' },
             { term: 'Work for Hire', def: 'When an employee creates a work within the scope of employment, the employer owns the copyright automatically. For contractors, it must be agreed in writing and fit specific categories.' },
             { term: 'Fair Use', def: 'A defense to copyright infringement. Four factors: (1) purpose and character of use, (2) nature of the work, (3) amount used, (4) effect on market value.' },
           ]},
           { cat: 'General IP', terms: [
             { term: 'Priority Date', def: 'The earliest filing date from which patent rights are measured. Established by the first-filed application (provisional, non-provisional, or foreign). Most deadlines count from this date.' },
-            { term: 'Grace Period', def: 'In the US, inventors have 12 months after public disclosure to file a patent without losing rights. Most other countries have NO grace period.public disclosure before filing = no patent.' },
+            { term: 'Grace Period', def: 'In the US, inventors have 12 months after public disclosure to file a patent without losing rights. Many other countries have no grace period, so public disclosure before filing can bar a patent.' },
             { term: 'On-Sale Bar', def: 'If an invention was sold, offered for sale, or in public use more than 1 year before the US filing date, the patent is invalid. AIA changed this to "effectively filed" date.' },
-            { term: 'Attorney Work Product', def: 'Documents prepared in anticipation of litigation that are protected from discovery. FTO memos are typically marked as work product to maintain privilege.' },
-            { term: 'FRAND', def: 'Fair, Reasonable, and Non-Discriminatory.licensing terms required for standard-essential patents (SEPs). Relevant when a patented technology is incorporated into an industry standard (e.g., 5G, Wi-Fi).' },
-            { term: 'Bluebook Citation', def: 'The standard legal citation format in the US. Used for formal IP deliverables. E.g., Alice Corp. v. CLS Bank Int\'l, 573 U.S. 208 (2014).' },
+            { term: 'Attorney Work Product', def: 'Documents prepared in anticipation of litigation that are protected from discovery. Whether a document qualifies depends on the facts and the jurisdiction; a label alone does not create protection.' },
+            { term: 'FRAND', def: 'Fair, Reasonable, and Non-Discriminatory: licensing terms required for standard-essential patents (SEPs). Relevant when a patented technology is incorporated into an industry standard (e.g., 5G, Wi-Fi).' },
+            { term: 'Bluebook Citation', def: 'The standard legal citation format in the US. Commonly used in formal legal writing. E.g., Alice Corp. v. CLS Bank Int\'l, 573 U.S. 208 (2014).' },
           ]},
         ].map(cat => (
           <div key={cat.cat} className="mb-8">
@@ -671,7 +610,7 @@ claude doctor`}</Block>
 
         <div className={`mt-12 pt-8 border-t text-center ${dark ? 'border-white/10' : 'border-ink-200'}`}>
           <p className={`text-[14px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
-            Markman v1.0.0 &middot; Apache-2.0 &middot; Claude Code Plugin for IP Law
+            Markman &middot; Apache-2.0 &middot; Claude Code plugin for IP work &middot; Not legal advice
           </p>
         </div>
       </div>
