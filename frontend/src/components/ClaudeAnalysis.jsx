@@ -7,10 +7,10 @@ import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
  * ClaudeAnalysis: streams a real Claude analysis using Markman skills.
  *
  * Props:
- *   query: string: what to analyze
+ *   query: string - what to analyze
  *   skillType: 'patent' | 'trademark' | 'fto' | 'intake'
- *   context?: string: additional context
- *   onComplete?: (text) => void: callback when done
+ *   context?: string - additional context
+ *   onComplete?: (text) => void - callback when done
  */
 export default function ClaudeAnalysis({ query, skillType, context, onComplete }) {
   const { dark } = useTheme()
