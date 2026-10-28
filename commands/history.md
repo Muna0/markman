@@ -42,6 +42,6 @@ Found 3 results.
 ## Important
 
 - Every skill should call `log_matter` after completing an analysis
-- History is stored locally in markman-data/history.json
+- History is stored locally in ~/.markman/data/history.json
 - Maximum 500 entries retained (oldest pruned automatically)
 - When a user asks "did we ever look at this patent before?" or "have we analyzed this mark?", use search_history to check

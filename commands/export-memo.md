@@ -1,6 +1,6 @@
 ---
 name: export-memo
-description: Export the most recent analysis as a formatted Word document (.docx). Includes privilege markings for FTO memos, Bluebook citation formatting, Times New Roman body text, proper heading hierarchy, and a standard AI-assistance disclaimer. Saves to markman-data/exports/.
+description: Export the most recent analysis as a formatted Word document (.docx). Includes privilege markings for FTO memos, Bluebook citation formatting, Times New Roman body text, proper heading hierarchy, and a standard AI-assistance disclaimer. Saves to ~/.markman/data/exports/.
 ---
 
 # /export-memo
@@ -48,5 +48,5 @@ The generated .docx includes:
 
 - Always ask the user to review the exported document before relying on it
 - The export does not add content — it formats the existing analysis
-- Files are saved to markman-data/exports/ with timestamped filenames
+- Files are saved to ~/.markman/data/exports/ with timestamped filenames
 - Recommend the user add their firm letterhead and any additional sections

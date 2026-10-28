@@ -28,11 +28,8 @@ import {
 // ---------------------------------------------------------------------------
 
 const USPTO_API_KEY = process.env.USPTO_API_KEY;
-if (!USPTO_API_KEY) {
-  console.error("Error: USPTO_API_KEY environment variable is required.");
-  console.error("Get an API key at https://data.uspto.gov/apis/getting-started");
-  process.exit(1);
-}
+// Without a key the server still starts, so Claude can explain how to add one
+const MISSING_KEY_MESSAGE = "USPTO_API_KEY is not set. Get a free key at https://data.uspto.gov/myodp and add it to your shell environment, then restart Claude Code. Markman's skills still work on text you paste in.";
 
 const ODP_BASE = "https://api.uspto.gov/api/v1";
 const TSDR_BASE = "https://tsdrapi.uspto.gov/ts/cd/casestatus";
@@ -70,6 +67,7 @@ function checkRateLimit() {
 // ---------------------------------------------------------------------------
 
 async function fetchWithRetry(url, options = {}, retries = 3) {
+  if (!USPTO_API_KEY) throw new Error(MISSING_KEY_MESSAGE);
   checkRateLimit();
 
   const headers = {
@@ -110,9 +108,16 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 // Tool implementations
 // ---------------------------------------------------------------------------
 
+// Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
+function toPatentQuery(query) {
+  const q = String(query).trim();
+  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
+  return q.split(/\s+/).join(" AND ");
+}
+
 async function searchPatents(query, dateRange) {
   const params = new URLSearchParams({
-    q: query,
+    q: toPatentQuery(query),
     rows: "20",
     start: "0",
   });
@@ -188,39 +193,12 @@ async function getPatentDetails(patentNumber) {
 }
 
 async function searchTrademarks(markText, niceClass) {
-  const params = new URLSearchParams({
-    q: markText,
-    rows: "20",
-    start: "0",
-  });
-
-  if (niceClass) {
-    params.set("fq", `internationalClassCode:${niceClass}`);
-  }
-
-  const url = `${ODP_BASE}/trademark/applications/search?${params}`;
-  const data = await fetchWithRetry(url);
-
-  const results = (data.results || data.trademarks || []).map((tm) => ({
-    serialNumber: tm.serialNumber || tm.applicationNumber,
-    registrationNumber: tm.registrationNumber,
-    markText: tm.wordMark || tm.markLiteralElements || tm.markText,
-    status: tm.statusCode || tm.status,
-    statusDate: tm.statusDate,
-    filingDate: tm.filingDate || tm.applicationDate,
-    registrationDate: tm.registrationDate,
-    owner: tm.ownerName || tm.applicantName || tm.owner,
-    niceClasses: tm.internationalClassCode || tm.niceClasses,
-    goodsServices: tm.goodsAndServicesDescription || tm.goodsServices,
-    markType: tm.markTypeCategory || tm.markType,
-    liveOrDead: tm.liveDeadIndicator || tm.liveOrDead,
-  }));
-
+  // USPTO offers no API for trademark search by text. Return guidance instead of a failed call.
   return {
-    totalResults: data.totalCount || data.numFound || results.length,
     query: markText,
     classFilter: niceClass || "all classes",
-    results,
+    results: [],
+    note: "USPTO does not offer trademark search by text through any API. Search this mark manually at https://tmsearch.uspto.gov (USPTO Trademark Search), then continue the clearance analysis with what you find.",
   };
 }
 

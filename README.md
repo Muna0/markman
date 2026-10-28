@@ -1,8 +1,10 @@
 # Markman
 
-A Claude Code plugin for intellectual property law. Patent claim analysis, trademark clearance, FTO memos, matter intake, deadline tracking, matter history, and Word document export. Connected to live USPTO and WIPO data.
+A free, open-source Claude Code plugin for intellectual property law, built for solo practitioners and boutique firms. Patent claim analysis, freedom-to-operate memos, trademark clearance, matter intake, deadline tracking, matter history, and Word export, connected to live USPTO patent data.
 
-**This plugin does not provide legal advice.** All AI-generated analysis must be reviewed by licensed attorneys before reliance.
+Commercial IP platforms such as PatSnap and Derwent cost $15,000 to $100,000 a year. Markman is free under the Apache-2.0 license.
+
+**Markman does not provide legal advice.** All AI-generated analysis must be reviewed by a licensed attorney before reliance.
 
 ![Markman Landing Page](docs/images/01-landing.jpeg)
 
@@ -25,64 +27,61 @@ Claude: [reads patent-analysis skill]
         [outputs structured claim map, scope assessment, prior art flags]
 ```
 
+## Quick start
+
+Requires [Claude Code](https://claude.com/claude-code) and Node.js 18 or later.
+
+In Claude Code, run:
+
+```
+/plugin install markman --marketplace Muna0/markman
+```
+
+That's it. The skills and commands work right away on patents and marks you paste in. To add live USPTO lookups, set up a free API key (below) and restart Claude Code.
+
 ## Components
 
 **Skills** (fire automatically):
-- `patent-analysis` — parse claims, map scope, flag Alice/KSR issues
-- `fto-memo` — element-by-element claim mapping, non-infringement arguments, design-arounds
-- `trademark-screen` — identical/similar mark search, DuPont factor scoring, jurisdiction coverage
-- `ip-triage` — classify IP type, extract facts, identify deadlines, assign risk
+- `patent-analysis`: parse claims, map scope, flag Alice and KSR issues
+- `fto-memo`: element-by-element claim mapping, non-infringement arguments, design-arounds
+- `trademark-screen`: likelihood-of-confusion (DuPont) analysis, phonetic variants, jurisdiction coverage
+- `ip-triage`: classify IP type, extract facts, identify deadlines, assign risk
 
 **Commands** (invoke explicitly):
-- `/review-claims` — analyze a patent by number or pasted claims
-- `/fto-analysis` — FTO assessment for a described technology
-- `/tm-clearance` — screen a proposed trademark
-- `/deadlines` — view, add, and manage tracked IP deadlines
-- `/history` — search past analyses
-- `/export-memo` — export analysis as formatted Word document
+- `/review-claims`: analyze a patent by number or pasted claims
+- `/fto-analysis`: FTO assessment for a described technology
+- `/tm-clearance`: screen a proposed trademark
+- `/deadlines`: view, add, and manage tracked IP deadlines
+- `/history`: search past analyses
+- `/export-memo`: export analysis as a formatted Word document
 
-**MCP Servers** (3 servers, 12 tools):
-- `uspto-server` — patent search, patent details (api.uspto.gov), trademark status (tsdrapi.uspto.gov)
-- `wipo-server` — international patent search, PCT application details (wipocase.wipo.int)
-- `markman-store` — deadline tracking, matter history, Word export (local storage)
+**MCP servers** (3 servers, 12 tools):
+- `uspto`: patent search and full patent file wrapper details (api.uspto.gov), trademark status by serial number
+- `wipo`: international patent search, PCT application details
+- `markman-store`: deadline tracking, matter history, Word export (stored locally in `~/.markman/data`)
 
-**Playbook** (configurable):
-- FTO risk thresholds (HIGH/MEDIUM/LOW with required actions)
+**Playbook** (configurable, `playbooks/ip-playbook.md`):
+- FTO risk thresholds (HIGH, MEDIUM, LOW with required actions)
 - Trademark clearance jurisdictions and recommendation thresholds
 - Patent claim drafting preferences
-- Deadline rules with alert intervals (90/60/30/7 days)
+- Deadline rules with alert intervals (90, 60, 30, 7 days)
 
-## Installation
+## API keys (optional, free)
 
-Requires Node.js 18+ and Claude Code.
+Markman reads keys from your shell environment. Add them to `~/.zshrc` (or `~/.bashrc`), then restart Claude Code:
 
 ```bash
-# Clone and install
-git clone https://github.com/Muna0/markman.git
-cd markman
-npm install
-
-# Add your API keys
-echo "USPTO_API_KEY=your_key" > .env
-echo "WIPO_API_KEY=your_key" >> .env
-
-# Update .mcp.json with your key values
-
-# Install the plugin
-claude plugin install ./
+export USPTO_API_KEY="your_key"
+export WIPO_API_KEY="your_key"
 ```
 
-### Getting API keys
+**USPTO**: Sign in at [data.uspto.gov/myodp](https://data.uspto.gov/myodp) with a USPTO.gov account verified through ID.me, then open Manage API Key. Since August 2026, USPTO requires four profile fields (job title, organization type, organization name, intended use) before a key works. New keys can take a couple of minutes to activate.
 
-**USPTO** (free): Go to data.uspto.gov/myodp. Create a USPTO.gov account, verify with ID.me, and request an API key. Since August 2026, USPTO also requires you to complete four profile fields (job title, organization type, organization name, intended use) before the key works. This key covers patent data.
+**WIPO**: Apply for API access at [wipo.int/case/en](https://www.wipo.int/case/en/). Approval may take one to three business days.
 
-**TSDR** (free, optional): Trademark status lookups by serial number need a separate key from account.uspto.gov/api-manager. Add it to `.env` as `TSDR_API_KEY`. USPTO offers no API for trademark search by text, so Markman links to USPTO Trademark Search (tmsearch.uspto.gov) instead.
+**Trademark search**: USPTO offers no API for trademark search by text. Markman points you to [USPTO Trademark Search](https://tmsearch.uspto.gov) for the knockout search and runs the clearance analysis on what you find. Trademark status lookups by serial number depend on USPTO's TSDR service, which was not responding reliably as of October 2026.
 
-**WIPO** (free): Go to wipo.int/case/en. Apply for API access. Approval may take 1-3 business days.
-
-### Testing without API keys
-
-The skills still work without API keys. Claude uses its training knowledge to analyze patents and trademarks you paste in directly. The APIs add real-time data lookup by patent number or trademark serial number.
+Without keys, the servers still start and explain how to add a key. The skills work on text you paste in.
 
 ## Usage
 
@@ -110,40 +109,43 @@ You: /history NEXAFLOW
 You: /export-memo
 ```
 
+## Web dashboard (optional)
+
+The repo also includes a local web dashboard for patent search, FTO, and trademark clearance:
+
+```bash
+git clone https://github.com/Muna0/markman.git
+cd markman
+npm install && (cd frontend && npm install)
+cp .env.example .env   # then add USPTO_API_KEY and ANTHROPIC_API_KEY
+npm run dev            # opens on http://localhost:5173
+```
+
 ## Project structure
 
 ```
 markman/
-├── .claude-plugin/plugin.json    # Plugin manifest (v1.1.0)
+├── .claude-plugin/
+│   ├── plugin.json               # Plugin manifest
+│   └── marketplace.json          # One-step install
 ├── .mcp.json                     # MCP server configuration
 ├── mcp/
 │   ├── uspto-server.js           # USPTO API (4 tools)
 │   ├── wipo-server.js            # WIPO API (2 tools)
-│   └── markman-store.js          # Local store (6 tools)
-├── skills/
-│   ├── patent-analysis.md
-│   ├── fto-memo.md
-│   ├── trademark-screen.md
-│   └── ip-triage.md
-├── commands/
-│   ├── review-claims.md
-│   ├── fto-analysis.md
-│   ├── tm-clearance.md
-│   ├── deadlines.md
-│   ├── history.md
-│   └── export-memo.md
-├── playbooks/ip-playbook.md
-├── markman-data/                 # Local storage (gitignored)
-│   ├── deadlines.json
-│   ├── history.json
-│   └── exports/
-├── frontend/                     # Web dashboard (optional)
-└── markman.html                  # Standalone marketing page
+│   ├── markman-store.js          # Local store (6 tools)
+│   └── dist/                     # Bundled servers (no npm install needed)
+├── skills/<name>/SKILL.md        # 4 skills
+├── commands/                     # 6 slash commands
+├── playbooks/ip-playbook.md      # Firm standards
+├── server.js                     # Web dashboard API (optional)
+└── frontend/                     # Web dashboard UI (optional)
 ```
+
+To rebuild the bundled servers after editing `mcp/*.js`, run `npm run build:mcp`.
 
 ## Customization
 
-Edit `playbooks/ip-playbook.md` to match your firm's standards. The playbook controls risk thresholds, jurisdiction requirements, claim drafting preferences, deadline rules, and output formatting across all skills.
+Fork the repo and edit `playbooks/ip-playbook.md` to match your firm's standards. The playbook controls risk thresholds, jurisdiction requirements, claim drafting preferences, deadline rules, and output formatting across all skills.
 
 ## License
 

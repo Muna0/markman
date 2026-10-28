@@ -110,7 +110,7 @@ Jurisdictions: [list]
 - Always caveat that this is a preliminary screen, not a comprehensive search
 - Common law marks and state registrations require separate investigation
 - If the mark raises descriptiveness issues, note the potential need for a 2(f) acquired distinctiveness showing
-- Reference the ip-playbook.md for jurisdiction minimums and clearance standards
+- Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for jurisdiction minimums and clearance standards
 
 ## Required Disclaimers
 

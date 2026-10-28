@@ -49,7 +49,7 @@ For each claim analyzed:
 
 ## Step 6: Risk Rating
 
-Apply the thresholds from the ip-playbook.md:
+Apply the thresholds from the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`):
 
 - **HIGH**: One or more claims appear to read directly on the technology with no strong non-infringement argument. Litigation risk is material. Recommend: do not proceed without design-around or license.
 - **MEDIUM**: Reasonable non-infringement arguments exist, but claim construction could go either way. Recommend: implement design-around if feasible; monitor prosecution/litigation of the patent.

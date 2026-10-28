@@ -2,21 +2,27 @@
   "mcpServers": {
     "uspto": {
       "command": "node",
-      "args": ["mcp/uspto-server.js"],
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/dist/uspto-server.mjs"
+      ],
       "env": {
-        "USPTO_API_KEY": "test"
+        "USPTO_API_KEY": "${USPTO_API_KEY:-}"
       }
     },
     "wipo": {
       "command": "node",
-      "args": ["mcp/wipo-server.js"],
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/dist/wipo-server.mjs"
+      ],
       "env": {
-        "WIPO_API_KEY": "test"
+        "WIPO_API_KEY": "${WIPO_API_KEY:-}"
       }
     },
     "markman-store": {
       "command": "node",
-      "args": ["mcp/markman-store.js"]
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/mcp/dist/markman-store.mjs"
+      ]
     }
   }
 }

@@ -77,7 +77,7 @@ RECOMMENDATIONS
 - This analysis assists patent counsel but does not substitute for legal judgment
 - Always recommend verification against the full specification and prosecution history
 - If connected to USPTO, pull the actual prosecution history for context
-- Reference the ip-playbook.md for claim drafting preferences when making recommendations
+- Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for claim drafting preferences when making recommendations
 
 ## Required Disclaimers
 

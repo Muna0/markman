@@ -40,4 +40,4 @@ When invoked with "remove", call the `remove_deadline` tool with the provided ID
 - Deadlines with less than 7 days remaining are URGENT
 - Deadlines with less than 30 days are UPCOMING
 - Flag any OVERDUE deadlines prominently at the top
-- All data persists locally in markman-data/deadlines.json
+- All data persists locally in ~/.markman/data/deadlines.json

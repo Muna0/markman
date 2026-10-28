@@ -55,7 +55,7 @@ For each classified matter type, extract:
 
 ## Step 3: Deadline Identification
 
-Reference the ip-playbook.md for standard deadlines. Flag any deadline within 60 days as URGENT.
+Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for standard deadlines. Flag any deadline within 60 days as URGENT.
 
 **Common critical deadlines:**
 - Provisional to non-provisional conversion: 12 months from provisional filing

@@ -1,14 +1,15 @@
 {
   "name": "markman",
-  "version": "1.1.0",
-  "description": "Markman — Claude Code Plugin for IP Law. MCP servers, backend API, and local data store.",
+  "version": "1.2.0",
+  "description": "Markman \u2014 Claude Code Plugin for IP Law. MCP servers, backend API, and local data store.",
   "type": "module",
   "scripts": {
     "start": "node server.js",
     "start:uspto": "node mcp/uspto-server.js",
     "start:wipo": "node mcp/wipo-server.js",
     "start:store": "node mcp/markman-store.js",
-    "dev": "node server.js & cd frontend && npx vite --port 5173"
+    "dev": "node server.js & cd frontend && npx vite --port 5173",
+    "build:mcp": "npx -y esbuild@0.24 mcp/uspto-server.js mcp/wipo-server.js mcp/markman-store.js --bundle --platform=node --format=esm --target=node18 --outdir=mcp/dist --out-extension:.js=.mjs --banner:js=\"import { createRequire as __cr } from 'module'; const require = __cr(import.meta.url);\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",

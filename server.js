@@ -77,12 +77,19 @@ app.use(cors());
 app.use(express.json());
 
 // ─── Patent search ───
+// Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
+function toPatentQuery(query) {
+  const q = String(query).trim();
+  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
+  return q.split(/\s+/).join(" AND ");
+}
+
 app.post("/api/patents/search", async (req, res) => {
   try {
     const { query, rows = 20, start = 0 } = req.body;
     if (!query) return res.status(400).json({ error: "query is required" });
 
-    const params = new URLSearchParams({ q: query, rows: String(rows), start: String(start) });
+    const params = new URLSearchParams({ q: toPatentQuery(query), rows: String(rows), start: String(start) });
     const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/search?${params}`);
 
     const bag = data.patentFileWrapperDataBag || [];

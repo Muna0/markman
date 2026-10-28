@@ -1,26 +1,11 @@
 {
   "name": "markman",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "IP law plugin for Claude Code. Patent claim analysis, trademark clearance, FTO memos, and matter intake with persistent deadline tracking, matter history, and Word export. Connected to live USPTO and WIPO APIs.",
   "author": {
     "name": "Muna Omar"
   },
   "homepage": "https://github.com/Muna0/markman",
   "repository": "https://github.com/Muna0/markman",
-  "license": "Apache-2.0",
-  "skills": [
-    "skills/patent-analysis.md",
-    "skills/fto-memo.md",
-    "skills/trademark-screen.md",
-    "skills/ip-triage.md"
-  ],
-  "commands": [
-    "commands/review-claims.md",
-    "commands/fto-analysis.md",
-    "commands/tm-clearance.md",
-    "commands/deadlines.md",
-    "commands/history.md",
-    "commands/export-memo.md"
-  ],
-  "playbook": "playbooks/ip-playbook.md"
+  "license": "Apache-2.0"
 }

@@ -8,7 +8,7 @@
  *   - Matter history (every analysis logged)
  *   - Word document export
  *
- * Data stored in markman-data/ as JSON files.
+ * Data stored in ~/.markman/data/ as JSON files.
  * No external dependencies beyond the MCP SDK and docx.
  *
  * Tools:
@@ -31,7 +31,9 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, "..", "markman-data");
+import os from "os";
+// Persistent data lives outside the plugin folder so it survives plugin updates
+const DATA_DIR = process.env.MARKMAN_DATA_DIR || path.join(os.homedir(), ".markman", "data");
 
 // Ensure data directory exists
 if (!fs.existsSync(DATA_DIR)) {
@@ -477,7 +479,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "export_memo",
       description:
-        "Export an analysis as a formatted Word (.docx) document with privilege markings, Bluebook citation formatting, and a standard disclaimer. Saves to markman-data/exports/.",
+        "Export an analysis as a formatted Word (.docx) document with privilege markings, Bluebook citation formatting, and a standard disclaimer. Saves to ~/.markman/data/exports/.",
       inputSchema: {
         type: "object",
         properties: {

@@ -28,11 +28,8 @@ import {
 // ---------------------------------------------------------------------------
 
 const WIPO_API_KEY = process.env.WIPO_API_KEY;
-if (!WIPO_API_KEY) {
-  console.error("Error: WIPO_API_KEY environment variable is required.");
-  console.error("Apply for access at https://www.wipo.int/case/en/");
-  process.exit(1);
-}
+// Without a key the server still starts, so Claude can explain how to add one
+const MISSING_KEY_MESSAGE = "WIPO_API_KEY is not set. Get a free key at https://www.wipo.int/case/en/ and add it to your shell environment, then restart Claude Code. Markman's skills still work on text you paste in.";
 
 const WIPO_BASE = "https://wipocase.wipo.int/api/v1";
 const PATENTSCOPE_BASE = "https://patentscope.wipo.int/search/api/v1";
@@ -70,6 +67,7 @@ function checkRateLimit() {
 // ---------------------------------------------------------------------------
 
 async function fetchWithRetry(url, options = {}, retries = 3) {
+  if (!WIPO_API_KEY) throw new Error(MISSING_KEY_MESSAGE);
   checkRateLimit();
 
   const headers = {

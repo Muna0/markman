@@ -1,0 +1,13 @@
+{
+  "name": "markman",
+  "owner": {
+    "name": "Muna Omar"
+  },
+  "plugins": [
+    {
+      "name": "markman",
+      "source": "./",
+      "description": "IP law toolkit for solo and boutique practitioners: patent claim analysis, FTO memos, trademark clearance, and matter intake, connected to live USPTO data."
+    }
+  ]
+}
