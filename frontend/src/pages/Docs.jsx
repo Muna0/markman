@@ -84,7 +84,7 @@ export default function Docs() {
       </aside>
 
       {/* Content */}
-      <div className="flex-1 p-6 lg:p-8 max-w-3xl">
+      <div className="flex-1 min-w-0 p-6 lg:p-8 max-w-3xl">
         <div className="flex items-center gap-3 mb-8">
           <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center ${dark ? 'bg-ink-800' : 'bg-ink-100'}`}>
             <BookOpen className={`w-5 h-5 ${dark ? 'text-ink-300' : 'text-ink-600'}`} />
@@ -660,8 +660,8 @@ claude doctor`}</Block>
             <h3 className={`text-[15px] font-bold mb-4 pb-2 border-b ${dark ? 'text-white border-white/10' : 'text-ink-950 border-ink-200'}`}>{cat.cat}</h3>
             <div className="space-y-4">
               {cat.terms.map(t => (
-                <div key={t.term} className="flex items-start gap-3">
-                  <span className={`text-[14px] font-bold mono shrink-0 w-[180px] pt-0.5 ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{t.term}</span>
+                <div key={t.term} className="flex flex-col sm:flex-row items-start gap-1 sm:gap-3">
+                  <span className={`text-[14px] font-bold mono shrink-0 sm:w-[180px] pt-0.5 ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{t.term}</span>
                   <span className={`text-[14px] leading-[1.65] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>{t.def}</span>
                 </div>
               ))}

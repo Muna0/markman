@@ -50,12 +50,33 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Server className={`w-4 h-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
-            <h2 className={`text-[14px] font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>MCP Server Status</h2>
+            <h2 className={`text-[14px] font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{serverStatus?.public ? 'Live data' : 'MCP Server Status'}</h2>
           </div>
           <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-[12px] font-medium transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
             <Download className="w-3 h-3" /> Get the plugin
           </a>
         </div>
+        {serverStatus?.public ? (
+          <>
+            <div className={`rounded-lg px-4 py-3 ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
+              <div className="flex items-center justify-between">
+                <span className={`text-[13px] font-semibold ${dark ? 'text-ink-100' : 'text-ink-800'}`}>USPTO patent data</span>
+                <span className={`flex items-center gap-1 text-[10px] font-bold mono ${
+                  usptoKey
+                    ? dark ? 'text-grn-400' : 'text-grn-500'
+                    : dark ? 'text-amb-400' : 'text-amb-500'
+                }`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${usptoKey ? 'bg-grn-400' : 'bg-amb-400'}`} />
+                  {usptoKey ? 'Connected' : 'Unavailable'}
+                </span>
+              </div>
+            </div>
+            <p className={`mt-3 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              International (WIPO) search is available in the free plugin.
+            </p>
+          </>
+        ) : (
+          <>
         <div className="grid sm:grid-cols-2 gap-3">
           {connectionStatus.map(c => (
             <div key={c.name} className={`rounded-lg px-4 py-3 ${dark ? 'bg-ink-800/50' : 'bg-ink-50'}`}>
@@ -84,6 +105,8 @@ export default function Dashboard() {
               Install the <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className="underline font-semibold">plugin</a> and add your API keys to enable live USPTO & WIPO data.
             </span>
           </div>
+        )}
+          </>
         )}
       </div>
 

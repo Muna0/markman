@@ -16,7 +16,7 @@ function AppLayout() {
   return (
     <div className={`flex min-h-screen transition-colors ${dark ? 'bg-ink-950 text-ink-200' : 'bg-ink-25 text-ink-600'}`}>
       <Sidebar />
-      <div className="flex-1 ml-[240px] max-lg:ml-0 flex flex-col">
+      <div className="flex-1 min-w-0 ml-[240px] max-lg:ml-0 flex flex-col">
         <TopBar />
         <main className="flex-1">
           <Outlet />
