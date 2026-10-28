@@ -3,294 +3,303 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../store/ThemeContext'
 import { MarkmanWordmark } from '../components/Logo'
 import {
-  Sun, Moon, ArrowRight, FileSearch, FlaskConical, Stamp, ShieldCheck,
-  Terminal, Copy,
+  Sun, Moon, ArrowRight, FileSearch, ShieldCheck, Stamp, ClipboardList,
+  Copy, Check, Menu, X, FileText, Database, FileDown,
 } from 'lucide-react'
 
-function TermLine({ children, color = 'text-ink-400' }) {
-  return <div className={`${color}`}>{children}</div>
+const PRIMARY_BTN = 'inline-flex items-center justify-center gap-2 rounded-[5px] bg-blu-500 text-white btn-shadow hover:bg-blu-600 font-medium transition'
+const INSTALL_CMD = '/plugin install markman --marketplace Muna0/markman'
+const GITHUB_URL = 'https://github.com/Muna0/markman'
+
+function GitHubIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
+      <path d="M12 .5C5.73.5.5 5.73.5 12a11.5 11.5 0 0 0 7.86 10.92c.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.53-1.33-1.28-1.69-1.28-1.69-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.56-.29-5.25-1.28-5.25-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.73 18.27.5 12 .5Z" />
+    </svg>
+  )
 }
 
 function Nav() {
   const { dark, toggle } = useTheme()
   const [scrolled, setScrolled] = useState(false)
+  const [open, setOpen] = useState(false)
+
   useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 20)
+    const fn = () => setScrolled(window.scrollY > 8)
+    fn()
     window.addEventListener('scroll', fn, { passive: true })
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
+  const linkCls = `block px-3 py-2 rounded-md text-[15px] font-medium transition ${
+    dark ? 'text-ink-200 hover:bg-ink-800' : 'text-ink-950 hover:bg-ink-100'
+  }`
+  const anchors = [
+    { label: 'Tools', href: '#tools' },
+    { label: 'How it works', href: '#how' },
+    { label: 'Install', href: '#install' },
+  ]
+
   return (
-    <nav className={`fixed inset-x-0 top-0 z-50 border-b transition-all duration-300 ${
-      scrolled ? (dark ? 'glass-dark border-ink-800/40' : 'glass-light border-ink-200') : 'border-transparent'
-    }`}>
-      <div className="max-w-[1120px] mx-auto px-6 h-[56px] flex items-center justify-between">
-        <MarkmanWordmark size={48} dark={dark} />
-        <div className="hidden md:flex items-center gap-7">
-          {['What it does', 'Tools', 'Install'].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`}
-              className={`mono text-[15px] font-medium relative transition after:absolute after:left-0 after:bottom-[-4px] after:w-0 after:h-[1.5px] after:bg-blu-500 after:transition-all hover:after:w-full ${dark ? 'text-ink-400 hover:text-ink-100' : 'text-ink-500 hover:text-ink-950'}`}>{l}</a>
+    <header
+      className={`sticky top-0 z-50 border-b transition-colors ${
+        dark ? 'bg-ink-950/80' : 'bg-white/80'
+      } backdrop-blur-[14px] backdrop-saturate-[1.6] ${
+        scrolled ? (dark ? 'border-ink-800' : 'border-ink-200') : 'border-transparent'
+      }`}
+    >
+      <div className="max-w-[1168px] mx-auto px-6 h-[68px] flex items-center gap-4">
+        <Link to="/" aria-label="Markman, home" className="shrink-0">
+          <MarkmanWordmark size={40} dark={dark} />
+        </Link>
+
+        <nav aria-label="Primary" className="hidden md:flex items-center gap-0.5 mx-auto">
+          {anchors.map(a => (
+            <a key={a.href} href={a.href} className={linkCls}>{a.label}</a>
           ))}
-          <Link to="/app/docs" className={`mono text-[14px] font-medium transition ${dark ? 'text-ink-400 hover:text-ink-100' : 'text-ink-500 hover:text-ink-950'}`}>Docs</Link>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={toggle} className={`p-2 rounded-lg transition ${dark ? 'hover:bg-ink-800' : 'hover:bg-ink-100'}`}>
-            {dark ? <Sun className="w-4 h-4 text-amb-400" /> : <Moon className="w-4 h-4 text-ink-400" />}
+          <Link to="/app/docs" className={linkCls}>Docs</Link>
+        </nav>
+
+        <div className="flex items-center gap-2 ml-auto md:ml-0">
+          <button
+            type="button"
+            onClick={toggle}
+            aria-label={dark ? 'Switch to light theme' : 'Switch to dark theme'}
+            className={`hidden sm:grid w-10 h-10 place-items-center rounded-md border transition ${
+              dark ? 'border-ink-700 hover:bg-ink-800 text-ink-200' : 'border-ink-200 hover:bg-ink-100 text-ink-500'
+            }`}
+          >
+            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
-          <Link to="/app" className="mono text-[14px] font-bold px-4 py-2 rounded-[5px] bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
-            Open App →
+          <Link to="/app" className={`${PRIMARY_BTN} text-[14px] px-3.5 py-[9px] whitespace-nowrap`}>
+            Try it free
           </Link>
+          <button
+            type="button"
+            onClick={() => setOpen(o => !o)}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            className={`md:hidden w-10 h-10 grid place-items-center rounded-md border transition ${
+              dark ? 'border-ink-700 text-ink-200' : 'border-ink-200 text-ink-950'
+            }`}
+          >
+            {open ? <X className="w-[18px] h-[18px]" /> : <Menu className="w-[18px] h-[18px]" />}
+          </button>
         </div>
       </div>
-    </nav>
+
+      {open && (
+        <nav
+          id="mobile-nav"
+          aria-label="Mobile"
+          className={`md:hidden border-b px-6 pt-2 pb-4 ${
+            dark ? 'bg-ink-950 border-ink-800' : 'bg-white border-ink-200'
+          }`}
+        >
+          {anchors.map(a => (
+            <a key={a.href} href={a.href} onClick={() => setOpen(false)} className={linkCls}>{a.label}</a>
+          ))}
+          <Link to="/app/docs" onClick={() => setOpen(false)} className={linkCls}>Docs</Link>
+          <button type="button" onClick={toggle} className={`sm:hidden w-full text-left flex items-center gap-2 ${linkCls}`}>
+            {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            {dark ? 'Light theme' : 'Dark theme'}
+          </button>
+        </nav>
+      )}
+    </header>
+  )
+}
+
+function SectionIntro({ eyebrow, title, children }) {
+  const { dark } = useTheme()
+  return (
+    <div className="max-w-[720px] mx-auto text-center mb-12 md:mb-14">
+      <span className={`block text-[13px] font-medium mb-3.5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{eyebrow}</span>
+      <h2 className={`text-[clamp(30px,3.6vw,44px)] font-bold tracking-[-0.03em] leading-[1.08] text-balance ${dark ? 'text-ink-25' : 'text-ink-950'}`}>
+        {title}
+      </h2>
+      {children && (
+        <p className={`mt-4 max-w-[600px] mx-auto text-[16px] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{children}</p>
+      )}
+    </div>
   )
 }
 
 function Hero() {
   const { dark } = useTheme()
-  const [copied, setCopied] = useState(false)
-  function copy() {
-    navigator.clipboard.writeText('claude plugin install markman')
-    setCopied(true); setTimeout(() => setCopied(false), 2000)
-  }
-
   return (
-    <section className="relative min-h-screen flex flex-col justify-center pt-[80px] pb-16 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none opacity-[0.04]">
-        <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-          <pattern id="claimPat" x="0" y="0" width="120" height="80" patternUnits="userSpaceOnUse">
-            <line x1="20" y1="10" x2="100" y2="10" stroke="#E8E4D8" strokeWidth="0.5"/>
-            <line x1="30" y1="25" x2="90" y2="25" stroke="#E8E4D8" strokeWidth="0.3"/>
-            <line x1="30" y1="35" x2="80" y2="35" stroke="#E8E4D8" strokeWidth="0.3"/>
-            <line x1="16" y1="8" x2="16" y2="40" stroke="#E8E4D8" strokeWidth="0.3"/>
-            <line x1="16" y1="8" x2="20" y2="8" stroke="#E8E4D8" strokeWidth="0.3"/>
-            <line x1="16" y1="40" x2="20" y2="40" stroke="#E8E4D8" strokeWidth="0.3"/>
-          </pattern>
-          <rect width="100%" height="100%" fill="url(#claimPat)"/>
-        </svg>
-      </div>
-      <div className="max-w-[1120px] mx-auto px-6 relative">
-        <p className="anim-reveal mono text-[13px] tracking-[0.15em] uppercase text-blu-500 mb-6">&gt;_ Claude Code Plugin for IP Law</p>
-        <h1 className={`anim-reveal d1 serif text-[clamp(40px,7vw,80px)] font-bold tracking-[-0.03em] leading-[1.08] mb-6 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>
-          Patent analysis &amp;<br/>trademark clearance,<br/><em className="text-blu-500">at the command line.</em>
+    <section className="relative isolate overflow-hidden" aria-labelledby="hero-h">
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 -top-[120px] h-[900px] -z-10 pointer-events-none"
+        style={{
+          background: dark
+            ? 'radial-gradient(620px 520px at -4% 18%, rgba(47,99,240,.22), transparent 70%), radial-gradient(700px 520px at 104% 0%, rgba(96,140,255,.16), transparent 70%)'
+            : 'radial-gradient(620px 520px at -4% 18%, rgba(47,99,240,.13), transparent 70%), radial-gradient(700px 520px at 104% 0%, rgba(96,140,255,.12), transparent 70%)',
+        }}
+      />
+      <div className="max-w-[1168px] mx-auto px-6 pt-[clamp(56px,8vw,104px)] text-center">
+        <span
+          className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-[14px] font-medium ${
+            dark ? 'border-ink-700 bg-ink-900/70 text-ink-200' : 'border-ink-200 bg-white text-ink-600'
+          }`}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-blu-500" aria-hidden="true" />
+          Free and open source · Apache-2.0
+        </span>
+        <h1
+          id="hero-h"
+          className={`mt-6 mx-auto max-w-[14ch] text-[clamp(40px,6vw,72px)] font-bold tracking-[-0.03em] leading-[1.04] text-balance ${
+            dark ? 'text-ink-25' : 'text-ink-950'
+          }`}
+        >
+          IP research for the rest of the bar.
         </h1>
-        <p className={`anim-reveal d2 text-[20px] leading-[1.7] max-w-[540px] mb-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-          Built for solo IP practitioners and boutique firms who need patent claim analysis, trademark clearance, and FTO memos without the $50,000 platform. Connects to live USPTO and WIPO data through Claude Code.
+        <p className={`mt-6 mx-auto max-w-[620px] text-[clamp(16px,1.4vw,18px)] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+          Patent search, freedom-to-operate memos, and trademark clearance for solo practitioners and boutique firms. Live USPTO data. No subscription.
         </p>
-
-        {/* Cost + outcome proof */}
-        <div className={`anim-reveal d2 flex items-center gap-5 mb-9 flex-wrap ${dark ? 'text-ink-300' : 'text-ink-600'}`}>
-          <span className="flex items-center gap-2 text-[15px]">
-            <span className="text-grn-400 font-bold">✓</span> Free and open source
-          </span>
-          <span className={`${dark ? 'text-ink-600' : 'text-ink-300'}`}>|</span>
-          <span className="flex items-center gap-2 text-[15px]">
-            <span className="text-grn-400 font-bold">✓</span> 47-claim patent analyzed in 90 seconds
-          </span>
-          <span className={`${dark ? 'text-ink-600' : 'text-ink-300'}`}>|</span>
-          <span className="flex items-center gap-2 text-[15px]">
-            <span className="text-grn-400 font-bold">✓</span> No subscription
-          </span>
-        </div>
-
-        <div className="anim-reveal d3 flex items-center gap-3 mb-8 flex-wrap">
-          <Link to="/app" className="group flex items-center gap-2 px-6 py-3 rounded-[5px] mono text-[15px] font-bold bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
-            Open the App <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+        <div className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
+          <Link to="/app" className={`${PRIMARY_BTN} group text-[15px] px-5 py-3`}>
+            Try it free
+            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
-          <a href="#install" className={`flex items-center gap-2 px-6 py-3 rounded-[5px] mono text-[15px] font-medium border transition ${dark ? 'border-ink-700 text-ink-300 hover:border-blu-500 hover:text-blu-400' : 'border-ink-300 text-ink-600 hover:border-blu-500'}`}>
-            <Terminal className="w-3.5 h-3.5" /> Install in 5 Minutes
+          <a
+            href="#install"
+            className={`inline-flex items-center justify-center gap-2 rounded-[5px] border text-[15px] font-medium px-5 py-3 transition ${
+              dark
+                ? 'border-ink-600 bg-transparent text-ink-25 hover:border-ink-300'
+                : 'border-ink-300 bg-white text-ink-950 hover:border-ink-950'
+            }`}
+          >
+            Install the plugin
           </a>
         </div>
-        <button onClick={copy} className={`anim-reveal d4 inline-flex items-center gap-3 px-5 py-2.5 rounded-full border transition mb-12 ${dark ? 'bg-ink-900 border-ink-700 hover:border-blu-500' : 'bg-ink-25 border-ink-200 hover:border-blu-500'}`}>
-          <code className={`mono text-[14px] ${dark ? 'text-ink-300' : 'text-ink-600'}`}><span className="text-ink-500">$</span> claude plugin install markman</code>
-          {copied
-            ? <span className="mono text-[13px] text-grn-400">✓ Copied</span>
-            : <Copy className="w-3.5 h-3.5 text-ink-500" />
-          }
-        </button>
-        <div className={`anim-reveal d5 w-full h-px mb-6 ${dark ? 'bg-blu-500/30' : 'bg-blu-500/20'}`} />
-        <div className="anim-reveal d6 flex gap-10 flex-wrap">
-          {[['6', 'Components'], ['7', 'Connectors'], ['5', 'Commands'], ['4', 'Claim Types']].map(([v, l]) => (
-            <div key={l} className="mono text-[14px] text-ink-400">
-              <strong className={`font-bold mr-1 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{v}</strong>{l}
-            </div>
-          ))}
-        </div>
+        <p className={`mt-5 text-[14px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+          No account needed. Your work stays in your browser.
+        </p>
       </div>
     </section>
   )
 }
 
-function WhatItDoes() {
-  const { dark } = useTheme()
-  return (
-    <section id="what-it-does" className={`py-24 scroll-mt-14 ${dark ? 'bg-ink-900/50' : 'bg-ink-25'}`}>
-      <div className="max-w-[1120px] mx-auto px-6">
-        <p className="mono text-[11px] tracking-[0.15em] uppercase text-blu-500 mb-3">What it does</p>
-        <div className="grid lg:grid-cols-2 gap-14">
-          <div>
-            <h2 className={`serif text-[clamp(28px,4vw,44px)] font-bold tracking-[-0.02em] leading-[1.12] mb-5 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>
-              Four IP analysis tools.<br/>Two live API connections.
-            </h2>
-            <p className={`text-[18px] leading-[1.7] mb-8 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-              Markman is a Claude Code plugin that gives you structured IP analysis skills backed by real-time patent and trademark data from the USPTO and WIPO.
-            </p>
-            <ul className="space-y-3">
-              {[
-                'Skills fire automatically when you discuss IP matters',
-                'Slash commands for on-demand analysis (/review-claims, /tm-clearance, /fto-analysis)',
-                'MCP servers handle rate limiting, retries, and data normalization',
-                'Playbook is fully editable — match your firm\'s standards',
-              ].map(t => (
-                <li key={t} className="flex items-start gap-2.5 text-[14px]">
-                  <span className="text-grn-400 font-bold text-[16px] mt-0.5 shrink-0">✓</span>
-                  <span className={dark ? 'text-ink-300' : 'text-ink-600'}>{t}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-800/40 border-ink-700/40' : 'bg-ink-25 border-ink-200'}`}>
-            <p className="mono text-[10px] tracking-[0.12em] uppercase text-ink-400 mb-4">Plugin Architecture</p>
-            {[
-              { cat: 'Skills', color: 'text-blu-500', items: ['patent-analysis', 'fto-memo', 'trademark-screen', 'matter-intake'] },
-              { cat: 'Commands', color: 'text-vio-400', items: ['/review-claims', '/fto-analysis', '/tm-clearance'] },
-              { cat: 'MCP Servers', color: 'text-grn-400', items: ['uspto-server (4 tools)', 'wipo-server (2 tools)'] },
-              { cat: 'Playbook', color: 'text-amb-400', items: ['FTO thresholds', 'TM jurisdictions', 'Claim drafting', 'Deadlines'] },
-            ].map(g => (
-              <div key={g.cat} className={`py-3.5 border-b last:border-0 ${dark ? 'border-ink-700/30' : 'border-ink-200'}`}>
-                <p className={`mono text-[10px] font-bold uppercase tracking-[0.1em] mb-2 ${g.color}`}>{g.cat}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {g.items.map(i => (
-                    <span key={i} className={`mono text-[11px] px-2 py-0.5 rounded ${dark ? 'bg-ink-800 text-ink-300' : 'bg-ink-100 text-ink-600'}`}>{i}</span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function TerminalMockup({ title, lines }) {
-  const { dark } = useTheme()
-  return (
-    <div className="bg-[#080E09] flex flex-col rounded-br-xl overflow-hidden">
-      <div className="flex items-center gap-1.5 px-4 py-2.5 border-b border-white/5">
-        <div className="w-2.5 h-2.5 rounded-full bg-red-400/60" />
-        <div className="w-2.5 h-2.5 rounded-full bg-amb-400/60" />
-        <div className="w-2.5 h-2.5 rounded-full bg-grn-400/60" />
-        <span className="mono text-[10px] text-ink-500 ml-2">{title}</span>
-      </div>
-      <div className="mono text-[13px] leading-[1.8] p-5 flex-1">
-        {lines.map((line, i) => (
-          <TermLine key={i} color={line.color}>{line.text}</TermLine>
-        ))}
-      </div>
-    </div>
-  )
-}
+const TOOLS = [
+  {
+    title: 'Patent analysis',
+    to: '/app/patent',
+    icon: FileSearch,
+    desc: 'Search USPTO patents and map claim scope, with Alice and KSR flags.',
+  },
+  {
+    title: 'Freedom to operate',
+    to: '/app/fto',
+    icon: ShieldCheck,
+    desc: 'Element-by-element claim mapping, design-arounds, and a risk rating.',
+  },
+  {
+    title: 'Trademark clearance',
+    to: '/app/trademark',
+    icon: Stamp,
+    desc: 'DuPont likelihood-of-confusion analysis with phonetic variants.',
+  },
+]
 
 function Tools() {
   const { dark } = useTheme()
-  const [tab, setTab] = useState(0)
-  const tools = [
-    { id: 'patent', label: 'Patent Analysis', icon: FlaskConical,
-      title: 'Parse claims. Map scope. Surface risks.',
-      desc: 'Drop in a patent number — Markman maps the full dependency tree, assesses breadth per limitation, and flags Alice/KSR issues.',
-      lines: [
-        { text: '> /review-claims US11,234,567', color: 'text-blu-500' },
-        { text: '', color: '' },
-        { text: 'Retrieving patent from USPTO...', color: 'text-ink-500' },
-        { text: '', color: '' },
-        { text: 'PATENT ANALYSIS — US 11,987,654', color: 'text-grn-400' },
-        { text: 'Filing: 2024-03-15', color: 'text-ink-400' },
-        { text: '', color: '' },
-        { text: 'CLAIM MAP', color: 'text-ink-300' },
-        { text: '  Claim 1 (Independent, Method)  Alice 101 risk', color: 'text-red-400' },
-        { text: '  Claim 2 (Dependent → 1)        Medium breadth', color: 'text-ink-400' },
-        { text: '  Claim 5 (Independent, System)  Rewrite standalone', color: 'text-amb-400' },
-      ],
-    },
-    { id: 'tm', label: 'TM Clearance', icon: Stamp,
-      title: 'Screen marks across jurisdictions.',
-      desc: 'Enter a mark and goods. Markman scores all 8 DuPont factors and delivers CLEAR / RISK / BLOCK per jurisdiction.',
-      lines: [
-        { text: '> /tm-clearance NEXAFLOW | SaaS workflow | US, EU, UK', color: 'text-blu-500' },
-        { text: '', color: '' },
-        { text: 'Searching USPTO...', color: 'text-ink-500' },
-        { text: '', color: '' },
-        { text: 'TRADEMARK CLEARANCE — NEXAFLOW', color: 'text-grn-400' },
-        { text: '  US — NEXFLOW (Cls 042)  CONFLICT  85%', color: 'text-red-400' },
-        { text: '  EU — No conflicts        CLEAR', color: 'text-grn-400' },
-        { text: '  UK — No conflicts        CLEAR', color: 'text-grn-400' },
-        { text: '', color: '' },
-        { text: 'Overall: CLEAR WITH RISK', color: 'text-amb-400' },
-      ],
-    },
-    { id: 'fto', label: 'FTO Assessment', icon: ShieldCheck,
-      title: 'Claim-by-claim mapping with design-arounds.',
-      desc: 'Describe your technology. Markman maps each limitation and rates non-infringement arguments.',
-      lines: [
-        { text: '> /fto-analysis Transformer medical NER', color: 'text-blu-500' },
-        { text: '', color: '' },
-        { text: 'PRIVILEGED — ATTORNEY WORK PRODUCT', color: 'text-ink-500' },
-        { text: '', color: '' },
-        { text: 'FTO — Transformer Medical NER', color: 'text-grn-400' },
-        { text: 'Risk: MEDIUM', color: 'text-amb-400' },
-        { text: '', color: '' },
-        { text: '  "recurrent NN" →  DOES NOT MEET (transformer)', color: 'text-grn-400' },
-        { text: '  "remote server" → DOES NOT MEET (on-device)', color: 'text-grn-400' },
-        { text: '', color: '' },
-        { text: '  Non-infringement: STRONG', color: 'text-grn-400' },
-      ],
-    },
-    { id: 'intake', label: 'Matter Intake', icon: FileSearch,
-      title: 'Classify, extract facts, flag deadlines.',
-      desc: 'Describe any IP matter. Markman classifies the type, extracts key facts, and assigns risk.',
-      lines: [
-        { text: '> NDA for algorithm disclosure to partner', color: 'text-blu-500' },
-        { text: '', color: '' },
-        { text: 'MATTER INTAKE', color: 'text-grn-400' },
-        { text: '  Primary:   Trade Secret', color: 'text-ink-300' },
-        { text: '  Secondary: Patent (no provisional)', color: 'text-ink-400' },
-        { text: '', color: '' },
-        { text: '  DEADLINE', color: 'text-ink-300' },
-        { text: '    Execute NDA before disclosure  URGENT', color: 'text-red-400' },
-        { text: '', color: '' },
-        { text: '  Risk: MEDIUM — NDA not yet signed.', color: 'text-amb-400' },
-      ],
-    },
-  ]
-  const t = tools[tab]
-
   return (
-    <section id="tools" className="py-24 scroll-mt-14">
-      <div className="max-w-[1120px] mx-auto px-6">
-        <p className="mono text-[11px] tracking-[0.15em] uppercase text-blu-500 mb-3">Tools</p>
-        <h2 className={`serif text-[clamp(28px,4vw,44px)] font-bold tracking-[-0.02em] mb-8 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>
-          See what each tool produces.
-        </h2>
-        <div className={`flex border-b mb-0 overflow-x-auto ${dark ? 'border-ink-700/40' : 'border-ink-200'}`}>
-          {tools.map((tool, i) => (
-            <button key={tool.id} onClick={() => setTab(i)}
-              className={`mono text-[14px] px-5 py-3 border-b-2 transition whitespace-nowrap ${
-                i === tab
-                  ? `border-blu-500 ${dark ? 'text-ink-50' : 'text-ink-950'}`
-                  : `border-transparent ${dark ? 'text-ink-400 hover:text-ink-200' : 'text-ink-500 hover:text-ink-700'}`
-              }`}>{tool.label}</button>
+    <section id="tools" className="scroll-mt-[84px] pt-24" aria-labelledby="tools-h">
+      <div className="max-w-[1168px] mx-auto px-6">
+        <SectionIntro eyebrow="Tools" title={<span id="tools-h">Three analyses, one workspace</span>} />
+        <div className="grid gap-4 md:grid-cols-3">
+          {TOOLS.map(({ title, to, icon: Icon, desc }) => (
+            <Link
+              key={to}
+              to={to}
+              className={`group flex flex-col rounded-[14px] border p-6 transition duration-200 hover:-translate-y-1 ${
+                dark
+                  ? 'border-ink-800 bg-ink-900 hover:border-ink-600 hover:shadow-[0_18px_40px_-24px_rgba(0,0,0,.8)]'
+                  : 'border-ink-200 bg-white hover:border-ink-300 hover:shadow-[0_18px_40px_-24px_rgba(11,15,25,.35)]'
+              }`}
+            >
+              <span className={`w-10 h-10 grid place-items-center rounded-[10px] ${dark ? 'bg-blu-500/15 text-blu-300' : 'bg-blu-50 text-blu-500'}`}>
+                <Icon className="w-5 h-5" />
+              </span>
+              <h3 className={`mt-5 text-[19px] font-bold tracking-[-0.02em] ${dark ? 'text-ink-25' : 'text-ink-950'}`}>{title}</h3>
+              <p className={`mt-2 text-[15px] leading-relaxed flex-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{desc}</p>
+              <span className={`mt-5 inline-flex items-center gap-1.5 text-[14px] font-medium ${dark ? 'text-blu-300' : 'text-blu-500'}`}>
+                Open
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+              </span>
+            </Link>
           ))}
         </div>
-        <div className={`grid lg:grid-cols-2 rounded-b-xl border border-t-0 overflow-hidden min-h-[340px] ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-25 border-ink-200'}`} key={t.id}>
-          <div className="p-10 flex flex-col justify-center">
-            <h3 className={`serif text-[22px] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{t.title}</h3>
-            <p className={`text-[17px] leading-[1.7] mb-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{t.desc}</p>
-            <Link to="/app" className="mono text-[14px] font-medium text-blu-500 inline-flex items-center gap-1 hover:gap-2 transition-all">
-              Try it now →
-            </Link>
-          </div>
-          <TerminalMockup title="claude" lines={t.lines} />
+        <Link
+          to="/app/intake"
+          className={`group mt-4 flex items-center gap-3 rounded-[14px] border px-6 py-4 transition ${
+            dark ? 'border-ink-800 hover:border-ink-600 hover:bg-ink-900' : 'border-ink-200 hover:border-ink-300 hover:bg-ink-25'
+          }`}
+        >
+          <ClipboardList className={`w-5 h-5 shrink-0 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
+          <span className={`text-[15px] ${dark ? 'text-ink-200' : 'text-ink-900'}`}>
+            <span className="font-bold">Matter intake.</span>{' '}
+            <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Not sure where to start? Describe the matter and get routed.</span>
+          </span>
+          <ArrowRight className={`w-4 h-4 ml-auto shrink-0 transition-transform group-hover:translate-x-0.5 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
+        </Link>
+      </div>
+    </section>
+  )
+}
+
+const STEPS = [
+  { n: '01', title: 'Describe the matter', icon: FileText },
+  { n: '02', title: 'Markman pulls live USPTO data', icon: Database },
+  { n: '03', title: 'Review the analysis and export to Word', icon: FileDown },
+]
+
+function HowItWorks() {
+  const { dark } = useTheme()
+  return (
+    <section id="how" className="scroll-mt-[84px] pt-24" aria-labelledby="how-h">
+      <div className="max-w-[1168px] mx-auto px-6">
+        <SectionIntro eyebrow="How it works" title={<span id="how-h">From question to memo in three steps</span>} />
+        <ol className="grid gap-4 md:grid-cols-3">
+          {STEPS.map(({ n, title, icon: Icon }) => (
+            <li
+              key={n}
+              className={`rounded-[14px] border p-6 ${dark ? 'border-ink-800 bg-ink-900/60' : 'border-ink-200 bg-ink-25'}`}
+            >
+              <div className="flex items-center justify-between">
+                <span className={`text-[13px] font-bold tracking-wide ${dark ? 'text-blu-300' : 'text-blu-500'}`}>{n}</span>
+                <Icon className={`w-5 h-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
+              </div>
+              <p className={`mt-6 text-[18px] font-bold tracking-[-0.02em] leading-snug ${dark ? 'text-ink-25' : 'text-ink-950'}`}>{title}</p>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </section>
+  )
+}
+
+function CostPanel() {
+  return (
+    <section className="pt-24" aria-label="Cost comparison">
+      <div className="max-w-[1168px] mx-auto px-6">
+        <div
+          className="relative overflow-hidden rounded-[16px] border border-[#1C2A50] bg-gradient-to-br from-nav-900 to-nav-800 px-6 py-14 md:px-14 md:py-20 text-center text-white"
+        >
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: 'radial-gradient(520px 360px at 85% -10%, rgba(47,99,240,.42), transparent 70%), radial-gradient(420px 320px at 0% 110%, rgba(30,58,138,.55), transparent 70%)',
+            }}
+          />
+          <p className="relative mx-auto max-w-[760px] text-[clamp(24px,3.2vw,38px)] font-bold tracking-[-0.03em] leading-[1.15] text-balance">
+            PatSnap and Derwent run $15,000 to $100,000 a year.{' '}
+            <span className="text-blu-300">Markman is free.</span>
+          </p>
         </div>
       </div>
     </section>
@@ -299,40 +308,73 @@ function Tools() {
 
 function Install() {
   const { dark } = useTheme()
+  const [copied, setCopied] = useState(false)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(INSTALL_CMD)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1800)
+    } catch {
+      setCopied(false)
+    }
+  }
+
   return (
-    <section id="install" className={`py-24 scroll-mt-14 ${dark ? 'bg-ink-900/50' : 'bg-ink-25'}`}>
-      <div className="max-w-[1120px] mx-auto px-6">
-        <p className="mono text-[11px] tracking-[0.15em] uppercase text-blu-500 mb-3">Install</p>
-        <h2 className={`serif text-[clamp(28px,4vw,44px)] font-bold tracking-[-0.02em] mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Up and running in 5 minutes.</h2>
-        <p className={`text-[15px] mb-10 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Requires Node.js 18+ and Claude Code. API keys from USPTO and WIPO are free.</p>
-        <div className="grid sm:grid-cols-3 gap-5 mb-10">
-          {[
-            { n: '01', t: 'Get the tools', d: 'Install Node.js 18+ and Claude Code. Get free API keys from data.uspto.gov and wipo.int/case.' },
-            { n: '02', t: 'Install the plugin', d: 'Run claude plugin install markman in your terminal. Configure your API keys.' },
-            { n: '03', t: 'Start analyzing', d: 'Open Claude Code and type /review-claims with any patent number.' },
-          ].map(s => (
-            <div key={s.n} className={`rounded-xl border p-7 ${dark ? 'bg-ink-800/40 border-ink-700/40' : 'bg-ink-25 border-ink-200'}`}>
-              <p className="mono text-[11px] text-blu-500 tracking-[0.1em] mb-3">{s.n}</p>
-              <h4 className={`serif text-[18px] font-bold mb-2 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{s.t}</h4>
-              <p className={`text-[13px] leading-[1.6] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{s.d}</p>
-            </div>
-          ))}
+    <section id="install" className="scroll-mt-[84px] pt-24" aria-labelledby="install-h">
+      <div className="max-w-[1168px] mx-auto px-6">
+        <SectionIntro eyebrow="Install" title={<span id="install-h">Run it in your own terminal</span>}>
+          Markman is also a Claude Code plugin. One command installs it.
+        </SectionIntro>
+        <div className="max-w-[760px] mx-auto">
+          <div className="flex items-center gap-3 rounded-[14px] border border-ink-800 bg-ink-950 pl-5 pr-2 py-2">
+            <code className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap py-2 font-mono [font-variant-ligatures:none] text-[13px] sm:text-[15px] text-ink-25">
+              <span className="text-blu-300 select-none">$ </span>{INSTALL_CMD}
+            </code>
+            <button
+              type="button"
+              onClick={copy}
+              aria-label="Copy install command"
+              className="shrink-0 inline-flex items-center gap-1.5 rounded-[5px] border border-ink-700 px-3 py-2 text-[13px] font-medium text-ink-200 hover:bg-ink-800 transition"
+            >
+              {copied ? <Check className="w-4 h-4 text-grn-400" /> : <Copy className="w-4 h-4" />}
+              <span className="hidden sm:inline">{copied ? 'Copied' : 'Copy'}</span>
+            </button>
+          </div>
+          <span className="sr-only" aria-live="polite">{copied ? 'Copied to clipboard' : ''}</span>
+          <p className={`mt-5 text-center text-[15px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+            Works in Claude Code. Add a free USPTO key for live lookups.
+          </p>
+          <div className="mt-5 flex justify-center">
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className={`inline-flex items-center gap-2 text-[15px] font-medium ${dark ? 'text-blu-300 hover:text-blu-200' : 'text-blu-500 hover:text-blu-600'}`}
+            >
+              <GitHubIcon />
+              View on GitHub
+              <ArrowRight className="w-4 h-4" />
+            </a>
+          </div>
         </div>
-        <TerminalMockup title="terminal" lines={[
-          { text: '# Clone and install', color: 'text-ink-500' },
-          { text: '$ git clone https://github.com/markman-ip/markman.git', color: 'text-blu-500' },
-          { text: '$ cd markman && npm install', color: 'text-blu-500' },
-          { text: 'added 91 packages in 3s', color: 'text-grn-400' },
-          { text: '', color: '' },
-          { text: '# Configure API keys', color: 'text-ink-500' },
-          { text: '$ echo "USPTO_API_KEY=your_key" > .env', color: 'text-blu-500' },
-          { text: '$ echo "WIPO_API_KEY=your_key" >> .env', color: 'text-blu-500' },
-          { text: '', color: '' },
-          { text: '# Install plugin', color: 'text-ink-500' },
-          { text: '$ claude plugin install ./', color: 'text-blu-500' },
-          { text: '✓ Plugin "markman" installed successfully', color: 'text-grn-400' },
-          { text: '  4 skills · 3 commands · 2 MCP servers', color: 'text-grn-400' },
-        ]} />
+      </div>
+    </section>
+  )
+}
+
+function DemoNote() {
+  const { dark } = useTheme()
+  return (
+    <section className="pt-24" aria-label="Demo limits">
+      <div className="max-w-[1168px] mx-auto px-6">
+        <p
+          className={`max-w-[760px] mx-auto rounded-[14px] sm:rounded-full border px-5 py-3 text-center text-[14px] leading-relaxed ${
+            dark ? 'border-ink-800 bg-ink-900/60 text-ink-400' : 'border-blu-100 bg-blu-50 text-ink-600'
+          }`}
+        >
+          The public demo allows 3 analyses per visitor per day. For unlimited use, install the plugin.
+        </p>
       </div>
     </section>
   )
@@ -340,19 +382,26 @@ function Install() {
 
 function Footer() {
   const { dark } = useTheme()
+  const linkCls = `text-[14px] transition ${dark ? 'text-ink-400 hover:text-ink-25' : 'text-ink-500 hover:text-ink-950'}`
   return (
-    <footer className={`py-10 border-t ${dark ? 'border-ink-800/40' : 'border-ink-200'}`}>
-      <div className="max-w-[1120px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <MarkmanWordmark size={44} dark={dark} />
-        <div className="flex items-center gap-5">
-          {['What it does', 'Tools', 'Install'].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`} className="mono text-[13px] text-ink-400 hover:text-blu-500 transition">{l}</a>
-          ))}
+    <footer className={`mt-24 border-t ${dark ? 'border-ink-800' : 'border-ink-200'}`}>
+      <div className="max-w-[1168px] mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-8">
+          <div className="max-w-[440px]">
+            <MarkmanWordmark size={36} dark={dark} />
+            <p className={`mt-4 text-[14px] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              Markman does not provide legal advice. All analysis must be reviewed by a licensed attorney.
+            </p>
+          </div>
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
+            <Link to="/privacy" className={linkCls}>Privacy</Link>
+            <a href={GITHUB_URL} target="_blank" rel="noreferrer" className={linkCls}>GitHub</a>
+            <Link to="/app/docs" className={linkCls}>Docs</Link>
+          </nav>
         </div>
-        <p className="mono text-[11px] text-ink-500">§ Built on Claude Code · MCP Standard</p>
-      </div>
-      <div className={`max-w-[1120px] mx-auto px-6 mt-6 pt-5 border-t ${dark ? 'border-blu-500/10' : 'border-ink-200'}`}>
-        <p className="mono text-[11px] text-ink-500 opacity-60">© 2026 Markman. Apache-2.0 License.</p>
+        <div className={`mt-10 pt-6 border-t text-[13px] ${dark ? 'border-ink-800 text-ink-500' : 'border-ink-200 text-ink-500'}`}>
+          © 2026 Muna Omar
+        </div>
       </div>
     </footer>
   )
@@ -361,12 +410,16 @@ function Footer() {
 export default function Landing() {
   const { dark } = useTheme()
   return (
-    <div className={`${dark ? 'bg-ink-950 text-ink-400' : 'bg-ink-25 text-ink-500'} transition-colors`}>
+    <div className={`min-h-screen overflow-x-clip ${dark ? 'bg-ink-950' : 'bg-white'}`}>
       <Nav />
-      <Hero />
-      <WhatItDoes />
-      <Tools />
-      <Install />
+      <main id="main">
+        <Hero />
+        <Tools />
+        <HowItWorks />
+        <CostPanel />
+        <Install />
+        <DemoNote />
+      </main>
       <Footer />
     </div>
   )
