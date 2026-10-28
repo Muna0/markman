@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { FlaskConical, ChevronRight, Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
@@ -170,6 +170,7 @@ export default function PatentAnalysis() {
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [patentDetails, setPatentDetails] = useState(null)
+  const detailsReqRef = useRef(0)
   const [loadingDetails, setLoadingDetails] = useState(false)
 
   async function loadMore(andThenPage) {
@@ -246,17 +247,19 @@ export default function PatentAnalysis() {
     ])
 
     // Fetch full patent details (claims, abstract, etc.) from USPTO
+    const reqId = ++detailsReqRef.current
     setLoadingDetails(true)
     try {
       const details = await api.getPatentDetails(patent.applicationNumber)
-      if (details && !details.error) {
+      if (reqId === detailsReqRef.current && details && !details.error) {
         setPatentDetails(details)
       }
     } catch (err) {
-      // Non-blocking — analysis still works with metadata only
+      // Non-blocking: analysis still works with metadata only
       console.warn('Could not fetch patent details:', err.message)
     }
-    setLoadingDetails(false)
+    // Ignore settled requests for a patent that is no longer selected
+    if (reqId === detailsReqRef.current) setLoadingDetails(false)
   }
 
   function addClaim() {
@@ -517,7 +520,8 @@ export default function PatentAnalysis() {
             </div>
           )}
           <ClaudeAnalysis
-            key={selectedPatent.applicationNumber + (patentDetails ? '-full' : '-meta')}
+            key={selectedPatent.applicationNumber}
+            disabled={loadingDetails}
             query={patentDetails
               ? buildAnalysisQuery(selectedPatent, patentDetails)
               : `Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}

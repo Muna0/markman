@@ -652,6 +652,8 @@ Important:
     const stream = await client.messages.stream({
       model: MODEL,
       max_tokens: MAX_TOKENS,
+      // Demo model thinks by default and can spend the whole token cap before any text
+      ...(PUBLIC ? { thinking: { type: "between_tools" } } : {}),
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
     });

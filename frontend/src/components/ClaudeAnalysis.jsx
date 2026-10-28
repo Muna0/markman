@@ -11,8 +11,9 @@ import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
  *   skillType: 'patent' | 'trademark' | 'fto' | 'intake'
  *   context?: string - additional context
  *   onComplete?: (text) => void - callback when done
+ *   disabled?: boolean - disable the Run button (e.g. while inputs are still loading)
  */
-export default function ClaudeAnalysis({ query, skillType, context, onComplete }) {
+export default function ClaudeAnalysis({ query, skillType, context, onComplete, disabled = false }) {
   const { dark } = useTheme()
   const [output, setOutput] = useState('')
   const [running, setRunning] = useState(false)
@@ -84,12 +85,12 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
   if (!output && !running && !error) {
     return (
       <div>
-        <button onClick={run}
-          className={`flex items-center gap-2 px-5 py-3 rounded-lg mono text-[14px] font-bold transition ${
+        <button onClick={run} disabled={disabled}
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg mono text-[14px] font-bold transition disabled:opacity-50 disabled:cursor-not-allowed ${
             dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25 border border-blu-500/20' : 'bg-blu-50 text-blu-500 hover:bg-blu-100 border border-blu-200'
           }`}>
           <Sparkles className="w-4 h-4" />
-          Run Claude Analysis
+          {disabled ? 'Loading patent details...' : 'Run Claude Analysis'}
         </button>
         <p className={`mt-2 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
           Public demo: do not paste confidential client information.
