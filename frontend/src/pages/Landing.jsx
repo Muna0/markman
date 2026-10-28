@@ -8,7 +8,8 @@ import {
 } from 'lucide-react'
 
 const PRIMARY_BTN = 'inline-flex items-center justify-center gap-2 rounded-[5px] bg-blu-500 text-white btn-shadow hover:bg-blu-600 font-medium transition'
-const INSTALL_CMD = '/plugin install markman --marketplace Muna0/markman'
+const INSTALL_LINES = ['/plugin marketplace add Muna0/markman', '/plugin install markman@markman']
+const INSTALL_CMD = INSTALL_LINES.join('\n')
 const GITHUB_URL = 'https://github.com/Muna0/markman'
 
 function GitHubIcon({ className = 'w-4 h-4' }) {
@@ -157,7 +158,7 @@ function Hero() {
           IP research for the rest of the bar.
         </h1>
         <p className={`mt-6 mx-auto max-w-[620px] text-[clamp(16px,1.4vw,18px)] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-          Patent search, freedom-to-operate memos, and trademark clearance for solo practitioners and boutique firms. Live USPTO data. No subscription.
+          Patent search plus draft freedom-to-operate and trademark clearance analyses for attorney review, built for solo practitioners and boutique firms. USPTO patent data. No subscription.
         </p>
         <div className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
           <Link to="/app" className={`${PRIMARY_BTN} group text-[15px] px-5 py-3`}>
@@ -188,19 +189,19 @@ const TOOLS = [
     title: 'Patent analysis',
     to: '/app/patent',
     icon: FileSearch,
-    desc: 'Search USPTO patents and map claim scope, with Alice and KSR flags.',
+    desc: 'Search USPTO patents and draft a claim scope map, with Alice and KSR flags.',
   },
   {
     title: 'Freedom to operate',
     to: '/app/fto',
     icon: ShieldCheck,
-    desc: 'Element-by-element claim mapping, design-arounds, and a risk rating.',
+    desc: 'Draft FTO analysis for attorney review: claim mapping, design-around ideas, and a preliminary risk rating.',
   },
   {
     title: 'Trademark clearance',
     to: '/app/trademark',
     icon: Stamp,
-    desc: 'DuPont likelihood-of-confusion analysis with phonetic variants.',
+    desc: 'Draft DuPont likelihood-of-confusion screen with phonetic variants, for attorney review.',
   },
 ]
 
@@ -253,8 +254,8 @@ function Tools() {
 
 const STEPS = [
   { n: '01', title: 'Describe the matter', icon: FileText },
-  { n: '02', title: 'Markman pulls live USPTO data', icon: Database },
-  { n: '03', title: 'Review the analysis and export to Word', icon: FileDown },
+  { n: '02', title: 'Markman pulls USPTO patent data', icon: Database },
+  { n: '03', title: 'Review the draft and export to Word', icon: FileDown },
 ]
 
 function HowItWorks() {
@@ -262,7 +263,7 @@ function HowItWorks() {
   return (
     <section id="how" className="scroll-mt-[84px] pt-24" aria-labelledby="how-h">
       <div className="max-w-[1168px] mx-auto px-6">
-        <SectionIntro eyebrow="How it works" title={<span id="how-h">From question to memo in three steps</span>} />
+        <SectionIntro eyebrow="How it works" title={<span id="how-h">From question to draft in three steps</span>} />
         <ol className="grid gap-4 md:grid-cols-3">
           {STEPS.map(({ n, title, icon: Icon }) => (
             <li
@@ -282,9 +283,9 @@ function HowItWorks() {
   )
 }
 
-function CostPanel() {
+function OpenSourcePanel() {
   return (
-    <section className="pt-24" aria-label="Cost comparison">
+    <section className="pt-24" aria-label="Free and open source">
       <div className="max-w-[1168px] mx-auto px-6">
         <div
           className="relative overflow-hidden rounded-[16px] border border-[#1C2A50] bg-gradient-to-br from-nav-900 to-nav-800 px-6 py-14 md:px-14 md:py-20 text-center text-white"
@@ -297,8 +298,10 @@ function CostPanel() {
             }}
           />
           <p className="relative mx-auto max-w-[760px] text-[clamp(24px,3.2vw,38px)] font-bold tracking-[-0.03em] leading-[1.15] text-balance">
-            PatSnap and Derwent run $15,000 to $100,000 a year.{' '}
-            <span className="text-blu-300">Markman is free.</span>
+            Free and open source.
+          </p>
+          <p className="relative mt-3 mx-auto max-w-[760px] text-[clamp(16px,1.4vw,18px)] leading-relaxed text-blu-300">
+            No subscription, no seat licenses. Apache-2.0.
           </p>
         </div>
       </div>
@@ -324,17 +327,21 @@ function Install() {
     <section id="install" className="scroll-mt-[84px] pt-24" aria-labelledby="install-h">
       <div className="max-w-[1168px] mx-auto px-6">
         <SectionIntro eyebrow="Install" title={<span id="install-h">Run it in your own terminal</span>}>
-          Markman is also a Claude Code plugin. One command installs it.
+          Markman is also a Claude Code plugin. Two commands install it.
         </SectionIntro>
         <div className="max-w-[760px] mx-auto">
           <div className="flex items-center gap-3 rounded-[14px] border border-ink-800 bg-ink-950 pl-5 pr-2 py-2">
             <code className="flex-1 min-w-0 overflow-x-auto whitespace-nowrap py-2 font-mono [font-variant-ligatures:none] text-[13px] sm:text-[15px] text-ink-25">
-              <span className="text-blu-300 select-none">$ </span>{INSTALL_CMD}
+              {INSTALL_LINES.map(line => (
+                <span key={line} className="block">
+                  <span className="text-blu-300 select-none">$ </span>{line}
+                </span>
+              ))}
             </code>
             <button
               type="button"
               onClick={copy}
-              aria-label="Copy install command"
+              aria-label="Copy install commands"
               className="shrink-0 inline-flex items-center gap-1.5 rounded-[5px] border border-ink-700 px-3 py-2 text-[13px] font-medium text-ink-200 hover:bg-ink-800 transition"
             >
               {copied ? <Check className="w-4 h-4 text-grn-400" /> : <Copy className="w-4 h-4" />}
@@ -390,7 +397,7 @@ function Footer() {
           <div className="max-w-[440px]">
             <MarkmanWordmark size={36} dark={dark} />
             <p className={`mt-4 text-[14px] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-              Markman does not provide legal advice. All analysis must be reviewed by a licensed attorney.
+              Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney.
             </p>
           </div>
           <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2">
@@ -416,7 +423,7 @@ export default function Landing() {
         <Hero />
         <Tools />
         <HowItWorks />
-        <CostPanel />
+        <OpenSourcePanel />
         <Install />
         <DemoNote />
       </main>
