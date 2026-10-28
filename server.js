@@ -33,7 +33,8 @@ try {
   const envFile = fs.readFileSync(path.join(__dirname, ".env"), "utf-8");
   envFile.split("\n").forEach((line) => {
     const [key, ...val] = line.split("=");
-    if (key && val.length) process.env[key.trim()] = val.join("=").trim();
+    const k = key && key.trim();
+    if (k && val.length && !(k in process.env)) process.env[k] = val.join("=").trim();
   });
 } catch {}
 
