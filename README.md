@@ -1,18 +1,20 @@
 # Markman
 
+**Try it in your browser:** [markman-ip.fly.dev](https://markman-ip.fly.dev) (free public demo, 3 analyses per day; no account needed).
+
 A free, open-source Claude Code plugin for intellectual property law, built for solo practitioners and boutique firms. Patent claim analysis, freedom-to-operate memos, trademark clearance, matter intake, deadline tracking, matter history, and Word export, connected to live USPTO patent data.
 
 Commercial IP platforms such as PatSnap and Derwent cost $15,000 to $100,000 a year. Markman is free under the Apache-2.0 license.
 
 **Markman does not provide legal advice.** All AI-generated analysis must be reviewed by a licensed attorney before reliance.
 
-![Markman Landing Page](docs/images/01-landing.jpeg)
+![Markman landing page](docs/images/01-landing.jpeg)
 
-![Markman Dashboard](docs/images/02-dashboard.jpeg)
+![Dashboard](docs/images/02-dashboard.jpeg)
 
-![Markman Documentation](docs/images/03-patent-analysis.jpeg)
+![Patent analysis](docs/images/03-patent-analysis.jpeg)
 
-![Markman Settings](docs/images/04-trademark.jpeg)
+![Trademark clearance](docs/images/04-trademark.jpeg)
 
 ## What it does
 
@@ -111,7 +113,7 @@ You: /export-memo
 
 ## Web dashboard (optional)
 
-The repo also includes a local web dashboard for patent search, FTO, and trademark clearance:
+The repo also includes a web dashboard for patent search, FTO, and trademark clearance. A public demo runs at [markman-ip.fly.dev](https://markman-ip.fly.dev) with `MARKMAN_PUBLIC=1`: 3 analyses per visitor per day, 150 site-wide, and history kept in the visitor's browser. To run it locally:
 
 ```bash
 git clone https://github.com/Muna0/markman.git
@@ -138,10 +140,16 @@ markman/
 ├── commands/                     # 6 slash commands
 ├── playbooks/ip-playbook.md      # Firm standards
 ├── server.js                     # Web dashboard API (optional)
+├── lib/                          # Server helpers (rate limiter)
+├── test/                         # Server tests
+├── Dockerfile                    # Container build for the public demo
+├── fly.toml                      # Fly.io configuration
 └── frontend/                     # Web dashboard UI (optional)
 ```
 
 To rebuild the bundled servers after editing `mcp/*.js`, run `npm run build:mcp`.
+
+Run the server tests with `npm test`.
 
 ## Customization
 
