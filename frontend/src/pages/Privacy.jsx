@@ -28,7 +28,7 @@ export default function Privacy() {
             <p className="mb-3">The public demo has no accounts and does not save your inputs or results on the server. Here is what happens to your data:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li><strong>Analysis history</strong> stays in this browser's local storage. You can clear it at any time from the Dashboard.</li>
-              <li><strong>Daily limit counter.</strong> The server keeps an in-memory count of analyses and patent searches per IP address to enforce the daily limits. The count is cleared daily and is never written to disk.</li>
+              <li><strong>Daily limit counter.</strong> The server keeps an in-memory count of analyses and patent searches per IP address to enforce the daily limits. The count is cleared daily and is not written to disk.</li>
               <li><strong>Nothing else.</strong> Beyond this, Markman does not collect personal information or run analytics, tracking pixels, or telemetry. Our hosting provider may keep standard infrastructure logs.</li>
             </ul>
             <p className="mt-4">If you run Markman locally as a Claude Code plugin, your API keys, history, deadlines, and exports stay on your own machine.</p>
@@ -54,16 +54,16 @@ export default function Privacy() {
           </section>
 
           <section>
-            <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Attorney-Client Privilege</h2>
+            <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Privilege and Confidentiality</h2>
             <p>
-              Markman is designed with privilege awareness. FTO memos are automatically marked as Attorney Work Product. However, users are responsible for maintaining privilege over their own analysis outputs. Sending queries to third-party APIs (Anthropic, USPTO) may have implications for privilege that users should evaluate with their own counsel.
+              Markman does not apply privilege or work-product labels. Exports are marked as drafts for attorney review, and you decide how to label and protect your own work. Sending text to third-party APIs (Anthropic, USPTO) may have implications for privilege and confidentiality that you should evaluate under your own professional obligations. Do not paste confidential client information into the public demo. Markman does not provide legal advice, and using it does not create an attorney-client relationship.
             </p>
           </section>
 
           <section>
             <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Open Source</h2>
             <p>
-              Markman is open source under the Apache-2.0 license. You can inspect every line of code to verify exactly what data is collected, stored, and transmitted. The source code is the authoritative reference for data handling behavior.
+              Markman is open source under the Apache-2.0 license. You can inspect the code to see what data is collected, stored, and transmitted. The source code is the authoritative reference for data handling behavior.
             </p>
           </section>
 
@@ -84,7 +84,7 @@ export default function Privacy() {
 
         <div className={`mt-12 pt-8 border-t ${dark ? 'border-ink-800' : 'border-ink-200'}`}>
           <p className={`mono text-[12px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
-            Markman v1.1.0 | Apache-2.0 License | Claude Code Plugin for IP Law
+            Markman | Apache-2.0 License | Claude Code plugin for IP work
           </p>
         </div>
       </div>
