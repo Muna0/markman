@@ -427,7 +427,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
         {/* ── PLAYBOOK ── */}
         <H2 dark={dark} id="playbook">Playbook Configuration</H2>
         <P dark={dark}>
-          The playbook at <Code dark={dark}>playbooks/ip-playbook.md</Code> controls how all skills behave. Edit it to match your firm's standards. You can also configure it in the <Link to="/app/settings" className="text-blu-400 underline">Settings</Link> page.
+          The playbook at <Code dark={dark}>playbooks/ip-playbook.md</Code> controls how all skills behave. Edit it to match your firm's standards.
         </P>
 
         <Table dark={dark}

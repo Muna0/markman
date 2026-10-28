@@ -8,8 +8,6 @@ import IpTriage from './pages/IpTriage'
 import PatentAnalysis from './pages/PatentAnalysis'
 import TrademarkClearance from './pages/TrademarkClearance'
 import FtoAnalysis from './pages/FtoAnalysis'
-import Settings from './pages/Settings'
-import Files from './pages/Files'
 import Docs from './pages/Docs'
 import Privacy from './pages/Privacy'
 
@@ -40,9 +38,7 @@ function App() {
         <Route path="patent" element={<PatentAnalysis />} />
         <Route path="trademark" element={<TrademarkClearance />} />
         <Route path="fto" element={<FtoAnalysis />} />
-        <Route path="files" element={<Files />} />
         <Route path="docs" element={<Docs />} />
-        <Route path="settings" element={<Settings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

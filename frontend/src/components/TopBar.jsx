@@ -1,31 +1,31 @@
 import { useTheme } from '../store/ThemeContext'
 import { Link } from 'react-router-dom'
-import { Search, Home, BookOpen } from 'lucide-react'
+import { Home, BookOpen, Sun, Moon } from 'lucide-react'
 
 export default function TopBar() {
-  const { dark } = useTheme()
+  const { dark, toggle } = useTheme()
+  const ghost = `flex items-center gap-1.5 px-3 py-2 rounded-[6px] text-[14px] font-medium transition ${
+    dark ? 'text-ink-300 hover:text-white hover:bg-white/5' : 'text-ink-600 hover:text-ink-900 hover:bg-ink-100'
+  }`
 
   return (
-    <header className={`sticky top-0 z-30 h-[52px] flex items-center justify-between px-5 border-b ${
-      dark ? 'glass-dark border-ink-800/40' : 'glass-light border-ink-200'
+    <header className={`sticky top-0 z-30 h-[68px] flex items-center justify-between pl-16 pr-5 lg:px-6 border-b ${
+      dark ? 'glass-dark border-white/10' : 'glass-light border-ink-200'
     }`}>
-      <div className="flex items-center gap-3">
-        <Link to="/" className={`flex items-center gap-1.5 mono text-[12px] font-medium transition ${dark ? 'text-ink-400 hover:text-ink-100' : 'text-ink-500 hover:text-ink-700'}`}>
-          <Home className="w-3.5 h-3.5" /> Home
-        </Link>
-        <div className={`w-px h-4 ${dark ? 'bg-ink-700' : 'bg-ink-200'}`} />
-        <div className={`flex items-center gap-2 rounded-lg px-3 py-1.5 w-48 max-sm:hidden ${dark ? 'bg-ink-800/60' : 'bg-ink-100'}`}>
-          <Search className="w-3.5 h-3.5 text-ink-400" />
-          <input type="text" placeholder="Search..." className={`bg-transparent text-[13px] w-full focus:outline-none placeholder:text-ink-500 ${dark ? 'text-ink-100' : 'text-ink-700'}`} />
-        </div>
-      </div>
+      <Link to="/" className={ghost}>
+        <Home className="w-4 h-4" /> Home
+      </Link>
       <div className="flex items-center gap-2">
-        <Link to="/app/docs" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg mono text-[12px] font-medium transition ${dark ? 'text-ink-400 hover:text-ink-100 hover:bg-ink-800' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
-          <BookOpen className="w-3.5 h-3.5" /> Docs
+        <Link to="/app/docs" className={ghost}>
+          <BookOpen className="w-4 h-4" /> Docs
         </Link>
-        <Link to="/app/settings" className="px-3 py-1.5 rounded-[5px] mono text-[12px] font-bold bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
-          Settings
-        </Link>
+        <button onClick={toggle} aria-label="Toggle theme" className={`p-2 rounded-[6px] transition ${dark ? 'text-ink-300 hover:bg-white/5' : 'text-ink-500 hover:bg-ink-100'}`}>
+          {dark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </button>
+        <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noopener noreferrer"
+          className="px-4 py-2 rounded-[5px] text-[14px] font-bold bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
+          Get the plugin
+        </a>
       </div>
     </header>
   )
