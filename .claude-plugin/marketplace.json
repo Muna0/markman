@@ -1,5 +1,6 @@
 {
   "name": "markman",
+  "description": "Markman: free, open-source IP law tools for Claude Code",
   "owner": {
     "name": "Muna Omar"
   },
