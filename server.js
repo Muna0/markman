@@ -55,7 +55,7 @@ const limiter = createDailyLimiter({ perKey: 3, total: 150 });
 const visitorKey = (req) => req.get("fly-client-ip") || req.ip;
 
 const DATA_DIR = path.join(__dirname, "markman-data");
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+if (!PUBLIC && !fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
 const DEADLINES_FILE = path.join(DATA_DIR, "deadlines.json");
 const HISTORY_FILE = path.join(DATA_DIR, "history.json");
