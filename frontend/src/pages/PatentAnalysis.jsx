@@ -75,6 +75,84 @@ function BreadthBadge({ breadth, dark }) {
   return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[breadth]}`}>{breadth}</span>
 }
 
+function buildAnalysisQuery(patent, details) {
+  const d = details
+  const parts = [
+    `Analyze patent application ${patent.applicationNumber}: "${d.title || patent.title}".`,
+    `\nAPPLICATION DATA FROM USPTO (VERIFIED):`,
+    `Filing Date: ${d.filingDate || patent.filingDate}`,
+    d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
+    `Type: ${patent.type}`,
+    `USPC Class/Subclass: ${d.class || patent.class}/${d.subclass || ''}`,
+    `USPC Symbol: ${d.uspcSymbol || 'N/A'}`,
+    d.groupArtUnit ? `Art Unit: ${d.groupArtUnit}` : null,
+    `Status: ${d.statusDescription || 'Pending'} (as of ${d.statusDate || 'unknown'})`,
+    d.entityStatus ? `Entity Status: ${d.entityStatus}` : null,
+    d.nationalStage ? `National Stage Entry: Yes (PCT application)` : null,
+    d.docketNumber ? `Attorney Docket: ${d.docketNumber}` : null,
+    d.firmName ? `Prosecuting Firm: ${d.firmName}` : null,
+    `\nINVENTORS (${d.inventors?.length || 0}):`,
+    ...(d.inventors || []).map(inv => typeof inv === 'string' ? `- ${inv}` : `- ${inv.name} (${inv.city}, ${inv.country})`),
+    `\nASSIGNEE: ${d.assignee || patent.assignee}`,
+  ]
+
+  if (d.continuity?.length > 0) {
+    parts.push(`\nCONTINUITY/PARENT APPLICATIONS:`)
+    d.continuity.forEach(c => parts.push(`- ${c.type}: ${c.parentApplication} (filed ${c.parentFilingDate}, status: ${c.parentStatus})`))
+  }
+
+  if (d.foreignPriority?.length > 0) {
+    parts.push(`\nFOREIGN PRIORITY CLAIMS (${d.foreignPriority.length}):`)
+    d.foreignPriority.forEach(fp => parts.push(`- ${fp.country}: ${fp.applicationNumber} (filed ${fp.filingDate})`))
+  }
+
+  if (d.assignments?.length > 0) {
+    parts.push(`\nASSIGNMENT HISTORY:`)
+    d.assignments.forEach(a => parts.push(`- ${a.conveyance} to ${a.assignee} (recorded ${a.recordedDate}, reel/frame: ${a.reelFrame})`))
+  }
+
+  if (d.prosecutionHistory) {
+    parts.push(`\nPROSECUTION HISTORY (${d.eventCount} events):`)
+    parts.push(d.prosecutionHistory)
+  }
+
+  if (d.abstract) parts.push(`\nABSTRACT:\n${d.abstract}`)
+  if (d.claims) parts.push(`\nCLAIMS:\n${typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims, null, 2)}`)
+
+  parts.push(`\nGrant Date: ${d.grantDate || 'Not yet granted'}`)
+  parts.push(`Expiration Date: ${d.expirationDate || 'N/A'}`)
+
+  parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. You have VERIFIED USPTO data above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application — clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
+
+  return parts.filter(Boolean).join('\n')
+}
+
+function buildAnalysisContext(patent, details) {
+  const d = details
+  const parts = [
+    `Patent: ${patent.applicationNumber}`,
+    `Title: ${d.title || patent.title}`,
+    `Filing Date: ${d.filingDate || patent.filingDate}`,
+    d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
+    `Type: ${patent.type}`,
+    `Class: ${d.class || patent.class}/${d.subclass || ''}`,
+    d.groupArtUnit ? `Art Unit: ${d.groupArtUnit}` : null,
+    `Inventors: ${(d.inventors || []).map(i => typeof i === 'string' ? i : i.name).join(', ')}`,
+    `Assignee: ${d.assignee || patent.assignee}`,
+    d.entityStatus ? `Entity: ${d.entityStatus}` : null,
+    d.firmName ? `Firm: ${d.firmName}` : null,
+    d.nationalStage ? `National Stage: Yes` : null,
+    d.continuity?.length ? `Continuity: ${d.continuity.map(c => `${c.type} ${c.parentApplication}`).join('; ')}` : null,
+    d.foreignPriority?.length ? `Foreign Priority: ${d.foreignPriority.length} claims (earliest: ${d.foreignPriority[d.foreignPriority.length - 1]?.filingDate})` : null,
+    `Status: ${d.statusDescription || 'Pending'}`,
+    d.abstract ? `Abstract: ${d.abstract}` : null,
+    d.claims ? `Claims: ${(typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims)).slice(0, 4000)}` : null,
+    `Grant Date: ${d.grantDate || 'Pending'}`,
+    `Prosecution Events: ${d.eventCount || 0}`,
+  ]
+  return parts.filter(Boolean).join('\n')
+}
+
 export default function PatentAnalysis() {
   const { dark } = useTheme()
   const [input, setInput] = useState('')
@@ -90,18 +168,25 @@ export default function PatentAnalysis() {
   const [perPage] = useState(25)
   const [loadingMore, setLoadingMore] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [patentDetails, setPatentDetails] = useState(null)
+  const [loadingDetails, setLoadingDetails] = useState(false)
 
-  async function loadMore() {
+  async function loadMore(andThenPage) {
     if (!liveResults || !searchQuery) return
     setLoadingMore(true)
     try {
       const nextStart = liveResults.results.length
       const data = await api.searchPatents(searchQuery, 50, nextStart)
       if (data.results && data.results.length > 0) {
-        setLiveResults(prev => ({
-          ...prev,
-          results: [...prev.results, ...data.results],
-        }))
+        setLiveResults(prev => {
+          const updated = { ...prev, results: [...prev.results, ...data.results] }
+          // If a page was requested after loading, set it now that data exists
+          if (andThenPage !== undefined) {
+            const maxPage = Math.ceil(updated.results.length / perPage) - 1
+            setPage(Math.min(andThenPage, maxPage))
+          }
+          return updated
+        })
       }
     } catch (err) {
       setApiError(err.message)
@@ -151,13 +236,26 @@ export default function PatentAnalysis() {
     setLoading(false)
   }
 
-  function selectPatent(patent) {
+  async function selectPatent(patent) {
     setSelectedPatent(patent)
     setResult(null)
-    // Initialize editable claims workspace
+    setPatentDetails(null)
     setClaims([
       { num: 1, type: 'Method', indDep: 'Independent', dependsOn: '', category: 'Process', notes: '' },
     ])
+
+    // Fetch full patent details (claims, abstract, etc.) from USPTO
+    setLoadingDetails(true)
+    try {
+      const details = await api.getPatentDetails(patent.applicationNumber)
+      if (details && !details.error) {
+        setPatentDetails(details)
+      }
+    } catch (err) {
+      // Non-blocking — analysis still works with metadata only
+      console.warn('Could not fetch patent details:', err.message)
+    }
+    setLoadingDetails(false)
   }
 
   function addClaim() {
@@ -303,8 +401,9 @@ export default function PatentAnalysis() {
               </span>
               <button onClick={() => {
                   const nextPage = page + 1
-                  if ((nextPage + 1) * perPage > liveResults.results.length && liveResults.results.length < liveResults.totalResults) {
-                    loadMore().then(() => setPage(nextPage))
+                  const needsMore = (nextPage + 1) * perPage > liveResults.results.length && liveResults.results.length < liveResults.totalResults
+                  if (needsMore) {
+                    loadMore(nextPage)
                   } else {
                     setPage(Math.min(Math.ceil(liveResults.results.length / perPage) - 1, nextPage))
                   }
@@ -411,10 +510,20 @@ export default function PatentAnalysis() {
           </div>
 
           {/* Claude Analysis */}
+          {loadingDetails && (
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-[13px] ${dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-50 text-ink-500'}`}>
+              <Loader2 className="w-4 h-4 animate-spin" /> Fetching full patent details from USPTO...
+            </div>
+          )}
           <ClaudeAnalysis
-            query={`Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}
+            key={selectedPatent.applicationNumber + (patentDetails ? '-full' : '-meta')}
+            query={patentDetails
+              ? buildAnalysisQuery(selectedPatent, patentDetails)
+              : `Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}
             skillType="patent"
-            context={`Patent: ${selectedPatent.applicationNumber}\nTitle: ${selectedPatent.title}\nFiling Date: ${selectedPatent.filingDate}\nType: ${selectedPatent.type}\nClass: ${selectedPatent.class}\nInventor: ${selectedPatent.firstInventor}\nAssignee: ${selectedPatent.assignee}`}
+            context={patentDetails
+              ? buildAnalysisContext(selectedPatent, patentDetails)
+              : `Patent: ${selectedPatent.applicationNumber}\nTitle: ${selectedPatent.title}\nFiling Date: ${selectedPatent.filingDate}\nType: ${selectedPatent.type}\nClass: ${selectedPatent.class}\nInventor: ${selectedPatent.firstInventor}\nAssignee: ${selectedPatent.assignee}`}
           />
         </div>
       )}

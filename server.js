@@ -117,7 +117,92 @@ app.post("/api/patents/details", async (req, res) => {
     const normalized = patentNumber.replace(/^US\s*/i, "").replace(/,/g, "").trim();
     const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/${normalized}`);
 
-    res.json(data);
+    // Parse the file wrapper response into a clean structure
+    const wrapper = data.patentFileWrapperDataBag?.[0] || data;
+    const meta = wrapper.applicationMetaData || {};
+    const events = wrapper.eventDataBag || [];
+    const inventors = (meta.inventorBag || []).map(i => {
+      const addr = i.correspondenceAddressBag?.[0] || {};
+      return { name: i.inventorNameText, city: addr.cityName, country: addr.countryName };
+    }).filter(i => i.name);
+    const assignees = (meta.applicantBag || []).map(a => a.applicantNameText || a.organizationNameText).filter(Boolean);
+
+    // Prosecution timeline
+    const prosecutionHistory = events
+      .sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate))
+      .map(e => `${e.eventDate}: ${e.eventDescriptionText} (${e.eventCode})`)
+      .join("\n");
+
+    // Parent/continuity data
+    const continuity = (wrapper.parentContinuityBag || []).map(p => ({
+      type: p.claimParentageTypeCodeDescriptionText,
+      parentApplication: p.parentApplicationNumberText,
+      parentFilingDate: p.parentApplicationFilingDate,
+      parentStatus: p.parentApplicationStatusDescriptionText,
+    }));
+
+    // Foreign priority
+    const foreignPriority = (wrapper.foreignPriorityBag || []).map(fp => ({
+      country: fp.ipOfficeName,
+      applicationNumber: fp.applicationNumberText,
+      filingDate: fp.filingDate,
+    }));
+
+    // Assignment data
+    const assignments = (wrapper.assignmentBag || []).map(a => ({
+      assignee: (a.assigneeBag || []).map(ae => ae.assigneeNameText).join("; "),
+      conveyance: a.conveyanceText,
+      recordedDate: a.assignmentRecordedDate,
+      reelFrame: a.reelAndFrameNumber,
+    }));
+
+    // Attorney/firm
+    const attorney = wrapper.recordAttorney?.customerNumberCorrespondenceData;
+    const firmName = attorney?.powerOfAttorneyAddressBag?.[0]?.nameLineOneText || null;
+
+    // Entity status
+    const entityStatus = meta.entityStatusData?.businessEntityStatusCategory || null;
+
+    res.json({
+      patentNumber: meta.patentNumber || normalized,
+      applicationNumber: wrapper.applicationNumberText || normalized,
+      title: meta.inventionTitle || meta.applicationTypeLabelName || "",
+      abstract: meta.abstractText || meta.inventionAbstractText || null,
+      claims: meta.claimText || meta.claims || null,
+      grantDate: meta.grantDate || null,
+      filingDate: meta.filingDate || "",
+      effectiveFilingDate: meta.effectiveFilingDate || null,
+      expirationDate: meta.expirationDate || null,
+      assignee: assignees.join("; ") || "",
+      inventors,
+      firstInventor: meta.firstInventorName || "",
+      type: meta.applicationTypeCategory || "",
+      status: meta.applicationStatusCode,
+      statusDescription: meta.applicationStatusDescriptionText || meta.applicationTypeLabelName || "",
+      statusDate: meta.applicationStatusDate || null,
+      class: meta.class || "",
+      subclass: meta.subclass || "",
+      uspcSymbol: meta.uspcSymbolText || "",
+      groupArtUnit: meta.groupArtUnitNumber || null,
+      docketNumber: meta.docketNumber || null,
+      entityStatus,
+      firmName,
+      nationalStage: meta.nationalStageIndicator === "True" || meta.nationalStageIndicator === true,
+      confirmationNumber: meta.applicationConfirmationNumber || null,
+      classifications: {
+        cpc: meta.cpcClassification || meta.cpcCodes || null,
+        uspc: meta.uspcClassification || meta.uspcCodes || meta.uspcSymbolText || null,
+      },
+      references: {
+        citedBy: meta.citedByCount || meta.referencedByCount || null,
+        citesPatents: meta.referenceCitedCount || null,
+      },
+      continuity,
+      foreignPriority,
+      assignments,
+      prosecutionHistory,
+      eventCount: events.length,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -235,51 +320,206 @@ app.post("/api/history", (req, res) => {
 });
 
 // ─── Export ───
+
+function detectHeading(line) {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.length <= 2) return null;
+  // ALL CAPS lines with letters (CLAIM SCOPE ASSESSMENT, PRIOR ART RED FLAGS, etc.)
+  if (trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed) && trimmed.length > 3) return "h2";
+  // Lines starting with capital letter subsections: "A. REISSUE-SPECIFIC SCOPE ISSUES"
+  if (/^[A-Z]\.\s+[A-Z]/.test(trimmed)) return "h3";
+  // Lines like "Claim Map", "Scope Assessment" — title case, no period, under 60 chars
+  if (/^[A-Z][a-z]/.test(trimmed) && !trimmed.includes(".") && trimmed.length < 60 && /^[A-Z][A-Za-z\s\-\/&:()]+$/.test(trimmed)) return "h3";
+  return null;
+}
+
 app.post("/api/export", async (req, res) => {
   try {
     const { title, content, memoType } = req.body;
     if (!title || !content) return res.status(400).json({ error: "title and content required" });
 
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle } = await import("docx");
+    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber, TabStopType, TabStopPosition, TableOfContents } = await import("docx");
     const timestamp = new Date().toISOString().split("T")[0];
     const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
     const filepath = path.join(EXPORT_DIR, filename);
 
+    const isFTO = /fto/i.test(memoType);
+    const memoLabel = isFTO ? "Freedom-to-Operate Analysis" : /trademark/i.test(memoType) ? "Trademark Clearance Report" : /intake/i.test(memoType) ? "IP Triage Report" : "Patent Analysis Memorandum";
+
     const children = [];
 
-    if (memoType === "FTO" || memoType === "fto") {
+    // ─── Privilege header (all memo types) ───
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { after: 100 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
+      children: [new TextRun({ text: "ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL", bold: true, size: 18, font: "Times New Roman", color: "888888" })],
+    }));
+
+    children.push(new Paragraph({ spacing: { after: 200 } }));
+
+    // ─── Memo heading block ───
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { after: 60 },
+      children: [new TextRun({ text: memoLabel.toUpperCase(), bold: true, size: 28, font: "Times New Roman", allCaps: true })],
+    }));
+
+    children.push(new Paragraph({
+      alignment: AlignmentType.CENTER, spacing: { after: 300 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: "333333", space: 12 } },
+      children: [new TextRun({ text: title, bold: true, size: 24, font: "Times New Roman" })],
+    }));
+
+    // ─── Memo metadata block ───
+    const metaFields = [
+      ["Date:", timestamp],
+      ["Prepared by:", "Markman IP Analysis Platform (Claude Opus 4.6)"],
+      ["Classification:", "Privileged & Confidential"],
+    ];
+
+    for (const [label, value] of metaFields) {
       children.push(new Paragraph({
-        alignment: AlignmentType.CENTER, spacing: { after: 400 },
-        children: [new TextRun({ text: "ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL", bold: true, size: 20, font: "Times New Roman", color: "666666" })],
+        spacing: { after: 40 },
+        children: [
+          new TextRun({ text: label, bold: true, size: 20, font: "Times New Roman" }),
+          new TextRun({ text: `  ${value}`, size: 20, font: "Times New Roman" }),
+        ],
       }));
     }
 
     children.push(new Paragraph({
-      heading: HeadingLevel.HEADING_1, spacing: { after: 200 },
-      children: [new TextRun({ text: title, bold: true, size: 32, font: "Times New Roman" })],
+      spacing: { after: 300 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
+    }));
+
+    // ─── Table of Contents ───
+    children.push(new Paragraph({
+      heading: HeadingLevel.HEADING_2, spacing: { after: 100 },
+      children: [new TextRun({ text: "TABLE OF CONTENTS", bold: true, size: 22, font: "Times New Roman" })],
+    }));
+
+    children.push(new TableOfContents("Table of Contents", {
+      hyperlink: true,
+      headingStyleRange: "1-3",
     }));
 
     children.push(new Paragraph({
-      spacing: { after: 300 },
-      children: [new TextRun({ text: `Date: ${timestamp}`, size: 22, font: "Times New Roman", color: "666666" })],
+      spacing: { after: 200 },
+      children: [new TextRun({ text: "[Update table of contents in Word: right-click above → Update Field]", italics: true, size: 16, font: "Times New Roman", color: "999999" })],
     }));
 
-    for (const line of content.split("\n")) {
-      if (!line.trim()) { children.push(new Paragraph({ spacing: { after: 100 } })); continue; }
-      const isHeading = line === line.toUpperCase() && line.trim().length > 3 && /[A-Z]/.test(line);
-      if (isHeading) {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 300, after: 100 }, children: [new TextRun({ text: line.trim(), bold: true, size: 24, font: "Times New Roman" })] }));
+    children.push(new Paragraph({
+      spacing: { after: 200 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
+    }));
+
+    // ─── Body content with smart heading detection ───
+    const lines = content.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (!line.trim()) {
+        children.push(new Paragraph({ spacing: { after: 80 } }));
+        continue;
+      }
+
+      const headingLevel = detectHeading(line);
+
+      if (headingLevel === "h2") {
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 300, after: 120 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "DDDDDD", space: 4 } },
+          children: [new TextRun({ text: line.trim(), bold: true, size: 24, font: "Times New Roman" })],
+        }));
+      } else if (headingLevel === "h3") {
+        children.push(new Paragraph({
+          heading: HeadingLevel.HEADING_3,
+          spacing: { before: 200, after: 80 },
+          children: [new TextRun({ text: line.trim(), bold: true, size: 22, font: "Times New Roman" })],
+        }));
       } else {
-        children.push(new Paragraph({ spacing: { after: 80 }, children: [new TextRun({ text: line, size: 22, font: "Times New Roman" })] }));
+        // Detect risk/severity markers and bold them
+        const runs = [];
+        const riskMatch = line.match(/^(.*?)(HIGH RISK|MEDIUM-HIGH RISK|MEDIUM RISK|LOW RISK|CRITICAL|⚠️)(.*)$/);
+        if (riskMatch) {
+          if (riskMatch[1]) runs.push(new TextRun({ text: riskMatch[1], size: 22, font: "Times New Roman" }));
+          runs.push(new TextRun({ text: riskMatch[2], bold: true, size: 22, font: "Times New Roman", color: riskMatch[2].includes("HIGH") || riskMatch[2] === "CRITICAL" ? "CC0000" : riskMatch[2].includes("MEDIUM") ? "CC6600" : "336600" }));
+          if (riskMatch[3]) runs.push(new TextRun({ text: riskMatch[3], size: 22, font: "Times New Roman" }));
+        } else {
+          // Detect numbered items for slight indent
+          const isNumbered = /^\s*\d+[\.\)]\s/.test(line);
+          const isBullet = /^\s*[-•]\s/.test(line);
+          runs.push(new TextRun({ text: line, size: 22, font: "Times New Roman" }));
+
+          if (isNumbered || isBullet) {
+            children.push(new Paragraph({
+              spacing: { after: 60 },
+              indent: { left: 360 },
+              children: runs,
+            }));
+            continue;
+          }
+        }
+
+        children.push(new Paragraph({ spacing: { after: 80 }, children: runs }));
       }
     }
 
-    children.push(new Paragraph({ spacing: { before: 400 } }));
+    // ─── Disclaimer ───
+    children.push(new Paragraph({ spacing: { before: 400 }, border: { top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } } }));
     children.push(new Paragraph({
-      children: [new TextRun({ text: "This analysis was generated with AI assistance and does not constitute legal advice.", italics: true, size: 18, font: "Times New Roman", color: "999999" })],
+      spacing: { after: 40 },
+      children: [new TextRun({ text: "DISCLAIMER", bold: true, size: 18, font: "Times New Roman", color: "888888" })],
+    }));
+    children.push(new Paragraph({
+      spacing: { after: 40 },
+      children: [new TextRun({ text: "This analysis was generated with AI assistance (Claude Opus 4.6, Anthropic) and does not constitute legal advice. All citations, statutory references, and legal conclusions must be independently verified by a licensed attorney before reliance. No attorney-client relationship is created by receipt of this document.", italics: true, size: 18, font: "Times New Roman", color: "888888" })],
+    }));
+    children.push(new Paragraph({
+      children: [new TextRun({ text: `Generated by Markman IP Analysis Platform — ${timestamp}`, italics: true, size: 16, font: "Times New Roman", color: "AAAAAA" })],
     }));
 
-    const doc = new Document({ sections: [{ children }] });
+    const doc = new Document({
+      styles: {
+        default: {
+          document: { run: { font: "Times New Roman", size: 22 } },
+          heading1: { run: { font: "Times New Roman", size: 32, bold: true } },
+          heading2: { run: { font: "Times New Roman", size: 24, bold: true } },
+          heading3: { run: { font: "Times New Roman", size: 22, bold: true } },
+        },
+      },
+      sections: [{
+        properties: {
+          page: {
+            margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 },
+          },
+        },
+        headers: {
+          default: new Header({
+            children: [new Paragraph({
+              alignment: AlignmentType.RIGHT,
+              children: [new TextRun({ text: "PRIVILEGED AND CONFIDENTIAL", size: 14, font: "Times New Roman", color: "AAAAAA", italics: true })],
+            })],
+          }),
+        },
+        footers: {
+          default: new Footer({
+            children: [new Paragraph({
+              alignment: AlignmentType.CENTER,
+              children: [
+                new TextRun({ text: "Markman IP Analysis  |  ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
+                new TextRun({ text: "Page ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
+                new TextRun({ children: [PageNumber.CURRENT], size: 14, font: "Times New Roman", color: "AAAAAA" }),
+                new TextRun({ text: " of ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
+                new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 14, font: "Times New Roman", color: "AAAAAA" }),
+              ],
+            })],
+          }),
+        },
+        children,
+      }],
+    });
+
     const buffer = await Packer.toBuffer(doc);
     fs.writeFileSync(filepath, buffer);
 
@@ -355,8 +595,8 @@ Important:
     const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
     const stream = await client.messages.stream({
-      model: "claude-opus-4-20250514",
-      max_tokens: 4096,
+      model: "claude-opus-4-6",
+      max_tokens: 8192,
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
     });
