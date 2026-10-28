@@ -14,8 +14,24 @@ export async function startServer(env = {}) {
     stdio: ["ignore", "pipe", "pipe"],
   });
   await new Promise((resolve, reject) => {
-    child.stdout.on("data", (d) => { if (String(d).includes("running")) resolve(); });
-    child.on("exit", (c) => reject(new Error(`server exited ${c}`)));
+    let buf = "";
+    const onExit = (c) => { clearTimeout(timer); reject(new Error(`server exited ${c}`)); };
+    const timer = setTimeout(() => {
+      child.off("exit", onExit);
+      child.kill();
+      reject(new Error("server did not start within 10s"));
+    }, 10000);
+    child.stdout.on("data", (d) => {
+      buf += String(d);
+      if (buf.includes("running")) {
+        clearTimeout(timer);
+        child.off("exit", onExit);
+        resolve();
+      }
+    });
+    child.on("exit", onExit);
   });
+  child.stdout.resume();
+  child.stderr.resume();
   return { url: `http://127.0.0.1:${port}`, stop: () => child.kill() };
 }

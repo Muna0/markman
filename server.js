@@ -16,8 +16,12 @@
  *   DELETE /api/deadlines/:id      - Remove a deadline
  *   POST /api/history              - Log a matter
  *   GET  /api/history              - Search history
- *   POST /api/export               - Export memo as .docx
- *   GET  /api/status               - Server and API key status
+ *   POST /api/export               - Export memo as .docx (streamed, nothing saved)
+ *   POST /api/analyze              - Stream an analysis (3/visitor/day in public mode)
+ *   GET  /api/status               - Mode, model, and API key status
+ *
+ * Set MARKMAN_PUBLIC=1 for the public demo: no CORS, no history, deadlines,
+ * or TSDR lookups, capped input size, daily limits, demo model.
  */
 
 import express from "express";
@@ -25,6 +29,7 @@ import cors from "cors";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { createDailyLimiter } from "./lib/rate-limit.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -42,11 +47,15 @@ const USPTO_API_KEY = process.env.USPTO_API_KEY || "";
 const TSDR_API_KEY = process.env.TSDR_API_KEY || USPTO_API_KEY;
 const WIPO_API_KEY = process.env.WIPO_API_KEY || "";
 const PORT = process.env.PORT || 3001;
+const PUBLIC = process.env.MARKMAN_PUBLIC === "1";
+const MODEL = process.env.MARKMAN_MODEL || (PUBLIC ? "claude-sonnet-5-5" : "claude-opus-5-5");
+const MAX_TOKENS = PUBLIC ? 4096 : 8192;
+const MAX_QUERY_CHARS = 20000;
+const limiter = createDailyLimiter({ perKey: 3, total: 150 });
+const visitorKey = (req) => req.get("fly-client-ip") || req.ip;
 
 const DATA_DIR = path.join(__dirname, "markman-data");
-const EXPORT_DIR = path.join(DATA_DIR, "exports");
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(EXPORT_DIR)) fs.mkdirSync(EXPORT_DIR, { recursive: true });
 
 const DEADLINES_FILE = path.join(DATA_DIR, "deadlines.json");
 const HISTORY_FILE = path.join(DATA_DIR, "history.json");
@@ -74,8 +83,13 @@ async function usptoFetch(url) {
 
 // ─── Express app ───
 const app = express();
-app.use(cors());
-app.use(express.json());
+if (!PUBLIC) app.use(cors());
+app.use(express.json({ limit: "200kb" }));
+app.use((req, res, next) => {
+  res.set({ "X-Content-Type-Options": "nosniff", "X-Frame-Options": "DENY", "Referrer-Policy": "strict-origin-when-cross-origin" });
+  next();
+});
+const localOnly = (req, res, next) => PUBLIC ? res.status(404).json({ error: "Not available on the public demo." }) : next();
 
 // ─── Patent search ───
 // Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
@@ -236,7 +250,7 @@ app.post("/api/trademarks/search", async (req, res) => {
 });
 
 // ─── Trademark status ───
-app.post("/api/trademarks/status", async (req, res) => {
+app.post("/api/trademarks/status", localOnly, async (req, res) => {
   try {
     const { serialNumber } = req.body;
     if (!serialNumber) return res.status(400).json({ error: "serialNumber is required" });
@@ -255,7 +269,7 @@ app.post("/api/trademarks/status", async (req, res) => {
 });
 
 // ─── Deadlines ───
-app.get("/api/deadlines", (req, res) => {
+app.get("/api/deadlines", localOnly, (req, res) => {
   const deadlines = readJSON(DEADLINES_FILE).filter(d => !d.completed);
   const now = new Date();
   const enriched = deadlines.map(d => {
@@ -278,7 +292,7 @@ app.get("/api/deadlines", (req, res) => {
   res.json(enriched);
 });
 
-app.post("/api/deadlines", (req, res) => {
+app.post("/api/deadlines", localOnly, (req, res) => {
   const { matter, deadline, date, notes, risk } = req.body;
   if (!matter || !deadline || !date) return res.status(400).json({ error: "matter, deadline, date required" });
   const all = readJSON(DEADLINES_FILE);
@@ -292,7 +306,7 @@ app.post("/api/deadlines", (req, res) => {
   res.json(entry);
 });
 
-app.delete("/api/deadlines/:id", (req, res) => {
+app.delete("/api/deadlines/:id", localOnly, (req, res) => {
   const all = readJSON(DEADLINES_FILE);
   const filtered = all.filter(d => d.id !== req.params.id);
   if (filtered.length === all.length) return res.status(404).json({ error: "not found" });
@@ -301,7 +315,7 @@ app.delete("/api/deadlines/:id", (req, res) => {
 });
 
 // ─── History ───
-app.get("/api/history", (req, res) => {
+app.get("/api/history", localOnly, (req, res) => {
   const { q, type } = req.query;
   let history = readJSON(HISTORY_FILE);
   if (q) {
@@ -316,7 +330,7 @@ app.get("/api/history", (req, res) => {
   res.json(history.slice(0, 50));
 });
 
-app.post("/api/history", (req, res) => {
+app.post("/api/history", localOnly, (req, res) => {
   const { type, title, summary, risk, input } = req.body;
   if (!type || !title) return res.status(400).json({ error: "type and title required" });
   const all = readJSON(HISTORY_FILE);
@@ -353,7 +367,6 @@ app.post("/api/export", async (req, res) => {
     const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber, TabStopType, TabStopPosition, TableOfContents } = await import("docx");
     const timestamp = new Date().toISOString().split("T")[0];
     const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
-    const filepath = path.join(EXPORT_DIR, filename);
 
     const isFTO = /fto/i.test(memoType);
     const memoLabel = isFTO ? "Freedom-to-Operate Analysis" : /trademark/i.test(memoType) ? "Trademark Clearance Report" : /intake/i.test(memoType) ? "IP Triage Report" : "Patent Analysis Memorandum";
@@ -533,18 +546,14 @@ app.post("/api/export", async (req, res) => {
     });
 
     const buffer = await Packer.toBuffer(doc);
-    fs.writeFileSync(filepath, buffer);
-
-    res.json({ filepath, filename, downloadUrl: `/api/export/download/${filename}` });
+    res.set({
+      "Content-Type": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    });
+    res.send(buffer);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-app.get("/api/export/download/:filename", (req, res) => {
-  const filepath = path.join(EXPORT_DIR, req.params.filename);
-  if (!fs.existsSync(filepath)) return res.status(404).json({ error: "not found" });
-  res.download(filepath);
 });
 
 // ─── Claude Analysis (the bridge) ───
@@ -553,10 +562,10 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 // Load skill files as system prompts
 function loadSkill(skillType) {
   const skillMap = {
-    "patent": "skills/patent-analysis.md",
-    "trademark": "skills/trademark-screen.md",
-    "fto": "skills/fto-memo.md",
-    "intake": "skills/ip-triage.md",
+    "patent": "skills/patent-analysis/SKILL.md",
+    "trademark": "skills/trademark-screen/SKILL.md",
+    "fto": "skills/fto-memo/SKILL.md",
+    "intake": "skills/ip-triage/SKILL.md",
   };
   const filepath = path.join(__dirname, skillMap[skillType] || skillMap["patent"]);
   if (!fs.existsSync(filepath)) return "";
@@ -570,12 +579,23 @@ function loadPlaybook() {
 }
 
 app.post("/api/analyze", async (req, res) => {
+  const { query, skillType, context } = req.body;
+  if (!query) return res.status(400).json({ error: "query is required" });
+  if (PUBLIC) {
+    if (String(query).length + String(context || "").length > MAX_QUERY_CHARS)
+      return res.status(413).json({ error: `The public demo accepts up to ${MAX_QUERY_CHARS.toLocaleString()} characters. Install the free plugin for longer documents.` });
+    const r = limiter.take(visitorKey(req));
+    if (!r.ok) return res.status(429).json({
+      limit: r.reason,
+      error: r.reason === "visitor"
+        ? "You've used today's 3 free analyses on the public demo. Install the free Markman plugin to keep going."
+        : "The public demo has reached today's limit. Install the free Markman plugin to keep going.",
+    });
+  }
+
   if (!ANTHROPIC_API_KEY) {
     return res.status(400).json({ error: "ANTHROPIC_API_KEY not configured. Add it to your .env file." });
   }
-
-  const { query, skillType, context } = req.body;
-  if (!query) return res.status(400).json({ error: "query is required" });
 
   const skill = loadSkill(skillType || "patent");
   const playbook = loadPlaybook();
@@ -600,15 +620,14 @@ Important:
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
-  res.setHeader("Access-Control-Allow-Origin", "*");
 
   try {
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
     const stream = await client.messages.stream({
-      model: "claude-opus-4-6",
-      max_tokens: 8192,
+      model: MODEL,
+      max_tokens: MAX_TOKENS,
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
     });
@@ -625,19 +644,21 @@ Important:
     res.end();
 
     // Log to history
-    const fullText = finalMessage.content.map(c => c.text || "").join("");
-    const historyAll = readJSON(HISTORY_FILE);
-    historyAll.unshift({
-      id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      type: `${skillType || "patent"}-analysis`,
-      title: query.slice(0, 80),
-      summary: fullText.slice(0, 200),
-      risk: "ANALYZED",
-      input: query,
-      timestamp: new Date().toISOString(),
-    });
-    if (historyAll.length > 500) historyAll.length = 500;
-    writeJSON(HISTORY_FILE, historyAll);
+    if (!PUBLIC) {
+      const fullText = finalMessage.content.map(c => c.text || "").join("");
+      const historyAll = readJSON(HISTORY_FILE);
+      historyAll.unshift({
+        id: `m-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        type: `${skillType || "patent"}-analysis`,
+        title: query.slice(0, 80),
+        summary: fullText.slice(0, 200),
+        risk: "ANALYZED",
+        input: query,
+        timestamp: new Date().toISOString(),
+      });
+      if (historyAll.length > 500) historyAll.length = 500;
+      writeJSON(HISTORY_FILE, historyAll);
+    }
 
   } catch (err) {
     res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
@@ -648,17 +669,28 @@ Important:
 // Check if Claude API is configured
 app.get("/api/status", (req, res) => {
   res.json({
+    public: PUBLIC, model: MODEL,
     uspto: USPTO_API_KEY ? "configured" : "missing",
     wipo: WIPO_API_KEY ? "configured" : "missing",
     claude: ANTHROPIC_API_KEY ? "configured" : "missing",
-    deadlines: readJSON(DEADLINES_FILE).length,
-    history: readJSON(HISTORY_FILE).length,
   });
 });
+
+// ─── Static app ───
+const DIST = path.join(__dirname, "frontend", "dist");
+if (fs.existsSync(DIST)) {
+  app.use(express.static(DIST, { index: false, maxAge: "1h" }));
+  app.use((req, res, next) => {
+    if (req.method !== "GET" || req.path.startsWith("/api")) return next();
+    res.sendFile(path.join(DIST, "index.html"));
+  });
+}
 
 // ─── Start ───
 app.listen(PORT, () => {
   console.log(`Markman API server running on http://localhost:${PORT}`);
+  console.log(`  Mode:         ${PUBLIC ? "public demo" : "local"}`);
+  console.log(`  Model:        ${MODEL}`);
   console.log(`  USPTO API:    ${USPTO_API_KEY ? "configured" : "NOT SET"}`);
   console.log(`  WIPO API:     ${WIPO_API_KEY ? "configured" : "NOT SET"}`);
   console.log(`  Claude API:   ${ANTHROPIC_API_KEY ? "configured" : "NOT SET"}`);
