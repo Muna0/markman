@@ -5,7 +5,7 @@ import { api } from '../store/api'
 import { localHistory } from '../store/localHistory'
 import {
   FileSearch, FlaskConical, Stamp, ShieldCheck,
-  ArrowRight, Server, Key, CheckCircle2, AlertTriangle, Clock, Settings, Trash2,
+  ArrowRight, Server, Key, CheckCircle2, AlertTriangle, Clock, Download, Trash2,
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -21,10 +21,10 @@ export default function Dashboard() {
   const wipoKey = serverStatus?.wipo === 'configured' ? 'yes' : ''
 
   const tools = [
-    { to: '/app/intake', label: 'Matter Intake', desc: 'Classify an IP matter, extract facts, flag deadlines', icon: FileSearch, color: 'from-blu-500 to-vio-500' },
-    { to: '/app/patent', label: 'Patent Analysis', desc: 'Parse claims, map scope, surface prior art risks', icon: FlaskConical, color: 'from-vio-500 to-blu-500' },
-    { to: '/app/trademark', label: 'TM Clearance', desc: 'Screen marks across jurisdictions with DuPont scoring', icon: Stamp, color: 'from-grn-500 to-blu-500' },
-    { to: '/app/fto', label: 'FTO Analysis', desc: 'Element-by-element claim mapping, design-arounds', icon: ShieldCheck, color: 'from-amb-500 to-red-400' },
+    { to: '/app/intake', label: 'Matter Intake', desc: 'Classify an IP matter, extract facts, flag deadlines', icon: FileSearch },
+    { to: '/app/patent', label: 'Patent Analysis', desc: 'Parse claims, map scope, surface prior art risks', icon: FlaskConical },
+    { to: '/app/trademark', label: 'TM Clearance', desc: 'Screen marks across jurisdictions with DuPont scoring', icon: Stamp },
+    { to: '/app/fto', label: 'FTO Analysis', desc: 'Element-by-element claim mapping, design-arounds', icon: ShieldCheck },
   ]
 
   const connectionStatus = [
@@ -41,19 +41,19 @@ export default function Dashboard() {
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className={`text-2xl font-bold ${dark ? 'text-white' : 'text-ink-950'}`}>Dashboard</h1>
+        <h1 className={`text-[28px] tracking-[-0.02em] font-bold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Dashboard</h1>
         <p className={`text-[13px] mt-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Markman plugin status and tools</p>
       </div>
 
       {/* Connection status */}
-      <div className={`rounded-xl border p-5 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+      <div className={`rounded-[14px] border p-5 mb-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Server className={`w-4 h-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
-            <h2 className={`text-[14px] font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>MCP Server Status</h2>
+            <h2 className={`text-[14px] font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>MCP Server Status</h2>
           </div>
           <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-[12px] font-medium transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
-            <Settings className="w-3 h-3" /> Get the plugin
+            <Download className="w-3 h-3" /> Get the plugin
           </a>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
@@ -94,34 +94,34 @@ export default function Dashboard() {
       )}
 
       {/* Tools */}
-      <h2 className={`text-[14px] font-semibold mb-3 ${dark ? 'text-white' : 'text-ink-950'}`}>Tools</h2>
+      <h2 className={`text-[14px] font-semibold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Tools</h2>
       <div className="grid sm:grid-cols-2 gap-3 mb-8">
         {tools.map(t => (
           <Link
             key={t.to}
             to={t.to}
-            className={`group rounded-xl border p-5 transition-all duration-200 hover:-translate-y-0.5 ${
-              dark ? 'bg-ink-900 border-ink-800 hover:border-ink-600' : 'bg-white border-ink-200 hover:border-ink-300 hover:shadow-md'
+            className={`group rounded-[14px] border p-5 transition-all duration-200 hover:-translate-y-0.5 ${
+              dark ? 'bg-ink-900 border-white/10 hover:border-blu-500/50' : 'bg-white border-ink-200 hover:border-blu-500 hover:shadow-md'
             }`}
           >
             <div className="flex items-start justify-between mb-3">
-              <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${t.color} flex items-center justify-center group-hover:scale-105 transition-transform`}>
-                <t.icon className="w-4.5 h-4.5 text-white" />
+              <div className={`w-9 h-9 rounded-[10px] ${dark ? 'bg-blu-500/15' : 'bg-blu-50'} flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                <t.icon className="w-4.5 h-4.5 text-blu-500" />
               </div>
               <ArrowRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
             </div>
-            <h3 className={`text-[14px] font-bold mb-1 ${dark ? 'text-white' : 'text-ink-950'}`}>{t.label}</h3>
+            <h3 className={`text-[14px] font-bold mb-1 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{t.label}</h3>
             <p className={`text-[12px] leading-[1.5] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{t.desc}</p>
           </Link>
         ))}
       </div>
 
       {/* Recent analyses */}
-      <div className={`rounded-xl border ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-        <div className={`px-5 py-4 border-b flex items-center justify-between ${dark ? 'border-ink-800' : 'border-ink-200'}`}>
+      <div className={`rounded-[14px] border ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
+        <div className={`px-5 py-4 border-b flex items-center justify-between ${dark ? 'border-white/10' : 'border-ink-200'}`}>
           <div className="flex items-center gap-2">
             <Clock className={`w-4 h-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
-            <h2 className={`text-[14px] font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Recent Analyses</h2>
+            <h2 className={`text-[14px] font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Recent Analyses</h2>
             <span className={`text-[11px] mono ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{history.length}</span>
           </div>
           {history.length > 0 && (

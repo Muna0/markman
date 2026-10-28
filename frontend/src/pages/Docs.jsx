@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useTheme } from '../store/ThemeContext'
-import { Link } from 'react-router-dom'
 import {
   BookOpen, Terminal, Server, Layers, ArrowUpRight,
   FlaskConical, Stamp, ShieldCheck, FileSearch, Zap, Clock, Shield, Check, X,
@@ -25,11 +24,11 @@ function Code({ children, dark }) {
 }
 
 function Block({ dark, children }) {
-  return <pre className={`rounded-xl p-5 text-[14px] mono leading-[1.8] overflow-x-auto bg-ink-950 text-ink-300 border border-ink-800`}>{children}</pre>
+  return <pre className={`rounded-[14px] p-5 text-[14px] mono leading-[1.8] overflow-x-auto bg-ink-950 text-ink-300 border border-white/10`}>{children}</pre>
 }
 
 function H2({ dark, id, children }) {
-  return <h2 id={id} className={`text-[30px] font-bold tracking-[-0.02em] mb-5 mt-16 first:mt-0 scroll-mt-20 ${dark ? 'text-white' : 'text-ink-950'}`}>{children}</h2>
+  return <h2 id={id} className={`text-[30px] font-bold tracking-[-0.02em] mb-5 mt-16 first:mt-0 scroll-mt-20 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{children}</h2>
 }
 
 function H3({ dark, children }) {
@@ -48,7 +47,7 @@ function Table({ dark, headers, rows }) {
           {headers.map(h => <th key={h} className={`text-left py-3 pr-4 font-semibold ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{h}</th>)}
         </tr></thead>
         <tbody>{rows.map((row, i) => (
-          <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
+          <tr key={i} className={`border-b last:border-0 ${dark ? 'border-white/10' : 'border-ink-100'}`}>
             {row.map((cell, j) => <td key={j} className={`py-3 pr-4 ${j === 0 ? 'font-semibold mono' : ''} ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{cell}</td>)}
           </tr>
         ))}</tbody>
@@ -70,7 +69,7 @@ export default function Docs() {
   return (
     <div className="flex">
       {/* Sidebar TOC */}
-      <aside className={`hidden lg:block w-[200px] shrink-0 sticky top-[52px] h-[calc(100vh-52px)] overflow-y-auto p-4 border-r ${dark ? 'border-ink-800/60' : 'border-ink-200'}`}>
+      <aside className={`hidden lg:block w-[200px] shrink-0 sticky top-[52px] h-[calc(100vh-52px)] overflow-y-auto p-4 border-r ${dark ? 'border-white/10/60' : 'border-ink-200'}`}>
         <p className={`text-[15px] font-semibold uppercase tracking-[0.12em] px-2 mb-2 ${dark ? 'text-ink-500' : 'text-ink-400'}`}>Documentation</p>
         <nav className="space-y-0.5">
           {sections.map(s => (
@@ -87,11 +86,11 @@ export default function Docs() {
       {/* Content */}
       <div className="flex-1 p-6 lg:p-8 max-w-3xl">
         <div className="flex items-center gap-3 mb-8">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${dark ? 'bg-ink-800' : 'bg-ink-100'}`}>
+          <div className={`w-10 h-10 rounded-[10px] flex items-center justify-center ${dark ? 'bg-ink-800' : 'bg-ink-100'}`}>
             <BookOpen className={`w-5 h-5 ${dark ? 'text-ink-300' : 'text-ink-600'}`} />
           </div>
           <div>
-            <h1 className={`text-3xl font-bold ${dark ? 'text-white' : 'text-ink-950'}`}>Documentation</h1>
+            <h1 className={`text-[28px] tracking-[-0.02em] font-bold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Documentation</h1>
             <p className={`text-[15px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Why Markman exists, how it works, and how to use it</p>
           </div>
         </div>
@@ -108,8 +107,8 @@ export default function Docs() {
           Markman takes a fundamentally different approach. It is a <strong>Claude Code plugin</strong> that brings IP analysis into the environment where attorneys already work. Instead of switching to a separate platform, you describe what you need in natural language and get structured, citation ready output connected to live USPTO and WIPO data through MCP servers.
         </P>
 
-        <div className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
-          <p className={`text-[17px] font-semibold mb-4 ${dark ? 'text-white' : 'text-ink-950'}`}>What makes Markman different:</p>
+        <div className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+          <p className={`text-[17px] font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>What makes Markman different:</p>
           <div className="space-y-3">
             {[
               'Runs inside Claude Code with no separate login and no context switching',
@@ -149,7 +148,7 @@ similarity search.`}</Block>
         <P dark={dark}>
           Claude Code detects that your message involves an FTO/infringement question. The <Code dark={dark}>fto-memo</Code> skill activates automatically. You do not invoke it manually. The skill's definition file tells Claude how to structure its analysis: what steps to follow, what format to output, what risk thresholds to use.
         </P>
-        <div className={`rounded-xl border p-4 mb-4 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+        <div className={`rounded-[14px] border p-4 mb-4 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
           <p className={`text-[15px] font-semibold uppercase tracking-wider mb-2 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>What happens behind the scenes</p>
           <div className="space-y-2">
             {[
@@ -272,7 +271,7 @@ UK: CLEAR
                 ['Cost', '$0', '$15k–$50k/yr', '$20k–$100k/yr', '$10k–$30k/yr'],
                 ['Setup time', '5 minutes', 'Weeks', 'Weeks', 'Weeks'],
               ].map((row, i) => (
-                <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800' : 'border-ink-100'}`}>
+                <tr key={i} className={`border-b last:border-0 ${dark ? 'border-white/10' : 'border-ink-100'}`}>
                   {row.map((cell, j) => (
                     <td key={j} className={`py-2.5 pr-3 ${j === 0 ? 'font-semibold' : ''} ${dark ? 'text-ink-200' : 'text-ink-700'}`}>{cell}</td>
                   ))}
@@ -460,15 +459,15 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             ['Trademark status lookup', 'check_trademark_status', 'data.uspto.gov/api/v1/trademarks/{serial} + TSDR fallback'],
           ]}
         />
-        <div className={`rounded-xl border p-5 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
-          <p className={`text-[15px] font-semibold mb-3 ${dark ? 'text-white' : 'text-ink-950'}`}>How to get your USPTO API key (free):</p>
+        <div className={`rounded-[14px] border p-5 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+          <p className={`text-[15px] font-semibold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>How to get your USPTO API key (free):</p>
           <ol className="space-y-2">
             {[
               'Go to data.uspto.gov/myodp',
               'Create a USPTO.gov account if you do not have one',
               'Verify your identity through ID.me (required for API access)',
               'Link your ID.me account to your USPTO.gov account',
-              'Your API key will appear on the MyODP page. Copy it and add to your .env file or Settings page.',
+              'Your API key will appear on the MyODP page. Copy it and add it to your .env file.',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className={`text-[15px] font-bold mono w-4 shrink-0 mt-0.5 ${dark ? 'text-blu-400' : 'text-blu-500'}`}>{i + 1}.</span>
@@ -489,15 +488,15 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             ['PCT application details (deadlines, national phase)', 'get_pct_application', 'wipocase.wipo.int/api/v1/applications/{number}'],
           ]}
         />
-        <div className={`rounded-xl border p-5 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
-          <p className={`text-[15px] font-semibold mb-3 ${dark ? 'text-white' : 'text-ink-950'}`}>How to get your WIPO API key (free):</p>
+        <div className={`rounded-[14px] border p-5 mb-6 ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+          <p className={`text-[15px] font-semibold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>How to get your WIPO API key (free):</p>
           <ol className="space-y-2">
             {[
               'Go to wipo.int/case/en',
               'Click "Access" or "Apply for API Access"',
               'Submit your organization details.approval may take 1-3 business days',
               'You\'ll receive a Bearer token for authentication',
-              'Add the key to your .env or Settings page',
+              'Add the key to your .env file',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2">
                 <span className={`text-[15px] font-bold mono w-4 shrink-0 mt-0.5 ${dark ? 'text-blu-400' : 'text-blu-500'}`}>{i + 1}.</span>
@@ -658,7 +657,7 @@ claude doctor`}</Block>
           ]},
         ].map(cat => (
           <div key={cat.cat} className="mb-8">
-            <h3 className={`text-[15px] font-bold mb-4 pb-2 border-b ${dark ? 'text-white border-ink-800' : 'text-ink-950 border-ink-200'}`}>{cat.cat}</h3>
+            <h3 className={`text-[15px] font-bold mb-4 pb-2 border-b ${dark ? 'text-white border-white/10' : 'text-ink-950 border-ink-200'}`}>{cat.cat}</h3>
             <div className="space-y-4">
               {cat.terms.map(t => (
                 <div key={t.term} className="flex items-start gap-3">
@@ -670,7 +669,7 @@ claude doctor`}</Block>
           </div>
         ))}
 
-        <div className={`mt-12 pt-8 border-t text-center ${dark ? 'border-ink-800' : 'border-ink-200'}`}>
+        <div className={`mt-12 pt-8 border-t text-center ${dark ? 'border-white/10' : 'border-ink-200'}`}>
           <p className={`text-[14px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
             Markman v1.0.0 &middot; Apache-2.0 &middot; Claude Code Plugin for IP Law
           </p>

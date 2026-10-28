@@ -278,18 +278,18 @@ export default function PatentAnalysis() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-vio-500 to-vio-600 flex items-center justify-center">
-            <FlaskConical className="w-5 h-5 text-white" />
+          <div className={`w-10 h-10 rounded-[10px] ${dark ? 'bg-blu-500/15' : 'bg-blu-50'} flex items-center justify-center`}>
+            <FlaskConical className="w-5 h-5 text-blu-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Patent Analysis</h1>
+            <h1 className={`text-[28px] font-bold tracking-[-0.02em] ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Patent Analysis</h1>
             <p className={`text-sm ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Analyze claims, scope, and prior art risks</p>
           </div>
         </div>
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+      <form onSubmit={handleSubmit} className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
         <div className="flex gap-2 mb-4">
           {['number', 'claims'].map(t => (
             <button
@@ -313,7 +313,7 @@ export default function PatentAnalysis() {
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder="e.g., US11,234,567 or PCT/US2024/012345"
-            className={`w-full rounded-lg border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'}`}
+            className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
           />
         ) : (
           <textarea
@@ -321,7 +321,7 @@ export default function PatentAnalysis() {
             onChange={e => setInput(e.target.value)}
             rows={8}
             placeholder="Paste patent claims here..."
-            className={`w-full rounded-lg border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent resize-none placeholder:text-ink-400 font-mono ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'}`}
+            className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 resize-none placeholder:text-ink-400 font-mono ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
           />
         )}
 
@@ -329,7 +329,7 @@ export default function PatentAnalysis() {
           <button
             type="submit"
             disabled={!input.trim() || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blu-500 text-white text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-[5px] bg-blu-500 text-white btn-shadow text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             {loading ? 'Analyzing...' : 'Analyze Patent'}
@@ -340,15 +340,15 @@ export default function PatentAnalysis() {
       {/* Results */}
       {/* Live USPTO Results */}
       {apiError && (
-        <div className={`mb-4 px-4 py-3 rounded-xl text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+        <div className={`mb-4 px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           API Error: {apiError}. Showing sample analysis below.
         </div>
       )}
 
       {liveResults && liveResults.results && liveResults.results.length > 0 && (
-        <div className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+        <div className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
           <div className="flex items-center justify-between mb-4">
-            <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Live USPTO Results</h2>
+            <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Live USPTO Results</h2>
             <span className={`mono text-[12px] px-2 py-0.5 rounded ${dark ? 'bg-grn-400/15 text-grn-400' : 'bg-grn-100 text-grn-500'}`}>
               {liveResults.totalResults.toLocaleString()} total
             </span>
@@ -366,7 +366,7 @@ export default function PatentAnalysis() {
               </thead>
               <tbody>
                 {liveResults.results.slice(page * perPage, (page + 1) * perPage).map((p, i) => (
-                  <tr key={i} className={`border-b last:border-0 ${dark ? 'border-ink-800 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
+                  <tr key={i} className={`border-b last:border-0 ${dark ? 'border-white/10 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
                     <td className="py-2.5 pr-4">
                       <a href={`https://patentcenter.uspto.gov/applications/${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
                         className={`mono text-[12px] underline decoration-dotted underline-offset-2 transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
@@ -428,10 +428,10 @@ export default function PatentAnalysis() {
       {selectedPatent && (
         <div className="space-y-6 mb-6">
           {/* Patent Header — real data */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+          <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
+                <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
                 <p className={`text-[14px] mt-1 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{selectedPatent.title}</p>
               </div>
               <a href={`https://patentcenter.uspto.gov/applications/${selectedPatent.applicationNumber}`}
@@ -466,9 +466,9 @@ export default function PatentAnalysis() {
           </div>
 
           {/* Editable Claim Map */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+          <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Claim Map</h2>
+              <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Claim Map</h2>
               <button onClick={addClaim}
                 className={`mono text-[12px] font-medium px-3 py-1.5 rounded transition ${dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25' : 'bg-blu-50 text-blu-500 hover:bg-blu-100'}`}>
                 + Add Claim
@@ -512,7 +512,7 @@ export default function PatentAnalysis() {
 
           {/* Claude Analysis */}
           {loadingDetails && (
-            <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-[13px] ${dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-50 text-ink-500'}`}>
+            <div className={`flex items-center gap-2 px-4 py-3 rounded-[14px] text-[13px] ${dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-50 text-ink-500'}`}>
               <Loader2 className="w-4 h-4 animate-spin" /> Fetching full patent details from USPTO...
             </div>
           )}

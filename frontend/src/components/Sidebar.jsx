@@ -46,7 +46,7 @@ export default function Sidebar() {
       } ${open ? 'translate-x-0' : 'max-lg:-translate-x-full'}`}>
         <div className={`flex items-center px-5 py-4 border-b ${dark ? 'border-white/10' : 'border-ink-200'}`}>
           <MarkmanWordmark size={52} dark={dark} />
-          <button onClick={() => setOpen(false)} className="ml-auto lg:hidden p-1 rounded hover:bg-ink-800">
+          <button onClick={() => setOpen(false)} className="ml-auto lg:hidden p-1 rounded hover:bg-ink-100 dark:hover:bg-ink-800">
             <X className="w-4 h-4" />
           </button>
         </div>

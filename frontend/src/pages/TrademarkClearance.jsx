@@ -186,18 +186,18 @@ export default function TrademarkClearance() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-grn-500 to-grn-600 flex items-center justify-center">
-            <Stamp className="w-5 h-5 text-white" />
+          <div className={`w-10 h-10 rounded-[10px] ${dark ? 'bg-blu-500/15' : 'bg-blu-50'} flex items-center justify-center`}>
+            <Stamp className="w-5 h-5 text-blu-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Trademark Clearance</h1>
+            <h1 className={`text-[28px] font-bold tracking-[-0.02em] ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Trademark Clearance</h1>
             <p className={`text-sm ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Screen a mark for conflicts across jurisdictions</p>
           </div>
         </div>
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+      <form onSubmit={handleSubmit} className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium mb-2">Proposed Mark</label>
@@ -206,7 +206,7 @@ export default function TrademarkClearance() {
               value={mark}
               onChange={e => setMark(e.target.value)}
               placeholder="e.g., NEXAFLOW"
-              className={`w-full rounded-lg border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'}`}
+              className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
             />
           </div>
           <div>
@@ -216,7 +216,7 @@ export default function TrademarkClearance() {
               value={goods}
               onChange={e => setGoods(e.target.value)}
               placeholder="e.g., AI-powered workflow automation software"
-              className={`w-full rounded-lg border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'}`}
+              className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
             />
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function TrademarkClearance() {
           <button
             type="submit"
             disabled={!mark.trim() || !goods.trim() || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blu-600 text-white text-sm font-medium hover:bg-blu-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-[5px] bg-blu-500 text-white btn-shadow text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             {loading ? 'Searching...' : 'Run Clearance Screen'}
@@ -262,7 +262,7 @@ export default function TrademarkClearance() {
         <div className="space-y-6">
           {/* Live API note */}
           {liveNote && (
-            <div className={`rounded-xl p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border border-ink-700/40' : 'bg-ink-50 border border-ink-200'}`}>
+            <div className={`rounded-[14px] p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border border-ink-700/40' : 'bg-ink-50 border border-ink-200'}`}>
               <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${dark ? 'text-amb-400' : 'text-amb-500'}`} />
               <div className="space-y-2">
                 <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>{liveNote.text}</p>
@@ -278,13 +278,13 @@ export default function TrademarkClearance() {
           )}
 
           {/* Summary */}
-          <div className={`rounded-xl p-6 border ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
+          <div className={`rounded-[14px] p-6 border ${dark ? 'bg-ink-800/30 border-ink-700/40' : 'bg-ink-50 border-ink-200'}`}>
             <p className={`text-[15px] leading-[1.7] ${dark ? 'text-ink-200' : 'text-ink-600'}`}>{result.recommendation}</p>
           </div>
 
           {/* Mark Assessment */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-ink-950'}`}>Mark Assessment</h2>
+          <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
+            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Mark Assessment</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div className={`rounded-lg p-4 ${dark ? 'bg-ink-800' : 'bg-ink-50'}`}>
                 <p className={`mono text-[11px] uppercase tracking-wider font-semibold mb-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Mark Type</p>
@@ -303,8 +303,8 @@ export default function TrademarkClearance() {
           </div>
 
           {/* Phonetic Variants — dynamically generated */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-white' : 'text-ink-950'}`}>Phonetic Variants to Search</h2>
+          <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
+            <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Phonetic Variants to Search</h2>
             <p className={`text-[13px] mb-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
               These are automatically generated variants that should be searched for conflicts (sound-alikes, misspellings, common substitutions):
             </p>
@@ -331,8 +331,8 @@ export default function TrademarkClearance() {
           </div>
 
           {/* Jurisdiction Coverage — with live search links */}
-          <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
-            <h2 className={`text-lg font-semibold mb-2 ${dark ? 'text-white' : 'text-ink-950'}`}>Jurisdiction Coverage</h2>
+          <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
+            <h2 className={`text-lg font-semibold mb-2 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Jurisdiction Coverage</h2>
             <p className={`text-[13px] mb-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
               Click "Search" to open each trademark office database directly. First-to-file jurisdictions require registration for priority. First-to-use jurisdictions recognize rights from commercial use.
             </p>

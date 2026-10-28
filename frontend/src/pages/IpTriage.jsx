@@ -117,25 +117,25 @@ export default function IpTriage() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-            <FileSearch className="w-5 h-5 text-white" />
+          <div className={`w-10 h-10 rounded-[10px] ${dark ? 'bg-blu-500/15' : 'bg-blu-50'} flex items-center justify-center`}>
+            <FileSearch className="w-5 h-5 text-blu-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Matter Intake</h1>
+            <h1 className={`text-[28px] font-bold tracking-[-0.02em] ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Matter Intake</h1>
             <p className={`text-sm ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Classify, extract key facts, and flag deadlines for any IP matter</p>
           </div>
         </div>
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSubmit} className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6 mb-6`}>
+      <form onSubmit={handleSubmit} className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6 mb-6`}>
         <label className="block text-sm font-medium mb-2">Describe the IP matter or question</label>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={5}
           placeholder="Example: We're developing a new ML-based recommendation algorithm for our SaaS platform. We plan to share technical details with a strategic partner under NDA. Need to assess IP protection options before the meeting next month."
-          className={`w-full rounded-lg border ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'} px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent resize-none placeholder:text-ink-400`}
+          className={`w-full rounded-[8px] border ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'} px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 resize-none placeholder:text-ink-400`}
         />
 
         <div className="mt-4 flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ export default function IpTriage() {
           <button
             type="submit"
             disabled={!description.trim() || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blu-500 text-white text-sm font-medium hover:bg-blu-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-[5px] bg-blu-500 text-white btn-shadow text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             {loading ? 'Analyzing...' : 'Run Triage'}
@@ -175,7 +175,7 @@ export default function IpTriage() {
       {result && (
         <div className="space-y-6 animate-in fade-in">
           {/* Classification */}
-          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6`}>
+          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6`}>
             <h2 className="text-lg font-semibold mb-4">Classification</h2>
             <div className="flex flex-wrap gap-3">
               <div className={`px-4 py-2 rounded-lg ${dark ? 'bg-blu-950 border-blu-800' : 'bg-blu-50 border-blu-200'} border`}>
@@ -192,7 +192,7 @@ export default function IpTriage() {
           </div>
 
           {/* Key Facts */}
-          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6`}>
+          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6`}>
             <h2 className="text-lg font-semibold mb-4">Key Facts</h2>
             <ul className="space-y-2">
               {result.facts.map((f, i) => (
@@ -205,7 +205,7 @@ export default function IpTriage() {
           </div>
 
           {/* Deadlines */}
-          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6`}>
+          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6`}>
             <h2 className="text-lg font-semibold mb-4">Critical Deadlines</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -219,7 +219,7 @@ export default function IpTriage() {
                 </thead>
                 <tbody>
                   {result.deadlines.map((d, i) => (
-                    <tr key={i} className={`border-b ${dark ? 'border-ink-800' : 'border-ink-100'} last:border-0`}>
+                    <tr key={i} className={`border-b ${dark ? 'border-white/10' : 'border-ink-100'} last:border-0`}>
                       <td className="py-3 pr-4 font-medium">{d.name}</td>
                       <td className={`py-3 pr-4 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{d.date}</td>
                       <td className={`py-3 pr-4 ${dark ? 'text-ink-400' : 'text-ink-600'}`}>{d.remaining}</td>
@@ -243,7 +243,7 @@ export default function IpTriage() {
           </div>
 
           {/* Risk Assessment */}
-          <div className={`rounded-xl border p-6 ${
+          <div className={`rounded-[14px] border p-6 ${
             result.risk === 'HIGH' ? `${dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200'}` :
             result.risk === 'MEDIUM' ? `${dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200'}` :
             `${dark ? 'bg-grn-950/30 border-grn-900' : 'bg-grn-50 border-grn-200'}`
@@ -260,7 +260,7 @@ export default function IpTriage() {
           </div>
 
           {/* Missing Information */}
-          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6`}>
+          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6`}>
             <h2 className="text-lg font-semibold mb-4">Missing Information</h2>
             <ul className="space-y-2">
               {result.missing.map((m, i) => (
@@ -273,7 +273,7 @@ export default function IpTriage() {
           </div>
 
           {/* Next Steps */}
-          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-xl border ${dark ? 'border-ink-800' : 'border-ink-200'} p-6`}>
+          <div className={`${dark ? 'bg-ink-900' : 'bg-white'} rounded-[14px] border ${dark ? 'border-white/10' : 'border-ink-200'} p-6`}>
             <h2 className="text-lg font-semibold mb-4">Recommended Next Steps</h2>
             <ol className="space-y-3">
               {result.nextSteps.map((s, i) => (

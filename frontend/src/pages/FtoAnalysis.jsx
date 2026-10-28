@@ -93,7 +93,7 @@ function RiskBanner({ risk }) {
   }
   const c = config[risk]
   return (
-    <div className={`rounded-xl p-6 border ${c.bg}`}>
+    <div className={`rounded-[14px] p-6 border ${c.bg}`}>
       <div className="flex items-center gap-3 mb-3">
         <AlertTriangle className={`w-6 h-6 ${c.icon}`} />
         <h2 className="text-xl font-bold">Overall FTO Risk: {c.label}</h2>
@@ -163,25 +163,25 @@ export default function FtoAnalysis() {
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amb-500 to-amb-600 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5 text-white" />
+          <div className={`w-10 h-10 rounded-[10px] ${dark ? 'bg-blu-500/15' : 'bg-blu-50'} flex items-center justify-center`}>
+            <ShieldCheck className="w-5 h-5 text-blu-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">FTO Analysis</h1>
+            <h1 className={`text-[28px] font-bold tracking-[-0.02em] ${dark ? 'text-ink-50' : 'text-ink-950'}`}>FTO Analysis</h1>
             <p className={`text-sm ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Freedom-to-operate risk assessment</p>
           </div>
         </div>
       </div>
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className={`rounded-xl border p-6 mb-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+      <form onSubmit={handleSubmit} className={`rounded-[14px] border p-6 mb-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
         <label className="block text-sm font-medium mb-2">Describe the technology, product, or feature to clear</label>
         <textarea
           value={description}
           onChange={e => setDescription(e.target.value)}
           rows={6}
           placeholder="Example: Our product uses a transformer-based model to extract structured data from unstructured medical records. Key features: fine-tuned on clinical text, outputs FHIR-compliant JSON, runs on-device for HIPAA compliance. Custom tokenizer trained on medical terminology corpus."
-          className={`w-full rounded-lg border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500 focus:border-transparent resize-none placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-300 bg-ink-50'}`}
+          className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 resize-none placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
         />
         <div className={`mt-4 rounded-lg border p-3 ${dark ? 'bg-ink-800 border-ink-700' : 'bg-ink-50 border-ink-200'}`}>
           <p className={`text-xs ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
@@ -192,7 +192,7 @@ export default function FtoAnalysis() {
           <button
             type="submit"
             disabled={!description.trim() || loading}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-blu-600 text-white text-sm font-medium hover:bg-blu-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-[5px] bg-blu-500 text-white btn-shadow text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
             {loading ? 'Analyzing...' : 'Run FTO Analysis'}
@@ -202,7 +202,7 @@ export default function FtoAnalysis() {
 
       {/* Searching */}
       {searching && (
-        <div className={`rounded-xl border p-6 flex items-center gap-3 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+        <div className={`rounded-[14px] border p-6 flex items-center gap-3 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
           <Loader2 className="w-5 h-5 animate-spin text-blu-400" />
           <span className={`text-[14px] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>Searching USPTO for potentially blocking patents...</span>
         </div>
@@ -218,9 +218,9 @@ export default function FtoAnalysis() {
 
           {/* Real Patents Found */}
           {foundPatents.length > 0 && (
-            <div className={`rounded-xl border p-6 ${dark ? 'bg-ink-900 border-ink-800' : 'bg-white border-ink-200'}`}>
+            <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
               <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-lg font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Potentially Relevant Patents from USPTO</h2>
+                <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Potentially Relevant Patents from USPTO</h2>
                 <span className={`mono text-[12px] px-2 py-0.5 rounded ${dark ? 'bg-grn-400/15 text-grn-400' : 'bg-grn-100 text-grn-500'}`}>
                   {foundPatents.length} found
                 </span>
