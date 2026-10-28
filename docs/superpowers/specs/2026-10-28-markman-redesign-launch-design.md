@@ -56,12 +56,12 @@ Turned on by `MARKMAN_PUBLIC=1`, so local use is unchanged.
 - Fly.io app `markman-ip` (URL `markman-ip.fly.dev`), region ord, shared-cpu-1x with 256 MB of memory. It stops when idle and starts on the next visit, so the first visit after a quiet spell takes a few seconds.
 - A Dockerfile builds the frontend, then runs `node server.js`, which serves `frontend/dist` and `/api`.
 - Secrets are set with `fly secrets set`: `USPTO_API_KEY`, `ANTHROPIC_API_KEY`, `MARKMAN_PUBLIC=1`.
-- Fly account: the logged-in account (rainwhisperer4@gmail.com), the same one used for the Gateway Thirteen demo.
+- Fly account: M's personal Fly.io account.
 - Expected Fly cost: under $5 a month at test traffic.
 
 ## M's actions
 
-1. Set a monthly spend limit on the Anthropic API key in the Anthropic console (suggested: $25).
+1. Set a monthly spend limit on the Anthropic API key in the Anthropic console.
 2. Approve the Fly deploy, which creates a public app.
 
 ## GitHub
