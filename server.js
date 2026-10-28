@@ -581,6 +581,8 @@ function loadPlaybook() {
 app.post("/api/analyze", async (req, res) => {
   const { query, skillType, context } = req.body;
   if (!query) return res.status(400).json({ error: "query is required" });
+  if (typeof query !== "string" || (context != null && typeof context !== "string"))
+    return res.status(400).json({ error: "query and context must be text" });
   if (PUBLIC) {
     if (String(query).length + String(context || "").length > MAX_QUERY_CHARS)
       return res.status(413).json({ error: `The public demo accepts up to ${MAX_QUERY_CHARS.toLocaleString()} characters. Install the free plugin for longer documents.` });

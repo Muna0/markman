@@ -61,3 +61,9 @@ test("security headers are set", async () => {
   assert.equal(r.headers.get("x-content-type-options"), "nosniff");
   assert.equal(r.headers.get("x-frame-options"), "DENY");
 });
+
+test("non-text query or context is refused with 400 before the limiter", async () => {
+  const blocks = [{ type: "text", text: "x".repeat(50000) }];
+  assert.equal((await analyze({ query: blocks })).status, 400);
+  assert.equal((await analyze({ query: "x", context: { a: 1 } })).status, 400);
+});
