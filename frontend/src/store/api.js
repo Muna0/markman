@@ -1,9 +1,9 @@
 /**
  * API client for the Markman backend server.
- * Backend runs on port 3001, frontend on 5173.
+ * Requests go to /api (proxied to the backend in dev).
  */
 
-const BASE = 'http://localhost:3001/api'
+const BASE = '/api'
 
 async function post(path, body) {
   const res = await fetch(`${BASE}${path}`, {
@@ -19,11 +19,6 @@ async function get(path) {
   return res.json()
 }
 
-async function del(path) {
-  const res = await fetch(`${BASE}${path}`, { method: 'DELETE' })
-  return res.json()
-}
-
 export const api = {
   // Status
   status: () => get('/status'),
@@ -34,19 +29,17 @@ export const api = {
 
   // Trademarks
   searchTrademarks: (markText) => post('/trademarks/search', { markText }),
-  getTrademarkStatus: (serialNumber) => post('/trademarks/status', { serialNumber }),
-
-  // Deadlines
-  listDeadlines: () => get('/deadlines'),
-  addDeadline: (matter, deadline, date, risk, notes) => post('/deadlines', { matter, deadline, date, risk, notes }),
-  removeDeadline: (id) => del(`/deadlines/${id}`),
-
-  // History
-  searchHistory: (q, type) => get(`/history?${new URLSearchParams({ ...(q && { q }), ...(type && { type }) })}`),
-  logMatter: (type, title, summary, risk, input) => post('/history', { type, title, summary, risk, input }),
 
   // Export
-  exportMemo: (title, content, memoType) => post('/export', { title, content, memoType }),
+  exportMemo: async (title, content, memoType) => {
+    const res = await fetch(`${BASE}/export`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title, content, memoType }) })
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Export failed')
+    const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') || '')?.[1] || 'markman-memo.docx'
+    const url = URL.createObjectURL(await res.blob())
+    const a = Object.assign(document.createElement('a'), { href: url, download: name })
+    a.click()
+    URL.revokeObjectURL(url)
+  },
 
   // Claude Analysis (streaming)
   // Returns an async generator that yields text chunks
@@ -58,8 +51,11 @@ export const api = {
     })
 
     if (!res.ok) {
-      const err = await res.json()
-      throw new Error(err.error || 'Analysis failed')
+      const err = await res.json().catch(() => ({}))
+      const e = new Error(err.error || 'Analysis failed')
+      e.status = res.status
+      e.limit = err.limit
+      throw e
     }
 
     const reader = res.body.getReader()

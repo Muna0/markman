@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ShieldCheck, ChevronRight, Loader2, AlertTriangle, CheckCircle2, ArrowRight } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import { localHistory } from '../store/localHistory'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const SAMPLE_RESULT = {
@@ -155,7 +156,7 @@ export default function FtoAnalysis() {
 
     setSearching(false)
     setSubmitted(true)
-    api.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis with USPTO search', 'UNKNOWN', description)
+    localHistory.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis with USPTO search', 'UNKNOWN', description)
   }
 
   return (

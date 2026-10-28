@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Stamp, ChevronRight, Loader2, AlertTriangle, CheckCircle2, XCircle, MinusCircle, ExternalLink } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import { localHistory } from '../store/localHistory'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const JURISDICTIONS = ['US', 'EU', 'UK', 'CA', 'AU', 'JP', 'KR', 'IN', 'BR', 'MX']
@@ -175,7 +176,7 @@ export default function TrademarkClearance() {
     }
 
     // Log to history
-    api.logMatter('trademark-screen', `TM Clearance: ${markUpper}`, `${distinctiveness} mark in ${niceClasses.join(', ')}. ${selectedJurisdictions.length} jurisdictions.`, 'UNKNOWN', `${mark} | ${goods} | ${selectedJurisdictions.join(', ')}`)
+    localHistory.logMatter('trademark-screen', `TM Clearance: ${markUpper}`, `${distinctiveness} mark in ${niceClasses.join(', ')}. ${selectedJurisdictions.length} jurisdictions.`, 'UNKNOWN', `${mark} | ${goods} | ${selectedJurisdictions.join(', ')}`)
 
     setResult(dynamicResult)
     setLoading(false)

@@ -6,8 +6,6 @@ import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
 /**
  * ClaudeAnalysis — streams a real Claude analysis using Markman skills.
  *
- * Model: Claude Opus 4 (claude-sonnet-4-20250514)
- *
  * Props:
  *   query: string — what to analyze
  *   skillType: 'patent' | 'trademark' | 'fto' | 'intake'
@@ -18,14 +16,14 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
   const { dark } = useTheme()
   const [output, setOutput] = useState('')
   const [running, setRunning] = useState(false)
-  const [error, setError] = useState('')
+  const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
   const [exporting, setExporting] = useState(false)
 
   async function run() {
     setRunning(true)
     setOutput('')
-    setError('')
+    setError(null)
     setDone(false)
 
     try {
@@ -37,7 +35,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
       setDone(true)
       if (onComplete) onComplete(fullText)
     } catch (err) {
-      setError(err.message)
+      setError(err)
     }
     setRunning(false)
   }
@@ -56,14 +54,9 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
     setExporting(true)
     try {
       const title = `Markman ${skillType.charAt(0).toUpperCase() + skillType.slice(1)} Analysis`
-      const result = await api.exportMemo(title, output, skillType === 'fto' ? 'FTO' : skillType)
-      if (result.downloadUrl) {
-        window.open(`http://localhost:3001${result.downloadUrl}`, '_blank')
-      } else if (result.error) {
-        setError(result.error)
-      }
+      await api.exportMemo(title, output, skillType === 'fto' ? 'FTO' : skillType)
     } catch (err) {
-      setError(err.message)
+      setError(err)
     }
     setExporting(false)
   }
@@ -138,7 +131,15 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
       {/* Output */}
       <div className="p-5 max-h-[700px] overflow-y-auto">
         {error && (
-          <p className="text-red-400 text-[14px] mb-3">Error: {error}</p>
+          <p className="text-red-400 text-[14px] mb-3">
+            Error: {error.message}
+            {error.limit && (
+              <>
+                {' '}
+                <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className="underline font-semibold">Install the free plugin</a>
+              </>
+            )}
+          </p>
         )}
         <pre className={`text-[15px] leading-[1.8] whitespace-pre-wrap font-sans ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
           {output}

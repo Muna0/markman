@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FlaskConical, ChevronRight, Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import { localHistory } from '../store/localHistory'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const SAMPLE_RESULT = {
@@ -212,7 +213,7 @@ export default function PatentAnalysis() {
         if (data.error) throw new Error(data.error)
         if (data.results && data.results.length > 0) {
           setLiveResults(data)
-          api.logMatter('patent-analysis', `Patent Search: ${input.trim()}`, `${data.totalResults} results found`, 'UNKNOWN', input.trim())
+          localHistory.logMatter('patent-analysis', `Patent Search: ${input.trim()}`, `${data.totalResults} results found`, 'UNKNOWN', input.trim())
         } else {
           setApiError('No results found. Try different keywords.')
         }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import { localHistory } from '../store/localHistory'
 import {
   FileSearch, FlaskConical, Stamp, ShieldCheck,
   ArrowRight, Server, Key, CheckCircle2, AlertTriangle, Clock, Settings, Trash2,
@@ -10,13 +11,10 @@ import {
 export default function Dashboard({ analyses }) {
   const { dark } = useTheme()
   const [serverStatus, setServerStatus] = useState(null)
-  const [deadlines, setDeadlines] = useState([])
-  const [history, setHistory] = useState([])
+  const [history] = useState(() => localHistory.list())
 
   useEffect(() => {
     api.status().then(setServerStatus).catch(() => setServerStatus(null))
-    api.listDeadlines().then(setDeadlines).catch(() => {})
-    api.searchHistory().then(setHistory).catch(() => {})
   }, [])
 
   const usptoKey = serverStatus?.uspto === 'configured' ? 'yes' : ''
@@ -35,6 +33,7 @@ export default function Dashboard({ analyses }) {
   ]
 
   function clearHistory() {
+    localHistory.clear()
     localStorage.removeItem('markman-analyses')
     window.location.reload()
   }
@@ -53,9 +52,9 @@ export default function Dashboard({ analyses }) {
             <Server className={`w-4 h-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
             <h2 className={`text-[14px] font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>MCP Server Status</h2>
           </div>
-          <Link to="/app/settings" className={`flex items-center gap-1 text-[12px] font-medium transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
-            <Settings className="w-3 h-3" /> Configure
-          </Link>
+          <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className={`flex items-center gap-1 text-[12px] font-medium transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
+            <Settings className="w-3 h-3" /> Get the plugin
+          </a>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           {connectionStatus.map(c => (
@@ -82,11 +81,17 @@ export default function Dashboard({ analyses }) {
           <div className={`mt-3 rounded-lg px-4 py-2.5 flex items-center gap-2 ${dark ? 'bg-amb-400/10 border border-amb-400/20' : 'bg-amb-100 border border-amb-500/20'}`}>
             <AlertTriangle className="w-3.5 h-3.5 text-amb-400" />
             <span className={`text-[12px] ${dark ? 'text-amb-400' : 'text-amb-500'}`}>
-              Add your API keys in <Link to="/app/settings" className="underline font-semibold">Settings</Link> to enable live USPTO & WIPO data.
+              Install the <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className="underline font-semibold">plugin</a> and add your API keys to enable live USPTO & WIPO data.
             </span>
           </div>
         )}
       </div>
+
+      {serverStatus?.public && (
+        <p className={`text-[12px] mb-6 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+          Public demo: 3 free analyses per day. Your history stays in this browser.
+        </p>
+      )}
 
       {/* Tools */}
       <h2 className={`text-[14px] font-semibold mb-3 ${dark ? 'text-white' : 'text-ink-950'}`}>Tools</h2>
@@ -117,22 +122,22 @@ export default function Dashboard({ analyses }) {
           <div className="flex items-center gap-2">
             <Clock className={`w-4 h-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`} />
             <h2 className={`text-[14px] font-semibold ${dark ? 'text-white' : 'text-ink-950'}`}>Recent Analyses</h2>
-            <span className={`text-[11px] mono ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{analyses.length}</span>
+            <span className={`text-[11px] mono ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{history.length}</span>
           </div>
-          {analyses.length > 0 && (
+          {history.length > 0 && (
             <button onClick={clearHistory} className={`flex items-center gap-1 text-[11px] font-medium transition ${dark ? 'text-ink-500 hover:text-red-400' : 'text-ink-400 hover:text-red-500'}`}>
               <Trash2 className="w-3 h-3" /> Clear
             </button>
           )}
         </div>
-        {analyses.length === 0 ? (
+        {history.length === 0 ? (
           <div className="px-5 py-12 text-center">
             <p className={`text-[13px] mb-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>No analyses yet</p>
             <p className={`text-[12px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>Run a tool above to see results here</p>
           </div>
         ) : (
           <div className={`divide-y ${dark ? 'divide-ink-800' : 'divide-ink-100'}`}>
-            {analyses.slice(0, 10).map(a => (
+            {history.slice(0, 10).map(a => (
               <div key={a.id} className={`px-5 py-3.5 flex items-center justify-between ${dark ? 'hover:bg-ink-800/30' : 'hover:bg-ink-50'} transition-colors`}>
                 <div className="min-w-0">
                   <p className={`text-[13px] font-medium truncate ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{a.title}</p>
