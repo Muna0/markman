@@ -8,7 +8,7 @@ import {
   ArrowRight, Server, Key, CheckCircle2, AlertTriangle, Clock, Settings, Trash2,
 } from 'lucide-react'
 
-export default function Dashboard({ analyses }) {
+export default function Dashboard() {
   const { dark } = useTheme()
   const [serverStatus, setServerStatus] = useState(null)
   const [history] = useState(() => localHistory.list())

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FileSearch, AlertTriangle, Clock, CheckCircle2, ChevronRight, Loader2 } from 'lucide-react'
+import { localHistory } from '../store/localHistory'
 import { useTheme } from '../store/ThemeContext'
 import { runTriage } from '../store/analyzer'
 import { api } from '../store/api'
@@ -82,7 +83,7 @@ const SAMPLE_RESULTS = {
   },
 }
 
-export default function IpTriage({ addMatter }) {
+export default function IpTriage() {
   const { dark } = useTheme()
   const [description, setDescription] = useState('')
   const [selectedType, setSelectedType] = useState('')
@@ -102,14 +103,13 @@ export default function IpTriage({ addMatter }) {
       setResult(analysis)
       setLoading(false)
 
-      addMatter({
-        title: description.slice(0, 60) + (description.length > 60 ? '...' : ''),
-        type: analysis.classification.primary,
-        risk: analysis.risk,
-        status: 'Analyzed',
-        date: new Date().toISOString().split('T')[0],
-        deadlines: analysis.deadlines,
-      })
+      localHistory.logMatter(
+        'intake',
+        description.slice(0, 60) + (description.length > 60 ? '...' : ''),
+        `Classified as ${analysis.classification.primary}`,
+        analysis.risk,
+        description,
+      )
     }, 800)
   }
 

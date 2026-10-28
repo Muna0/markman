@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { useTheme } from './store/ThemeContext'
-import { useStore } from './store/useStore'
 import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import Landing from './pages/Landing'
@@ -30,15 +29,14 @@ function AppLayout() {
 }
 
 function App() {
-  const store = useStore()
 
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/privacy" element={<Privacy />} />
       <Route path="/app" element={<AppLayout />}>
-        <Route index element={<Dashboard analyses={store.analyses} />} />
-        <Route path="intake" element={<IpTriage addMatter={store.addMatter} />} />
+        <Route index element={<Dashboard />} />
+        <Route path="intake" element={<IpTriage />} />
         <Route path="patent" element={<PatentAnalysis />} />
         <Route path="trademark" element={<TrademarkClearance />} />
         <Route path="fto" element={<FtoAnalysis />} />
