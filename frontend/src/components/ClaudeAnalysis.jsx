@@ -4,13 +4,13 @@ import { api } from '../store/api'
 import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
 
 /**
- * ClaudeAnalysis — streams a real Claude analysis using Markman skills.
+ * ClaudeAnalysis: streams a real Claude analysis using Markman skills.
  *
  * Props:
- *   query: string — what to analyze
+ *   query: string: what to analyze
  *   skillType: 'patent' | 'trademark' | 'fto' | 'intake'
- *   context?: string — additional context
- *   onComplete?: (text) => void — callback when done
+ *   context?: string: additional context
+ *   onComplete?: (text) => void: callback when done
  */
 export default function ClaudeAnalysis({ query, skillType, context, onComplete }) {
   const { dark } = useTheme()
@@ -83,13 +83,18 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
 
   if (!output && !running && !error) {
     return (
-      <button onClick={run}
-        className={`flex items-center gap-2 px-5 py-3 rounded-lg mono text-[14px] font-bold transition ${
-          dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25 border border-blu-500/20' : 'bg-blu-50 text-blu-500 hover:bg-blu-100 border border-blu-200'
-        }`}>
-        <Sparkles className="w-4 h-4" />
-        Run Claude Analysis
-      </button>
+      <div>
+        <button onClick={run}
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg mono text-[14px] font-bold transition ${
+            dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25 border border-blu-500/20' : 'bg-blu-50 text-blu-500 hover:bg-blu-100 border border-blu-200'
+          }`}>
+          <Sparkles className="w-4 h-4" />
+          Run Claude Analysis
+        </button>
+        <p className={`mt-2 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+          Public demo: do not paste confidential client information.
+        </p>
+      </div>
     )
   }
 
@@ -100,7 +105,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
         <div className="flex items-center gap-2">
           <Sparkles className={`w-4 h-4 ${running ? 'animate-pulse' : ''} ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
           <span className={`mono text-[13px] font-bold ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
-            Claude Opus 4 {running ? '— streaming...' : done ? '— complete' : ''}
+            {running ? 'Streaming...' : done ? 'Complete' : ''}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -118,7 +123,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete }
                 className={`flex items-center gap-1 mono text-[11px] px-2.5 py-1.5 rounded transition ${dark ? 'text-ink-400 hover:text-ink-200 hover:bg-ink-700' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
                 <Download className="w-3 h-3" /> PDF
               </button>
-              <button onClick={run}
+              <button onClick={run} title="Each run counts toward the public demo's daily limit."
                 className={`flex items-center gap-1 mono text-[11px] px-2.5 py-1.5 rounded transition ${dark ? 'text-ink-400 hover:text-ink-200 hover:bg-ink-700' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
                 <RefreshCw className="w-3 h-3" /> Re-run
               </button>

@@ -176,7 +176,7 @@ function Hero() {
           </a>
         </div>
         <p className={`mt-5 text-[14px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-          No account needed. Your work stays in your browser.
+          No account needed. History stays in your browser; text you analyze is sent to Anthropic.
         </p>
       </div>
     </section>

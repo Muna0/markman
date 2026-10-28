@@ -28,7 +28,7 @@ export default function Privacy() {
             <p className="mb-3">The public demo has no accounts and does not save your inputs or results on the server. Here is what happens to your data:</p>
             <ul className="list-disc pl-6 space-y-2">
               <li><strong>Analysis history</strong> stays in this browser's local storage. You can clear it at any time from the Dashboard.</li>
-              <li><strong>Daily limit counter.</strong> The server keeps an in-memory count of analyses per IP address to enforce the daily limit. The count is cleared daily and is never written to disk.</li>
+              <li><strong>Daily limit counter.</strong> The server keeps an in-memory count of analyses and patent searches per IP address to enforce the daily limits. The count is cleared daily and is never written to disk.</li>
               <li><strong>Nothing else.</strong> Beyond this, Markman does not collect personal information or run analytics, tracking pixels, or telemetry. Our hosting provider may keep standard infrastructure logs.</li>
             </ul>
             <p className="mt-4">If you run Markman locally as a Claude Code plugin, your API keys, history, deadlines, and exports stay on your own machine.</p>
@@ -38,8 +38,8 @@ export default function Privacy() {
             <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Third-Party Services</h2>
             <p className="mb-3">Using the demo sends data to two outside services:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong>USPTO Open Data Portal.</strong> Patent and trademark searches are sent to the United States Patent and Trademark Office. This is a U.S. government service.</li>
-              <li><strong>Anthropic API.</strong> The text you submit for analysis is sent to Anthropic's API to generate the analysis. Anthropic's privacy policy applies: anthropic.com/privacy</li>
+              <li><strong>USPTO Open Data Portal.</strong> Patent searches are sent to the USPTO Open Data Portal. This is a U.S. government service.</li>
+              <li><strong>Anthropic API.</strong> The text you submit for analysis is sent to Anthropic's API to generate the analysis. Anthropic processes this text under its commercial API terms. Anthropic's privacy policy applies: anthropic.com/privacy</li>
             </ul>
             <p className="mt-4">
               Markman does not control how these third parties handle your data. Review their respective privacy policies for details.

@@ -113,6 +113,7 @@ export default function Dashboard() {
       {serverStatus?.public && (
         <p className={`text-[12px] mb-6 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
           Public demo: 3 free analyses per day. Your history stays in this browser.
+          {' '}Public demo: do not paste confidential client information.
         </p>
       )}
 
