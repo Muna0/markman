@@ -42,7 +42,7 @@ const SAMPLE_RESULTS = {
     risk: 'MEDIUM',
     rationale: 'NEXAFLOW appears relatively distinctive (suggestive mark), but clearance search has not been conducted. Risk depends on search results.',
     missing: ['Full trademark clearance search results', 'Planned launch date', 'Design mark elements (if any)', 'International filing strategy'],
-    nextSteps: ['Run preliminary USPTO TESS search', 'Conduct full clearance screening', 'Assess Nice Classification accuracy', 'Develop filing strategy for target jurisdictions'],
+    nextSteps: ['Run preliminary USPTO Trademark Search', 'Conduct full clearance screening', 'Assess Nice Classification accuracy', 'Develop filing strategy for target jurisdictions'],
   },
   'Trade Secret': {
     classification: { primary: 'Trade Secret', secondary: ['Patent', 'Copyright'] },

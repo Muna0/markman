@@ -99,7 +99,7 @@ export default function Docs() {
         {/* ── WHY MARKMAN ── */}
         <H2 dark={dark} id="why">Why Markman Exists</H2>
         <P dark={dark}>
-          Every IP attorney does the same research: search USPTO TESS for conflicting marks, parse patent claims into a dependency tree, map claim limitations against a product for FTO, classify incoming matters by type and deadline. They do it in browser tabs, Word documents, and spreadsheets. Disconnected from each other and disconnected from the data sources.
+          Every IP attorney does the same research: search USPTO Trademark Search for conflicting marks, parse patent claims into a dependency tree, map claim limitations against a product for FTO, classify incoming matters by type and deadline. They do it in browser tabs, Word documents, and spreadsheets. Disconnected from each other and disconnected from the data sources.
         </P>
         <P dark={dark}>
           The existing tools (PatSnap, Derwent, IPlytics, Clarivate) are built for large enterprises. They cost $20,000 to $100,000 or more per year, require separate logins, and do not integrate into an attorney's actual workflow. They are databases with graphical interfaces, not workflow tools.
@@ -449,7 +449,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
 
         <H3 dark={dark}>USPTO Open Data Portal API</H3>
         <P dark={dark}>
-          This API key gives you access to patent application data. It powers the patent search and patent details tools. Trademark search uses the separate TESS system (no API key needed, web interface only).
+          This API key gives you access to patent application data. It powers the patent search and patent details tools. USPTO offers no API for trademark search by text, so Markman links you to USPTO Trademark Search on the web. Trademark status lookups by serial number use the TSDR API, which needs its own key.
         </P>
         <Table dark={dark}
           headers={['What it covers', 'Tools it powers', 'Endpoint']}
@@ -509,7 +509,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
 
         <H3 dark={dark}>What about trademark search?</H3>
         <P dark={dark}>
-          The USPTO does not offer a public API for trademark text search. Trademark searching is done through the TESS web interface at tmsearch.uspto.gov. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code> in Markman, the tool generates phonetic variants, assesses distinctiveness, identifies Nice classifications, and provides direct links to TESS and other jurisdiction search databases (EUIPO, UKIPO, CIPO, etc.) so you can verify conflicts manually. Claude then runs a full DuPont factor analysis based on the mark and goods description. For trademark status checks by serial number, Markman uses the TSDR API which does not require a separate key. For international trademarks, check the Madrid Monitor at wipo.int/madrid/monitor.
+          The USPTO does not offer a public API for trademark text search. Trademark searching is done through the USPTO Trademark Search web interface at tmsearch.uspto.gov. When you run <Code dark={dark}>/tm-clearance NEXAFLOW</Code> in Markman, the tool generates phonetic variants, assesses distinctiveness, identifies Nice classifications, and provides direct links to TESS and other jurisdiction search databases (EUIPO, UKIPO, CIPO, etc.) so you can verify conflicts manually. Claude then runs a full DuPont factor analysis based on the mark and goods description. For trademark status checks by serial number, Markman uses the TSDR API, which requires its own key from account.uspto.gov/api-manager (set TSDR_API_KEY). For international trademarks, check the Madrid Monitor at wipo.int/madrid/monitor.
         </P>
 
         <H3 dark={dark}>Testing with real API keys</H3>
@@ -626,7 +626,7 @@ claude doctor`}</Block>
             { term: 'Distinctiveness Spectrum', def: 'From weakest to strongest: Generic (never protectable) → Descriptive (protectable only with acquired distinctiveness) → Suggestive (protectable) → Arbitrary (strong) → Fanciful (strongest). "APPLE" for computers is arbitrary; "APPLE" for apples is generic.' },
             { term: 'Likelihood of Confusion', def: 'The core test for trademark infringement. Would a consumer likely be confused about the source of goods? Analyzed using the DuPont factors (see below).' },
             { term: 'DuPont Factors', def: 'The 8 (sometimes 13) factors used to assess likelihood of confusion: (1) similarity of marks, (2) relatedness of goods/services, (3) similarity of trade channels, (4) conditions of purchase, (5) fame of prior mark, (6) number of similar marks in use, (7) actual confusion evidence, (8) length of concurrent use.' },
-            { term: 'TESS', def: 'Trademark Electronic Search System.the USPTO\'s free online trademark database. Used for preliminary clearance searches.' },
+            { term: 'TESS', def: 'Trademark Electronic Search System. The USPTO\'s former trademark database, retired in 2023 and replaced by USPTO Trademark Search. Used for preliminary clearance searches.' },
             { term: 'TSDR', def: 'Trademark Status & Document Retrieval.USPTO system for checking the current status of a trademark application or registration.' },
             { term: 'Section 8 Declaration', def: 'A declaration of continued use filed between years 5-6 after registration. Failure to file results in cancellation.' },
             { term: 'Section 15 (Incontestability)', def: 'Filed after 5 years of continuous use. Makes the registration "incontestable".limits the grounds on which it can be challenged.' },

@@ -38,6 +38,7 @@ try {
 } catch {}
 
 const USPTO_API_KEY = process.env.USPTO_API_KEY || "";
+const TSDR_API_KEY = process.env.TSDR_API_KEY || USPTO_API_KEY;
 const WIPO_API_KEY = process.env.WIPO_API_KEY || "";
 const PORT = process.env.PORT || 3001;
 
@@ -214,10 +215,10 @@ app.post("/api/trademarks/search", async (req, res) => {
     const { markText } = req.body;
     if (!markText) return res.status(400).json({ error: "markText is required" });
 
-    // TSDR doesn't have a search-by-text endpoint without a separate key
-    // Return a helpful message
+    // USPTO offers no API for trademark text search, only its web search tool
     res.json({
-      note: "Trademark text search requires a separate TSDR API key from developer.uspto.gov. Use the USPTO TESS web interface at tess2.uspto.gov for manual searches.",
+      note: "USPTO does not offer trademark search by text through any API. Search the mark on USPTO Trademark Search to check for conflicting registrations.",
+      searchUrl: "https://tmsearch.uspto.gov/search/search-information",
       query: markText,
       results: [],
     });
@@ -233,7 +234,10 @@ app.post("/api/trademarks/status", async (req, res) => {
     if (!serialNumber) return res.status(400).json({ error: "serialNumber is required" });
 
     const normalized = serialNumber.replace(/[-\s]/g, "").trim();
-    const tsdrRes = await fetch(`https://tsdrapi.uspto.gov/ts/cd/casestatus/sn${normalized}/info.json`);
+    const tsdrRes = await fetch(`https://tsdrapi.uspto.gov/ts/cd/casestatus/sn${normalized}/info.json`, {
+      headers: { "Accept": "application/json", "USPTO-API-KEY": TSDR_API_KEY },
+    });
+    if (tsdrRes.status === 401) throw new Error("TSDR rejected the request: set TSDR_API_KEY (from account.uspto.gov/api-manager)");
     if (!tsdrRes.ok) throw new Error(`TSDR ${tsdrRes.status}`);
     const data = await tsdrRes.json();
     res.json(data);

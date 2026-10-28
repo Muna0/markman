@@ -109,7 +109,7 @@ export default function TrademarkClearance() {
   function assessJurisdictions(markText, jurisdictions) {
     return jurisdictions.map(code => {
       const info = {
-        US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/search/search-results?query=${encodeURIComponent(markText)}&section=default` },
+        US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/search/search-information` },
         EU: { system: 'First-to-file', office: 'EUIPO', searchUrl: `https://euipo.europa.eu/eSearch/#basic/${encodeURIComponent(markText)}` },
         UK: { system: 'First-to-file', office: 'UKIPO', searchUrl: `https://www.gov.uk/search-for-trademark` },
         CA: { system: 'First-to-file (since 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search?searchType=basic&keyword=${encodeURIComponent(markText)}` },
@@ -138,7 +138,7 @@ export default function TrademarkClearance() {
     // Try live TSDR search
     try {
       const data = await api.searchTrademarks(mark.trim())
-      if (data.note) setLiveNote(data.note)
+      if (data.note) setLiveNote({ text: data.note, searchUrl: data.searchUrl })
     } catch {}
 
     // Build dynamic result
@@ -263,7 +263,16 @@ export default function TrademarkClearance() {
           {liveNote && (
             <div className={`rounded-xl p-4 flex items-start gap-3 ${dark ? 'bg-ink-800/30 border border-ink-700/40' : 'bg-ink-50 border border-ink-200'}`}>
               <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${dark ? 'text-amb-400' : 'text-amb-500'}`} />
-              <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>{liveNote}</p>
+              <div className="space-y-2">
+                <p className={`text-[13px] ${dark ? 'text-ink-300' : 'text-ink-500'}`}>{liveNote.text}</p>
+                {liveNote.searchUrl && (
+                  <button type="button"
+                    onClick={() => { navigator.clipboard?.writeText(mark.trim()).catch(() => {}); window.open(liveNote.searchUrl, '_blank', 'noopener') }}
+                    className={`text-[13px] font-medium underline ${dark ? 'text-ink-100' : 'text-ink-800'}`}>
+                    Copy "{mark.trim()}" and open USPTO Trademark Search
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

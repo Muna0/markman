@@ -35,7 +35,7 @@ The user provides:
    - Search for identical marks: `search_trademarks(mark_text, class)`
    - Search for phonetic variants and common misspellings
    - For each hit, retrieve status: `check_trademark_status(serial_number)`
-   - If connector is unavailable, note that results are based on general knowledge and recommend a formal TESS search
+   - If connector is unavailable, note that results are based on general knowledge and recommend a formal search on USPTO Trademark Search
 
 4. **Run the trademark-screen skill** with:
    - The proposed mark and its characterization

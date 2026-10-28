@@ -42,7 +42,7 @@ Claude: [reads patent-analysis skill]
 - `/export-memo` — export analysis as formatted Word document
 
 **MCP Servers** (3 servers, 12 tools):
-- `uspto-server` — patent search, patent details, trademark search, trademark status (api.uspto.gov)
+- `uspto-server` — patent search, patent details (api.uspto.gov), trademark status (tsdrapi.uspto.gov)
 - `wipo-server` — international patent search, PCT application details (wipocase.wipo.int)
 - `markman-store` — deadline tracking, matter history, Word export (local storage)
 
@@ -74,7 +74,9 @@ claude plugin install ./
 
 ### Getting API keys
 
-**USPTO** (free): Go to data.uspto.gov/myodp. Create a USPTO.gov account, verify with ID.me, and request an API key. The key covers both patent and trademark data.
+**USPTO** (free): Go to data.uspto.gov/myodp. Create a USPTO.gov account, verify with ID.me, and request an API key. Since August 2026, USPTO also requires you to complete four profile fields (job title, organization type, organization name, intended use) before the key works. This key covers patent data.
+
+**TSDR** (free, optional): Trademark status lookups by serial number need a separate key from account.uspto.gov/api-manager. Add it to `.env` as `TSDR_API_KEY`. USPTO offers no API for trademark search by text, so Markman links to USPTO Trademark Search (tmsearch.uspto.gov) instead.
 
 **WIPO** (free): Go to wipo.int/case/en. Apply for API access. Approval may take 1-3 business days.
 
