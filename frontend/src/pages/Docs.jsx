@@ -69,7 +69,7 @@ export default function Docs() {
   return (
     <div className="flex">
       {/* Sidebar TOC */}
-      <aside className={`hidden lg:block w-[200px] shrink-0 sticky top-[52px] h-[calc(100vh-52px)] overflow-y-auto p-4 border-r ${dark ? 'border-white/10/60' : 'border-ink-200'}`}>
+      <aside className={`hidden lg:block w-[200px] shrink-0 sticky top-[52px] h-[calc(100vh-52px)] overflow-y-auto p-4 border-r ${dark ? 'border-white/10' : 'border-ink-200'}`}>
         <p className={`text-[15px] font-semibold uppercase tracking-[0.12em] px-2 mb-2 ${dark ? 'text-ink-500' : 'text-ink-400'}`}>Documentation</p>
         <nav className="space-y-0.5">
           {sections.map(s => (

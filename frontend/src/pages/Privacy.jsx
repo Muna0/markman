@@ -25,11 +25,11 @@ export default function Privacy() {
 
           <section>
             <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Data Collection</h2>
-            <p className="mb-3">The public demo has no accounts and stores nothing on the server. Here is what happens to your data:</p>
+            <p className="mb-3">The public demo has no accounts and does not save your inputs or results on the server. Here is what happens to your data:</p>
             <ul className="list-disc pl-6 space-y-2">
-              <li><strong>Analysis history</strong> stays in this browser's local storage. It never leaves your device through Markman, and you can clear it at any time from the Dashboard.</li>
+              <li><strong>Analysis history</strong> stays in this browser's local storage. You can clear it at any time from the Dashboard.</li>
               <li><strong>Daily limit counter.</strong> The server keeps an in-memory count of analyses per IP address to enforce the daily limit. The count is cleared daily and is never written to disk.</li>
-              <li><strong>Nothing else.</strong> We do not collect personal information, and we do not use analytics, tracking pixels, or telemetry.</li>
+              <li><strong>Nothing else.</strong> Beyond this, Markman does not collect personal information or run analytics, tracking pixels, or telemetry. Our hosting provider may keep standard infrastructure logs.</li>
             </ul>
             <p className="mt-4">If you run Markman locally as a Claude Code plugin, your API keys, history, deadlines, and exports stay on your own machine.</p>
           </section>
@@ -49,7 +49,7 @@ export default function Privacy() {
           <section>
             <h2 className={`text-[20px] tracking-[-0.01em] font-bold mb-3 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Data Security</h2>
             <p>
-              The demo does not store your inputs or results on the server. History lives only in your browser. Communication with third-party APIs (Anthropic and USPTO) uses HTTPS encryption.
+              The demo does not persist your inputs or results on the server; requests are processed in memory to run the search or analysis. History lives only in your browser. Communication with third-party APIs (Anthropic and USPTO) uses HTTPS encryption.
             </p>
           </section>
 
