@@ -191,11 +191,11 @@ export default function FtoAnalysis() {
         <div className="mt-5 flex justify-end">
           <button
             type="submit"
-            disabled={!description.trim() || loading}
+            disabled={!description.trim() || searching}
             className="flex items-center gap-2 px-5 py-2.5 rounded-[5px] bg-blu-500 text-white btn-shadow text-sm font-medium hover:bg-blu-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
-            {loading ? 'Analyzing...' : 'Run FTO Analysis'}
+            {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronRight className="w-4 h-4" />}
+            {searching ? 'Analyzing...' : 'Run FTO Analysis'}
           </button>
         </div>
       </form>
