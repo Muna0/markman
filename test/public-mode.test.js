@@ -67,3 +67,66 @@ test("non-text query or context is refused with 400 before the limiter", async (
   assert.equal((await analyze({ query: blocks })).status, 400);
   assert.equal((await analyze({ query: "x", context: { a: 1 } })).status, 400);
 });
+
+const postJSON = (path, body, ip) => fetch(`${s.url}${path}`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json", ...(ip ? { "fly-client-ip": ip } : {}) },
+  body: JSON.stringify(body),
+});
+
+test("x-powered-by header is not sent", async () => {
+  const r = await fetch(`${s.url}/api/status`);
+  assert.equal(r.headers.get("x-powered-by"), null);
+});
+
+test("patent details rejects path traversal and malformed numbers with 400", async () => {
+  for (const patentNumber of ["../../foo?x=1", "US 10,000,000/../x", "abc", "1234567890123456789012345", "12 34#5"]) {
+    const r = await postJSON("/api/patents/details", { patentNumber }, "10.0.1.1");
+    assert.equal(r.status, 400, patentNumber);
+    assert.equal((await r.json()).error, "Invalid patent or application number");
+  }
+});
+
+test("patent details accepts a normal number past validation", async () => {
+  const r = await postJSON("/api/patents/details", { patentNumber: "US 10,000,000" }, "10.0.1.2");
+  assert.notEqual(r.status, 400);
+});
+
+test("USPTO routes share a 100/visitor daily limit in public mode", async () => {
+  const ip = "10.0.2.1";
+  for (let i = 0; i < 50; i++) assert.notEqual((await postJSON("/api/patents/search", { query: "widget" }, ip)).status, 429);
+  for (let i = 0; i < 50; i++) assert.notEqual((await postJSON("/api/patents/details", { patentNumber: "10000000" }, ip)).status, 429);
+  const r = await postJSON("/api/patents/search", { query: "widget" }, ip);
+  assert.equal(r.status, 429);
+  const body = await r.json();
+  assert.equal(body.limit, "visitor");
+  assert.equal(body.error, "Daily search limit reached on the public demo. Install the free plugin to keep going.");
+  assert.equal((await postJSON("/api/patents/details", { patentNumber: "10000000" }, ip)).status, 429);
+  assert.notEqual((await postJSON("/api/patents/search", { query: "widget" }, "10.0.2.2")).status, 429);
+});
+
+test("skillType 'constructor' falls back to the patent skill instead of a 500", async () => {
+  const http = await import("node:http");
+  const stub = http.createServer((req, res) => {
+    req.resume();
+    req.on("end", () => {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ type: "error", error: { type: "authentication_error", message: "stub" } }));
+    });
+  });
+  await new Promise((r) => stub.listen(0, "127.0.0.1", r));
+  const s2 = await startServer({ MARKMAN_PUBLIC: "1", ANTHROPIC_API_KEY: "test-key", ANTHROPIC_BASE_URL: `http://127.0.0.1:${stub.address().port}` });
+  try {
+    for (const skillType of ["constructor", "__proto__", "toString"]) {
+      const r = await fetch(`${s2.url}/api/analyze`, {
+        method: "POST", headers: { "Content-Type": "application/json", "fly-client-ip": `10.0.3.${skillType.length}` },
+        body: JSON.stringify({ query: "x", skillType }),
+      });
+      assert.equal(r.status, 200, skillType);
+      await r.text();
+    }
+  } finally {
+    s2.stop();
+    stub.close();
+  }
+});

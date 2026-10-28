@@ -52,6 +52,7 @@ const MODEL = process.env.MARKMAN_MODEL || (PUBLIC ? "claude-sonnet-5-5" : "clau
 const MAX_TOKENS = PUBLIC ? 4096 : 8192;
 const MAX_QUERY_CHARS = 20000;
 const limiter = createDailyLimiter({ perKey: 3, total: 150 });
+const searchLimiter = createDailyLimiter({ perKey: 100, total: 3000 });
 const visitorKey = (req) => req.get("fly-client-ip") || req.ip;
 
 const DATA_DIR = path.join(__dirname, "markman-data");
@@ -83,6 +84,7 @@ async function usptoFetch(url) {
 
 // ─── Express app ───
 const app = express();
+app.disable("x-powered-by");
 if (!PUBLIC) app.use(cors());
 app.use(express.json({ limit: "200kb" }));
 app.use((req, res, next) => {
@@ -90,6 +92,21 @@ app.use((req, res, next) => {
   next();
 });
 const localOnly = (req, res, next) => PUBLIC ? res.status(404).json({ error: "Not available on the public demo." }) : next();
+
+// Shared daily cap on USPTO-backed routes in public mode. Returns true if the request was refused.
+function searchLimitReached(req, res) {
+  if (!PUBLIC) return false;
+  const r = searchLimiter.take(visitorKey(req));
+  if (r.ok) return false;
+  res.status(429).json({ error: "Daily search limit reached on the public demo. Install the free plugin to keep going.", limit: r.reason });
+  return true;
+}
+
+function clampInt(value, min, max, fallback) {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
 
 // ─── Patent search ───
 // Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
@@ -101,8 +118,11 @@ function toPatentQuery(query) {
 
 app.post("/api/patents/search", async (req, res) => {
   try {
-    const { query, rows = 20, start = 0 } = req.body;
+    const { query } = req.body;
     if (!query) return res.status(400).json({ error: "query is required" });
+    const rows = clampInt(req.body.rows, 1, 50, 20);
+    const start = clampInt(req.body.start, 0, Number.MAX_SAFE_INTEGER, 0);
+    if (searchLimitReached(req, res)) return;
 
     const params = new URLSearchParams({ q: toPatentQuery(query), rows: String(rows), start: String(start) });
     const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/search?${params}`);
@@ -137,8 +157,10 @@ app.post("/api/patents/details", async (req, res) => {
     const { patentNumber } = req.body;
     if (!patentNumber) return res.status(400).json({ error: "patentNumber is required" });
 
-    const normalized = patentNumber.replace(/^US\s*/i, "").replace(/,/g, "").trim();
-    const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/${normalized}`);
+    const normalized = String(patentNumber).replace(/\s+/g, "").replace(/^US/i, "").replace(/,/g, "");
+    if (!/^[0-9A-Z\/]{5,20}$/i.test(normalized)) return res.status(400).json({ error: "Invalid patent or application number" });
+    if (searchLimitReached(req, res)) return;
+    const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/${encodeURIComponent(normalized)}`);
 
     // Parse the file wrapper response into a clean structure
     const wrapper = data.patentFileWrapperDataBag?.[0] || data;
@@ -567,7 +589,7 @@ function loadSkill(skillType) {
     "fto": "skills/fto-memo/SKILL.md",
     "intake": "skills/ip-triage/SKILL.md",
   };
-  const filepath = path.join(__dirname, skillMap[skillType] || skillMap["patent"]);
+  const filepath = path.join(__dirname, Object.hasOwn(skillMap, skillType) ? skillMap[skillType] : skillMap["patent"]);
   if (!fs.existsSync(filepath)) return "";
   return fs.readFileSync(filepath, "utf-8");
 }
