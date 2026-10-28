@@ -31,7 +31,7 @@ export default function Login() {
         </div>
         <div className="relative">
           <div className="flex items-center gap-2 mb-20">
-            <div className="w-8 h-8 rounded-md bg-blu-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-[5px] bg-blu-500 flex items-center justify-center">
               <Scale className="w-4.5 h-4.5 text-white" />
             </div>
             <span className="text-[17px] font-bold text-white tracking-[-0.02em]">ipsuite</span>

@@ -23,7 +23,7 @@ export default function TopBar() {
         <Link to="/app/docs" className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg mono text-[12px] font-medium transition ${dark ? 'text-ink-400 hover:text-ink-100 hover:bg-ink-800' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
           <BookOpen className="w-3.5 h-3.5" /> Docs
         </Link>
-        <Link to="/app/settings" className="px-3 py-1.5 rounded-md mono text-[12px] font-bold bg-blu-500 text-ink-950 btn-shadow hover:bg-blu-400 transition">
+        <Link to="/app/settings" className="px-3 py-1.5 rounded-[5px] mono text-[12px] font-bold bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
           Settings
         </Link>
       </div>

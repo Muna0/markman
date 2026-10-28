@@ -37,7 +37,7 @@ function Nav() {
           <button onClick={toggle} className={`p-2 rounded-lg transition ${dark ? 'hover:bg-ink-800' : 'hover:bg-ink-100'}`}>
             {dark ? <Sun className="w-4 h-4 text-amb-400" /> : <Moon className="w-4 h-4 text-ink-400" />}
           </button>
-          <Link to="/app" className="mono text-[14px] font-bold px-4 py-2 rounded-md bg-blu-500 text-ink-950 btn-shadow hover:bg-blu-400 transition">
+          <Link to="/app" className="mono text-[14px] font-bold px-4 py-2 rounded-[5px] bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
             Open App →
           </Link>
         </div>
@@ -94,10 +94,10 @@ function Hero() {
         </div>
 
         <div className="anim-reveal d3 flex items-center gap-3 mb-8 flex-wrap">
-          <Link to="/app" className="group flex items-center gap-2 px-6 py-3 rounded-md mono text-[15px] font-bold bg-blu-500 text-ink-950 btn-shadow hover:bg-blu-400 transition">
+          <Link to="/app" className="group flex items-center gap-2 px-6 py-3 rounded-[5px] mono text-[15px] font-bold bg-blu-500 text-white btn-shadow hover:bg-blu-600 transition">
             Open the App <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
-          <a href="#install" className={`flex items-center gap-2 px-6 py-3 rounded-md mono text-[15px] font-medium border transition ${dark ? 'border-ink-700 text-ink-300 hover:border-blu-500 hover:text-blu-400' : 'border-ink-300 text-ink-600 hover:border-blu-500'}`}>
+          <a href="#install" className={`flex items-center gap-2 px-6 py-3 rounded-[5px] mono text-[15px] font-medium border transition ${dark ? 'border-ink-700 text-ink-300 hover:border-blu-500 hover:text-blu-400' : 'border-ink-300 text-ink-600 hover:border-blu-500'}`}>
             <Terminal className="w-3.5 h-3.5" /> Install in 5 Minutes
           </a>
         </div>
