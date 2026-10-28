@@ -8,7 +8,7 @@
     {
       "name": "markman",
       "source": "./",
-      "description": "IP law toolkit for solo and boutique practitioners: patent claim analysis, FTO memos, trademark clearance, and matter intake, connected to live USPTO data."
+      "description": "IP law toolkit for solo and boutique practitioners: drafts patent claim analyses, FTO risk analyses, trademark clearance screens, and matter intake summaries for attorney review, using USPTO data. Does not provide legal advice."
     }
   ]
 }

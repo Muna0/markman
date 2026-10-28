@@ -2,11 +2,11 @@
 
 **Try it in your browser:** [markman-ip.fly.dev](https://markman-ip.fly.dev) (free public demo, 3 analyses per day; no account needed).
 
-A free, open-source Claude Code plugin for intellectual property law, built for solo practitioners and boutique firms. Patent claim analysis, freedom-to-operate memos, trademark clearance, matter intake, deadline tracking, matter history, and Word export, connected to live USPTO patent data.
+A free, open-source Claude Code plugin for intellectual property work, built for solo practitioners and boutique firms. It drafts patent claim analyses, freedom-to-operate (FTO) risk analyses, trademark clearance screens, and matter intake summaries for attorney review, and adds deadline tracking, matter history, and Word export. Patent lookups use USPTO data when you add a free API key.
 
-Commercial IP platforms such as PatSnap and Derwent cost $15,000 to $100,000 a year. Markman is free under the Apache-2.0 license.
+Free and open source. No subscription, no seat licenses. Apache-2.0.
 
-**Markman does not provide legal advice.** All AI-generated analysis must be reviewed by a licensed attorney before reliance.
+**Markman does not provide legal advice.** Output is a draft and must be reviewed by a licensed attorney. Using Markman does not create an attorney-client relationship, and it is not a substitute for professional judgment.
 
 ![Markman landing page](docs/images/01-landing.jpeg)
 
@@ -18,7 +18,7 @@ Commercial IP platforms such as PatSnap and Derwent cost $15,000 to $100,000 a y
 
 ## What it does
 
-Markman teaches Claude Code how to do structured IP work. You describe what you need in natural language. Claude reads the skill definitions, calls the USPTO and WIPO APIs through MCP servers, references your firm's playbook for risk thresholds and standards, and produces formatted legal analysis output.
+Markman teaches Claude Code how to do structured IP work. You describe what you need in natural language. Claude reads the skill definitions, calls the USPTO API (and the WIPO API, if you have a WIPO key) through MCP servers, references your firm's playbook for risk thresholds and standards, and drafts structured analysis for attorney review.
 
 ```
 You: Analyze the claims in US11,234,567
@@ -36,26 +36,27 @@ Requires [Claude Code](https://claude.com/claude-code) and Node.js 18 or later.
 In Claude Code, run:
 
 ```
-/plugin install markman --marketplace Muna0/markman
+/plugin marketplace add Muna0/markman
+/plugin install markman@markman
 ```
 
-That's it. The skills and commands work right away on patents and marks you paste in. To add live USPTO lookups, set up a free API key (below) and restart Claude Code.
+The skills and commands work right away on patents and marks you paste in. To add live USPTO lookups, set up a free API key (below) and restart Claude Code.
 
 ## Components
 
 **Skills** (fire automatically):
 - `patent-analysis`: parse claims, map scope, flag Alice and KSR issues
-- `fto-memo`: element-by-element claim mapping, non-infringement arguments, design-arounds
+- `fto-memo`: draft FTO analysis for attorney review: element-by-element claim mapping, possible non-infringement positions, design-around ideas
 - `trademark-screen`: likelihood-of-confusion (DuPont) analysis, phonetic variants, jurisdiction coverage
 - `ip-triage`: classify IP type, extract facts, identify deadlines, assign risk
 
 **Commands** (invoke explicitly):
 - `/review-claims`: analyze a patent by number or pasted claims
-- `/fto-analysis`: FTO assessment for a described technology
+- `/fto-analysis`: draft FTO analysis for a described technology
 - `/tm-clearance`: screen a proposed trademark
 - `/deadlines`: view, add, and manage tracked IP deadlines
 - `/history`: search past analyses
-- `/export-memo`: export analysis as a formatted Word document
+- `/export-memo`: export analysis as a Word document marked as a draft for attorney review
 
 **MCP servers** (3 servers, 12 tools):
 - `uspto`: patent search and full patent file wrapper details (api.uspto.gov), trademark status by serial number
@@ -129,7 +130,7 @@ npm run dev            # opens on http://localhost:5173
 markman/
 ├── .claude-plugin/
 │   ├── plugin.json               # Plugin manifest
-│   └── marketplace.json          # One-step install
+│   └── marketplace.json          # Marketplace listing
 ├── .mcp.json                     # MCP server configuration
 ├── mcp/
 │   ├── uspto-server.js           # USPTO API (4 tools)
