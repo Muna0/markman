@@ -38335,26 +38335,24 @@ async function exportMemo(title, content, memoType) {
   const filepath = path.join(EXPORT_DIR, filename);
   const lines = content.split("\n");
   const children = [];
-  if (memoType === "FTO" || memoType === "fto") {
-    children.push(
-      new Paragraph2({
-        alignment: AlignmentType2.CENTER,
-        spacing: { after: 400 },
-        border: {
-          bottom: { style: BorderStyle2.SINGLE, size: 1, color: "999999" }
-        },
-        children: [
-          new TextRun2({
-            text: "ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL",
-            bold: true,
-            size: 20,
-            font: "Times New Roman",
-            color: "666666"
-          })
-        ]
-      })
-    );
-  }
+  children.push(
+    new Paragraph2({
+      alignment: AlignmentType2.CENTER,
+      spacing: { after: 400 },
+      border: {
+        bottom: { style: BorderStyle2.SINGLE, size: 1, color: "999999" }
+      },
+      children: [
+        new TextRun2({
+          text: "DRAFT FOR ATTORNEY REVIEW",
+          bold: true,
+          size: 20,
+          font: "Times New Roman",
+          color: "666666"
+        })
+      ]
+    })
+  );
   children.push(
     new Paragraph2({
       heading: HeadingLevel2.HEADING_1,
@@ -38459,7 +38457,7 @@ async function exportMemo(title, content, memoType) {
       spacing: { before: 200 },
       children: [
         new TextRun2({
-          text: "This analysis was generated with AI assistance and does not constitute legal advice. All citations, patent numbers, and legal conclusions should be verified by licensed counsel before reliance.",
+          text: "Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations, patent numbers, and legal conclusions before reliance.",
           italics: true,
           size: 18,
           font: "Times New Roman",
@@ -38590,7 +38588,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "export_memo",
-      description: "Export an analysis as a formatted Word (.docx) document with privilege markings, Bluebook citation formatting, and a standard disclaimer. Saves to ~/.markman/data/exports/.",
+      description: "Export an analysis as a Word (.docx) document marked DRAFT FOR ATTORNEY REVIEW, with a standard disclaimer. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.",
       inputSchema: {
         type: "object",
         properties: {
@@ -38605,7 +38603,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           memo_type: {
             type: "string",
             enum: ["FTO", "patent", "trademark", "triage", "general"],
-            description: "Type of memo. FTO memos get automatic privilege markings."
+            description: "Type of memo."
           }
         },
         required: ["title", "content"]
