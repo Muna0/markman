@@ -40,3 +40,14 @@ test("system prompt sets the memo voice and single disclaimer/limitations rule",
 test("public prompt keeps the length cap", () => {
   assert.match(buildSystemPrompt({ skill: "", playbook: "", isPublic: true }), /1,500 words/);
 });
+
+test("memoFooter (used by the web and plugin exports) puts the fixed disclaimer and page number in the footer", async () => {
+  const docx = await import("docx");
+  const { default: AdmZip } = await import("adm-zip");
+  const { memoFooter } = await import("../lib/memo.js");
+  const doc = new docx.Document({ sections: [{ footers: { default: memoFooter(docx) }, children: [new docx.Paragraph("x")] }] });
+  const zip = new AdmZip(await docx.Packer.toBuffer(doc));
+  const footer = zip.getEntries().filter((e) => /^word\/footer\d*\.xml$/.test(e.entryName)).map((e) => zip.readAsText(e)).join("");
+  assert.match(footer, /Draft for attorney review\. Not legal advice\. Prepared with Markman; verify all citations and conclusions\./);
+  assert.match(footer, /PAGE/);
+});

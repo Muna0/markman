@@ -41479,6 +41479,22 @@ function stripLeadingTitle(markdown) {
   if (m2[3] && heading !== heading.toUpperCase()) return text;
   return text.slice(m2[0].length).replace(/^\s*\n/, "");
 }
+var FOOTER_DISCLAIMER = "Draft for attorney review. Not legal advice. Prepared with Markman; verify all citations and conclusions.";
+function memoFooter(docx) {
+  const { Footer: Footer3, Paragraph: Paragraph2, TextRun: TextRun2, AlignmentType: AlignmentType2, PageNumber: PageNumber2 } = docx;
+  const run = (opts) => new TextRun2({ size: 14, font: "Times New Roman", color: "888888", ...opts });
+  return new Footer3({
+    children: [new Paragraph2({
+      alignment: AlignmentType2.CENTER,
+      children: [
+        run({ text: `${FOOTER_DISCLAIMER}  |  Page ` }),
+        run({ children: [PageNumber2.CURRENT] }),
+        run({ text: " of " }),
+        run({ children: [PageNumber2.TOTAL_PAGES] })
+      ]
+    })]
+  });
+}
 
 // mcp/markman-store.js
 var __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -41640,7 +41656,7 @@ async function exportMemo(title, content, memoType) {
   );
   children.push(...markdownToDocx(stripLeadingTitle(content), docx));
   const doc = new Document2({
-    sections: [{ children }]
+    sections: [{ footers: { default: memoFooter(docx) }, children }]
   });
   const buffer2 = await Packer2.toBuffer(doc);
   fs.writeFileSync(filepath, buffer2);

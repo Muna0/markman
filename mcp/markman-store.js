@@ -33,7 +33,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import os from "os";
 import { markdownToDocx } from "../lib/markdown-docx.js";
-import { memoTitle, stripLeadingTitle } from "../lib/memo.js";
+import { memoTitle, stripLeadingTitle, memoFooter } from "../lib/memo.js";
 // Persistent data lives outside the plugin folder so it survives plugin updates
 const DATA_DIR = process.env.MARKMAN_DATA_DIR || path.join(os.homedir(), ".markman", "data");
 
@@ -250,7 +250,7 @@ async function exportMemo(title, content, memoType) {
   children.push(...markdownToDocx(stripLeadingTitle(content), docx));
 
   const doc = new Document({
-    sections: [{ children }],
+    sections: [{ footers: { default: memoFooter(docx) }, children }],
   });
 
   const buffer = await Packer.toBuffer(doc);

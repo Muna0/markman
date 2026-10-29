@@ -83,6 +83,10 @@ test("FTO export has one proper title, no table of contents, and no added discla
   assert.equal((text.match(/LIMITATIONS/g) || []).length, 1);
   assert.equal((text.match(/DRAFT FOR ATTORNEY REVIEW/g) || []).length, 1, "only the model's disclaimer line in the body");
   assert.match(zip.readAsText("word/header1.xml"), /DRAFT FOR ATTORNEY REVIEW/);
+  const footer = zip.getEntries().filter((e) => /^word\/footer\d*\.xml$/.test(e.entryName)).map((e) => zip.readAsText(e)).join("");
+  assert.match(footer, /Draft for attorney review\. Not legal advice\. Prepared with Markman; verify all citations and conclusions\./);
+  assert.match(footer, /Not legal advice/);
+  assert.match(footer, /PAGE/, "page number field in the footer");
   assert.match(disposition, /Freedom_to_Operate_Analysis_\d{4}-\d{2}-\d{2}\.docx/);
 });
 

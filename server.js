@@ -32,7 +32,7 @@ import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
 import { toPatentQuery, numberQueryDigits, exactNumberMatches, isNoMatchResponse } from "./lib/patent-query.js";
 import { markdownToDocx } from "./lib/markdown-docx.js";
-import { memoTitle, stripLeadingTitle } from "./lib/memo.js";
+import { memoTitle, stripLeadingTitle, memoFooter } from "./lib/memo.js";
 import { buildSystemPrompt } from "./lib/system-prompt.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -420,7 +420,7 @@ app.post("/api/export", async (req, res) => {
     if (!title || !content) return res.status(400).json({ error: "title and content required" });
 
     const docx = await import("docx");
-    const { Document, Paragraph, TextRun, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber } = docx;
+    const { Document, Paragraph, TextRun, AlignmentType, Packer, BorderStyle, Header } = docx;
     const timestamp = new Date().toISOString().split("T")[0];
     const heading = memoTitle(memoType, title);
     const filename = `${heading.replace(/\(Draft\)/, "").trim().replace(/[^a-zA-Z0-9]+/g, "_")}_${timestamp}.docx`;
@@ -483,20 +483,7 @@ app.post("/api/export", async (req, res) => {
             })],
           }),
         },
-        footers: {
-          default: new Footer({
-            children: [new Paragraph({
-              alignment: AlignmentType.CENTER,
-              children: [
-                new TextRun({ text: "Markman draft  |  ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
-                new TextRun({ text: "Page ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
-                new TextRun({ children: [PageNumber.CURRENT], size: 14, font: "Times New Roman", color: "AAAAAA" }),
-                new TextRun({ text: " of ", size: 14, font: "Times New Roman", color: "AAAAAA" }),
-                new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 14, font: "Times New Roman", color: "AAAAAA" }),
-              ],
-            })],
-          }),
-        },
+        footers: { default: memoFooter(docx) },
         children,
       }],
     });

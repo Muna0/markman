@@ -36,6 +36,7 @@ Export an analysis as a Word document marked as a draft for attorney review.
 The generated .docx includes:
 
 - **Header**: DRAFT FOR ATTORNEY REVIEW (all memo types)
+- **Footer**: "Draft for attorney review. Not legal advice. Prepared with Markman; verify all citations and conclusions." with the page number, on every page
 - **Title**: By memo type: "Freedom-to-Operate Analysis (Draft)", "Patent Analysis (Draft)", "Trademark Clearance Screen (Draft)", or "IP Matter Intake Summary (Draft)"; the custom title for "general" memos
 - **Date**: Analysis date
 - **Body**: Full analysis with proper heading hierarchy
