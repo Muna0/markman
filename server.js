@@ -31,6 +31,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
 import { toPatentQuery } from "./lib/patent-query.js";
+import { markdownToDocx } from "./lib/markdown-docx.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -394,24 +395,13 @@ app.post("/api/history", localOnly, (req, res) => {
 
 // ─── Export ───
 
-function detectHeading(line) {
-  const trimmed = line.trim();
-  if (!trimmed || trimmed.length <= 2) return null;
-  // ALL CAPS lines with letters (CLAIM SCOPE ASSESSMENT, PRIOR ART RED FLAGS, etc.)
-  if (trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed) && trimmed.length > 3) return "h2";
-  // Lines starting with capital letter subsections: "A. REISSUE-SPECIFIC SCOPE ISSUES"
-  if (/^[A-Z]\.\s+[A-Z]/.test(trimmed)) return "h3";
-  // Lines like "Claim Map", "Scope Assessment": title case, no period, under 60 chars
-  if (/^[A-Z][a-z]/.test(trimmed) && !trimmed.includes(".") && trimmed.length < 60 && /^[A-Z][A-Za-z\s\-\/&:()]+$/.test(trimmed)) return "h3";
-  return null;
-}
-
 app.post("/api/export", async (req, res) => {
   try {
     const { title, content, memoType } = req.body;
     if (!title || !content) return res.status(400).json({ error: "title and content required" });
 
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber, TabStopType, TabStopPosition, TableOfContents } = await import("docx");
+    const docx = await import("docx");
+    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber, TableOfContents } = docx;
     const timestamp = new Date().toISOString().split("T")[0];
     const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
 
@@ -484,58 +474,8 @@ app.post("/api/export", async (req, res) => {
       border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
     }));
 
-    // ─── Body content with smart heading detection ───
-    const lines = content.split("\n");
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-
-      if (!line.trim()) {
-        children.push(new Paragraph({ spacing: { after: 80 } }));
-        continue;
-      }
-
-      const headingLevel = detectHeading(line);
-
-      if (headingLevel === "h2") {
-        children.push(new Paragraph({
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 300, after: 120 },
-          border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "DDDDDD", space: 4 } },
-          children: [new TextRun({ text: line.trim(), bold: true, size: 24, font: "Times New Roman" })],
-        }));
-      } else if (headingLevel === "h3") {
-        children.push(new Paragraph({
-          heading: HeadingLevel.HEADING_3,
-          spacing: { before: 200, after: 80 },
-          children: [new TextRun({ text: line.trim(), bold: true, size: 22, font: "Times New Roman" })],
-        }));
-      } else {
-        // Detect risk/severity markers and bold them
-        const runs = [];
-        const riskMatch = line.match(/^(.*?)(HIGH RISK|MEDIUM-HIGH RISK|MEDIUM RISK|LOW RISK|CRITICAL|⚠️)(.*)$/);
-        if (riskMatch) {
-          if (riskMatch[1]) runs.push(new TextRun({ text: riskMatch[1], size: 22, font: "Times New Roman" }));
-          runs.push(new TextRun({ text: riskMatch[2], bold: true, size: 22, font: "Times New Roman", color: riskMatch[2].includes("HIGH") || riskMatch[2] === "CRITICAL" ? "CC0000" : riskMatch[2].includes("MEDIUM") ? "CC6600" : "336600" }));
-          if (riskMatch[3]) runs.push(new TextRun({ text: riskMatch[3], size: 22, font: "Times New Roman" }));
-        } else {
-          // Detect numbered items for slight indent
-          const isNumbered = /^\s*\d+[\.\)]\s/.test(line);
-          const isBullet = /^\s*[-•]\s/.test(line);
-          runs.push(new TextRun({ text: line, size: 22, font: "Times New Roman" }));
-
-          if (isNumbered || isBullet) {
-            children.push(new Paragraph({
-              spacing: { after: 60 },
-              indent: { left: 360 },
-              children: runs,
-            }));
-            continue;
-          }
-        }
-
-        children.push(new Paragraph({ spacing: { after: 80 }, children: runs }));
-      }
-    }
+    // ─── Body content: Markdown converted to Word formatting ───
+    children.push(...markdownToDocx(content, docx));
 
     // ─── Disclaimer ───
     children.push(new Paragraph({ spacing: { before: 400 }, border: { top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } } }));

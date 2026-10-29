@@ -9,7 +9,7 @@
  *   - Word document export
  *
  * Data stored in ~/.markman/data/ as JSON files.
- * No external dependencies beyond the MCP SDK and docx.
+ * No external dependencies beyond the MCP SDK, docx, and marked.
  *
  * Tools:
  *   add_deadline         - Add a tracked deadline
@@ -32,6 +32,7 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import os from "os";
+import { markdownToDocx } from "../lib/markdown-docx.js";
 // Persistent data lives outside the plugin folder so it survives plugin updates
 const DATA_DIR = process.env.MARKMAN_DATA_DIR || path.join(os.homedir(), ".markman", "data");
 
@@ -174,6 +175,7 @@ function searchHistory(query, type) {
 
 async function exportMemo(title, content, memoType) {
   // Dynamic import for docx (ESM)
+  const docx = await import("docx");
   const {
     Document,
     Paragraph,
@@ -182,14 +184,12 @@ async function exportMemo(title, content, memoType) {
     AlignmentType,
     Packer,
     BorderStyle,
-  } = await import("docx");
+  } = docx;
 
   const timestamp = new Date().toISOString().split("T")[0];
   const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
   const filepath = path.join(EXPORT_DIR, filename);
 
-  // Parse content into paragraphs
-  const lines = content.split("\n");
   const children = [];
 
   // Draft header on every export. Privilege and work-product labels are left to the user.
@@ -243,79 +243,8 @@ async function exportMemo(title, content, memoType) {
     })
   );
 
-  // Content lines
-  for (const line of lines) {
-    if (!line.trim()) {
-      children.push(new Paragraph({ spacing: { after: 100 } }));
-      continue;
-    }
-
-    // Detect headings (all caps lines or lines starting with #)
-    const isHeading =
-      line === line.toUpperCase() && line.trim().length > 3 && /[A-Z]/.test(line);
-    const isSubheading = line.startsWith("## ") || line.startsWith("### ");
-    const isH1 = line.startsWith("# ");
-
-    if (isH1) {
-      children.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_1,
-          spacing: { before: 300, after: 100 },
-          children: [
-            new TextRun({
-              text: line.replace(/^#+\s*/, ""),
-              bold: true,
-              size: 28,
-              font: "Times New Roman",
-            }),
-          ],
-        })
-      );
-    } else if (isSubheading) {
-      children.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 200, after: 100 },
-          children: [
-            new TextRun({
-              text: line.replace(/^#+\s*/, ""),
-              bold: true,
-              size: 24,
-              font: "Times New Roman",
-            }),
-          ],
-        })
-      );
-    } else if (isHeading) {
-      children.push(
-        new Paragraph({
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 300, after: 100 },
-          children: [
-            new TextRun({
-              text: line.trim(),
-              bold: true,
-              size: 24,
-              font: "Times New Roman",
-            }),
-          ],
-        })
-      );
-    } else {
-      children.push(
-        new Paragraph({
-          spacing: { after: 80 },
-          children: [
-            new TextRun({
-              text: line,
-              size: 22,
-              font: "Times New Roman",
-            }),
-          ],
-        })
-      );
-    }
-  }
+  // Content: Markdown converted to Word formatting
+  children.push(...markdownToDocx(content, docx));
 
   // Disclaimer
   children.push(
