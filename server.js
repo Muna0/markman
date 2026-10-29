@@ -618,18 +618,22 @@ Important:
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  // Stop the upstream request if the visitor leaves, so abandoned runs stop billing
+  const upstream = new AbortController();
+  res.on("close", () => { if (!res.writableFinished) upstream.abort(); });
+
   try {
     const { default: Anthropic } = await import("@anthropic-ai/sdk");
     const client = new Anthropic({ apiKey: ANTHROPIC_API_KEY });
 
-    const stream = await client.messages.stream({
+    const stream = client.messages.stream({
       model: MODEL,
       max_tokens: MAX_TOKENS,
       // This model thinks by default and can spend the whole token cap before any text
       ...(MODEL === "claude-sonnet-5-5" ? { thinking: { type: "between_tools" } } : {}),
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
-    });
+    }, { signal: upstream.signal });
 
     for await (const event of stream) {
       if (event.type === "content_block_delta" && event.delta?.text) {
@@ -660,6 +664,10 @@ Important:
     }
 
   } catch (err) {
+    if (upstream.signal.aborted) {
+      console.log("[analyze] client disconnected; upstream stream aborted");
+      return;
+    }
     logError("analyze", err);
     res.write(`data: ${JSON.stringify({ error: analysisErrorMessage(err) })}\n\n`);
     res.end();
