@@ -38540,7 +38540,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "log_matter",
-      description: "Log an IP analysis to the persistent matter history. Called automatically by skills after completing an analysis.",
+      description: "Log an IP analysis to the local matter history (~/.markman/data/history.json). Markman skills ask Claude to call this after completing an analysis.",
       inputSchema: {
         type: "object",
         properties: {
