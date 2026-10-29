@@ -45,7 +45,7 @@ Implementation: replace the copper tokens in `frontend/src/index.css` with these
 Turned on by `MARKMAN_PUBLIC=1`, so local use is unchanged.
 
 - Claude analysis limit: 3 per visitor per day, by IP address, kept in memory, plus a site-wide limit of 150 per day as a backstop. When a limit is hit, the page says so and links to the free plugin.
-- Model for the public demo: `claude-sonnet-5-5`, with output capped at 4,096 tokens. That costs roughly a fifth of Opus per analysis. Local use keeps whatever `.env` sets.
+- Model for the public demo: `claude-sonnet-5-5`, with output capped at 6,000 tokens. That costs roughly a fifth of Opus per analysis. Local use keeps whatever `.env` sets.
 - History and deadlines: the `/api/history` and `/api/deadlines` routes are turned off in public mode. The frontend stores them in localStorage.
 - Word export: the file is generated and sent straight to the browser, not saved on the server.
 - Request size limit and basic security headers.

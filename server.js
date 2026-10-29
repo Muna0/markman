@@ -49,7 +49,7 @@ const WIPO_API_KEY = process.env.WIPO_API_KEY || "";
 const PORT = process.env.PORT || 3001;
 const PUBLIC = process.env.MARKMAN_PUBLIC === "1";
 const MODEL = process.env.MARKMAN_MODEL || (PUBLIC ? "claude-sonnet-5-5" : "claude-opus-5-5");
-const MAX_TOKENS = PUBLIC ? 4096 : 8192;
+const MAX_TOKENS = PUBLIC ? 6000 : 8192;
 const MAX_QUERY_CHARS = 20000;
 const limiter = createDailyLimiter({ perKey: 3, total: 150 });
 const searchLimiter = createDailyLimiter({ perKey: 100, total: 3000 });
@@ -665,7 +665,7 @@ Important:
 - Use Bluebook citation format where applicable
 - Include a limitations section
 - Present the output as a draft for attorney review; do not label it privileged, confidential, or attorney work product
-- Be specific and actionable`;
+- Be specific and actionable${PUBLIC ? "\n\nThis is a public demo with a limited response length. Keep the draft under about 1,500 words. Use short sections and bullet points, avoid restating the input data, and always finish with the Limitations section. If you must cut, shorten earlier sections rather than omitting Limitations." : ""}`;
 
   // Set up SSE streaming
   res.setHeader("Content-Type", "text/event-stream");

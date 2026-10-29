@@ -16,7 +16,7 @@
 - Risk colors: high #8C1D18, medium amber, low #1D6B45.
 - Font Satoshi 400/500/700 self-hosted; code font `ui-monospace, SFMono-Regular, Menlo, monospace`.
 - Buttons 5px radius, cards 12 to 16px, pills 999px; sticky 68px blurred nav.
-- Public limits: 3 analyses per visitor per UTC day, 150 per day site-wide. Public model `claude-sonnet-5-5`, `max_tokens` 4096.
+- Public limits: 3 analyses per visitor per UTC day, 150 per day site-wide. Public model `claude-sonnet-5-5`, `max_tokens` 6000.
 - Copy: no em dashes, no mention of AI authorship, no Claude co-author lines in commits, commits use M's GitHub noreply email.
 - Secrets are never printed, never committed, never baked into the Docker image.
 - Fly app `markman-ip`, region `ord`, shared-cpu-1x, 256 MB, auto stop/start, exactly 1 machine.
@@ -247,7 +247,7 @@ After the key constants:
 ```js
 const PUBLIC = process.env.MARKMAN_PUBLIC === "1";
 const MODEL = process.env.MARKMAN_MODEL || (PUBLIC ? "claude-sonnet-5-5" : "claude-opus-5-5");
-const MAX_TOKENS = PUBLIC ? 4096 : 8192;
+const MAX_TOKENS = PUBLIC ? 6000 : 8192;
 const MAX_QUERY_CHARS = 20000;
 const limiter = createDailyLimiter({ perKey: 3, total: 150 });
 const visitorKey = (req) => req.get("fly-client-ip") || req.ip;
