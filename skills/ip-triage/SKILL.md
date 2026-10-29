@@ -62,7 +62,7 @@ Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for st
 - PCT national phase entry: 30 months from earliest priority date (some jurisdictions 31)
 - USPTO Office Action response: typically a 3-month shortened statutory period, extendable up to the 6-month statutory maximum with fees
 - Trademark Statement of Use: 6 months from Notice of Allowance (extendable)
-- Trademark maintenance: Section 8 declaration between years 5 and 6 after registration (Section 15 optional after 5 years of continuous use), and Section 8/9 renewal in the year before each 10-year anniversary
+- Trademark maintenance: Section 8 declaration between years 5 and 6 after registration (Section 15 optional after 5 consecutive years of continuous use following registration), and Section 8/9 renewal in the year before each 10-year anniversary
 - Copyright registration: required before suing for infringement of a U.S. work; for statutory damages and attorney's fees, generally registration before the infringement began or within 3 months after first publication (17 U.S.C. §§ 411(a), 412)
 - Trade secret: DTSA limitations period is 3 years from when the misappropriation was or reasonably should have been discovered (18 U.S.C. § 1836(d)); state UTSA periods vary
 - Public disclosure, sale, or offer for sale: under the AIA, the inventor's own disclosure starts a 1-year grace period (35 U.S.C. § 102(b)(1)); many foreign jurisdictions require absolute novelty, with no comparable grace period

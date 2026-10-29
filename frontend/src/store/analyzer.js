@@ -103,7 +103,7 @@ export function identifyDeadlines(text, ipType) {
       deadlines.push({ name: 'PCT National Phase Entry', date: '30 months from priority', remaining: 'Calculate from priority date', status: 'UPCOMING' })
     }
     if (lower.includes('office action') || lower.includes(' oa ')) {
-      deadlines.push({ name: 'Office Action Response', date: '3 months (extendable to 6)', remaining: 'Check OA date', status: 'URGENT' })
+      deadlines.push({ name: 'Office Action Response', date: 'Typically a 3-month shortened statutory period, extendable up to 6 months with fees', remaining: 'Check OA date', status: 'URGENT' })
     }
     if (lower.includes('disclose') || lower.includes('publish') || lower.includes('present')) {
       deadlines.push({ name: 'File Before Public Disclosure', date: 'Before any disclosure', remaining: 'Immediate', status: 'URGENT' })

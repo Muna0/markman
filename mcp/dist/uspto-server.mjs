@@ -15343,6 +15343,18 @@ var StdioServerTransport = class {
   }
 };
 
+// lib/patent-query.js
+function toPatentQuery(query) {
+  const q = String(query).trim();
+  const num = /^(?:US\s*)?(\d[\d,\/]*)(?:[A-Z]\d?)?$/i.exec(q);
+  if (num) {
+    const digits = num[1].replace(/\D/g, "");
+    if (digits.length >= 6) return digits;
+  }
+  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
+  return q.split(/\s+/).join(" AND ");
+}
+
 // mcp/uspto-server.js
 var USPTO_API_KEY = process.env.USPTO_API_KEY;
 var MISSING_KEY_MESSAGE = "USPTO_API_KEY is not set. Get a free key at https://data.uspto.gov/myodp (sign in with a USPTO.gov account verified through ID.me, and complete the required profile fields: job title, organization type, organization name, intended use). Add it to your shell environment (for example ~/.zshrc), then restart Claude Code. Markman's skills still work on text you paste in.";
@@ -15389,24 +15401,21 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
       }
       if (!response.ok) {
         const body = await response.text().catch(() => "");
-        throw new Error(
+        const err = new Error(
           `USPTO API error ${response.status}: ${response.statusText}. ${body}`
         );
+        if (response.status >= 400 && response.status < 500) err.noRetry = true;
+        throw err;
       }
       return await response.json();
     } catch (err) {
-      if (attempt === retries) throw err;
+      if (err.noRetry || attempt === retries) throw err;
       const backoff = Math.min(1e3 * 2 ** (attempt - 1), 1e4);
       console.error(`Request failed (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${backoff}ms`);
       await new Promise((r) => setTimeout(r, backoff));
     }
   }
-}
-function toPatentQuery(query) {
-  const q = String(query).trim();
-  if (/^(US)?[\d,\/\s]+$/i.test(q) && /\d{6}/.test(q.replace(/\D/g, ""))) return q.replace(/\D/g, "");
-  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
-  return q.split(/\s+/).join(" AND ");
+  throw new Error(`USPTO API is rate limiting requests (HTTP 429 on all ${retries} attempts). Try again in a minute.`);
 }
 async function searchPatents(query, dateRange) {
   const params = new URLSearchParams({

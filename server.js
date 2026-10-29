@@ -30,6 +30,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
+import { toPatentQuery } from "./lib/patent-query.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -44,7 +45,6 @@ try {
 } catch {}
 
 const USPTO_API_KEY = process.env.USPTO_API_KEY || "";
-const TSDR_API_KEY = process.env.TSDR_API_KEY || USPTO_API_KEY;
 const WIPO_API_KEY = process.env.WIPO_API_KEY || "";
 const PORT = process.env.PORT || 3001;
 const PUBLIC = process.env.MARKMAN_PUBLIC === "1";
@@ -81,6 +81,11 @@ function logError(where, err) {
   console.error(`[${where}]`, err?.status ? `status ${err.status}:` : "", err?.message || String(err));
 }
 
+// Local users get the actionable missing-key message; the public demo gets the generic one
+function usptoErrorMessage(err) {
+  return !PUBLIC && err?.missingKey ? err.message : MSG_USPTO;
+}
+
 function analysisErrorMessage(err) {
   const type = err?.error?.error?.type || err?.error?.type;
   if (UNAVAILABLE_TYPES.has(type) || [401, 402, 403, 429, 529].includes(err?.status)) return MSG_ANALYSIS_UNAVAILABLE;
@@ -89,7 +94,11 @@ function analysisErrorMessage(err) {
 
 // ─── USPTO fetch helper ───
 async function usptoFetch(url) {
-  if (!USPTO_API_KEY) throw new Error("USPTO_API_KEY not configured");
+  if (!USPTO_API_KEY) {
+    const err = new Error("USPTO_API_KEY is not set. Get a free key at https://data.uspto.gov/myodp, add USPTO_API_KEY to your .env file, and restart the server.");
+    err.missingKey = true;
+    throw err;
+  }
   const res = await fetch(url, {
     headers: { "Accept": "application/json", "X-API-KEY": USPTO_API_KEY },
   });
@@ -127,14 +136,6 @@ function clampInt(value, min, max, fallback) {
 }
 
 // ─── Patent search ───
-// Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
-function toPatentQuery(query) {
-  const q = String(query).trim();
-  // A patent or application number ("US11,234,567", "17/988,084") matches only as bare digits
-  if (/^(US)?[\d,\/\s]+$/i.test(q) && /\d{6}/.test(q.replace(/\D/g, ""))) return q.replace(/\D/g, "");
-  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
-  return q.split(/\s+/).join(" AND ");
-}
 
 app.post("/api/patents/search", async (req, res) => {
   try {
@@ -168,7 +169,7 @@ app.post("/api/patents/search", async (req, res) => {
     res.json({ totalResults: data.count || results.length, query, results });
   } catch (err) {
     logError("patents/search", err);
-    res.status(500).json({ error: MSG_USPTO });
+    res.status(500).json({ error: usptoErrorMessage(err) });
   }
 });
 
@@ -271,7 +272,7 @@ app.post("/api/patents/details", async (req, res) => {
     });
   } catch (err) {
     logError("patents/details", err);
-    res.status(500).json({ error: MSG_USPTO });
+    res.status(500).json({ error: usptoErrorMessage(err) });
   }
 });
 
@@ -290,7 +291,7 @@ app.post("/api/trademarks/search", async (req, res) => {
     });
   } catch (err) {
     logError("trademarks/search", err);
-    res.status(500).json({ error: MSG_USPTO });
+    res.status(500).json({ error: usptoErrorMessage(err) });
   }
 });
 
@@ -302,7 +303,7 @@ app.post("/api/trademarks/status", localOnly, async (req, res) => {
 
     const normalized = serialNumber.replace(/[-\s]/g, "").trim();
     const tsdrRes = await fetch(`https://tsdrapi.uspto.gov/ts/cd/casestatus/sn${normalized}/info.json`, {
-      headers: { "Accept": "application/json", "USPTO-API-KEY": TSDR_API_KEY },
+      headers: { "Accept": "application/json", "USPTO-API-KEY": USPTO_API_KEY },
     });
     if (tsdrRes.status === 401) throw new Error("TSDR rejected the request. TSDR uses your USPTO key and was not responding reliably as of October 2026; check the record at tsdr.uspto.gov.");
     if (!tsdrRes.ok) throw new Error(`TSDR ${tsdrRes.status}`);
@@ -310,7 +311,7 @@ app.post("/api/trademarks/status", localOnly, async (req, res) => {
     res.json(data);
   } catch (err) {
     logError("trademarks/status", err);
-    res.status(500).json({ error: MSG_USPTO });
+    res.status(500).json({ error: usptoErrorMessage(err) });
   }
 });
 
@@ -400,7 +401,7 @@ function detectHeading(line) {
   if (trimmed === trimmed.toUpperCase() && /[A-Z]/.test(trimmed) && trimmed.length > 3) return "h2";
   // Lines starting with capital letter subsections: "A. REISSUE-SPECIFIC SCOPE ISSUES"
   if (/^[A-Z]\.\s+[A-Z]/.test(trimmed)) return "h3";
-  // Lines like "Claim Map", "Scope Assessment" — title case, no period, under 60 chars
+  // Lines like "Claim Map", "Scope Assessment": title case, no period, under 60 chars
   if (/^[A-Z][a-z]/.test(trimmed) && !trimmed.includes(".") && trimmed.length < 60 && /^[A-Z][A-Za-z\s\-\/&:()]+$/.test(trimmed)) return "h3";
   return null;
 }

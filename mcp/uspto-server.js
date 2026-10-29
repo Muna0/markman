@@ -22,6 +22,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
+import { toPatentQuery } from "../lib/patent-query.js";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -89,33 +90,29 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 
       if (!response.ok) {
         const body = await response.text().catch(() => "");
-        throw new Error(
+        const err = new Error(
           `USPTO API error ${response.status}: ${response.statusText}. ${body}`
         );
+        // Client errors (bad number, no match, bad key) will not succeed on retry
+        if (response.status >= 400 && response.status < 500) err.noRetry = true;
+        throw err;
       }
 
       return await response.json();
     } catch (err) {
-      if (attempt === retries) throw err;
+      if (err.noRetry || attempt === retries) throw err;
       const backoff = Math.min(1000 * 2 ** (attempt - 1), 10_000);
       console.error(`Request failed (attempt ${attempt}/${retries}): ${err.message}. Retrying in ${backoff}ms`);
       await new Promise((r) => setTimeout(r, backoff));
     }
   }
+  throw new Error(`USPTO API is rate limiting requests (HTTP 429 on all ${retries} attempts). Try again in a minute.`);
 }
 
 // ---------------------------------------------------------------------------
 // Tool implementations
 // ---------------------------------------------------------------------------
 
-// Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
-function toPatentQuery(query) {
-  const q = String(query).trim();
-  // A patent or application number ("US11,234,567", "17/988,084") matches only as bare digits
-  if (/^(US)?[\d,\/\s]+$/i.test(q) && /\d{6}/.test(q.replace(/\D/g, ""))) return q.replace(/\D/g, "");
-  if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
-  return q.split(/\s+/).join(" AND ");
-}
 
 async function searchPatents(query, dateRange) {
   const params = new URLSearchParams({

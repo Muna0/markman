@@ -101,14 +101,18 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 
       if (!response.ok) {
         const body = await response.text().catch(() => "");
-        throw new Error(
+        const err = new Error(
           `WIPO API error ${response.status}: ${response.statusText}. ${body}`
         );
+        // Client errors will not succeed on retry
+        if (response.status >= 400 && response.status < 500) err.noRetry = true;
+        throw err;
       }
 
       return await response.json();
     } catch (err) {
       if (
+        err.noRetry ||
         err.message.includes("authentication failed") ||
         attempt === retries
       ) {
@@ -121,6 +125,7 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
       await new Promise((r) => setTimeout(r, backoff));
     }
   }
+  throw new Error(`WIPO API is rate limiting requests (HTTP 429 on all ${retries} attempts). Try again in a minute.`);
 }
 
 // ---------------------------------------------------------------------------

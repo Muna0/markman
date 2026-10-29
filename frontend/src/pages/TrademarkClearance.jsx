@@ -15,7 +15,6 @@ function RiskIcon({ risk }) {
 
 function JurisdictionStatus({ status, dark }) {
   const styles = {
-    CLEAR: dark ? 'bg-grn-950 text-grn-400' : 'bg-grn-100 text-grn-700',
     CONFLICT: dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700',
     CAUTION: dark ? 'bg-amb-950 text-amb-400' : 'bg-amb-100 text-amb-700',
   }
@@ -138,7 +137,7 @@ export default function TrademarkClearance() {
       jurisdictions: jurisdictionResults,
       selectedGoods: goods,
       overall: 'SEARCH REQUIRED',
-      recommendation: `Preliminary analysis complete for ${markUpper}. Distinctiveness: ${distinctiveness}. ${variants.length} phonetic variants generated. ${selectedJurisdictions.length} jurisdictions selected. To complete clearance, search each jurisdiction database using the links below. For automated search, run /tm-clearance ${markUpper} | ${goods} | ${selectedJurisdictions.join(', ')} in Claude Code with Markman installed.`,
+      recommendation: `Preliminary analysis complete for ${markUpper}. Distinctiveness: ${distinctiveness}. ${variants.length} phonetic variants generated. ${selectedJurisdictions.length} jurisdictions selected. To complete clearance, search each jurisdiction database using the links below. In Claude Code, /tm-clearance drafts the likelihood-of-confusion analysis from the marks you find and paste.`,
     }
 
     // Log to history
