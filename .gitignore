@@ -6,3 +6,4 @@ frontend/dist/
 frontend/.firecrawl/
 *.log
 markman-data/
+docs/superpowers/
