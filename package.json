@@ -1,6 +1,6 @@
 {
   "name": "markman",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Markman \u2014 Claude Code Plugin for IP Law. MCP servers, backend API, and local data store.",
   "type": "module",
   "scripts": {
