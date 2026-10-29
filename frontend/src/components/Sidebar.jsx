@@ -63,7 +63,7 @@ export default function Sidebar() {
         </nav>
 
         <div className={`px-4 py-3 border-t ${dark ? 'border-white/10' : 'border-ink-200'}`}>
-          <p className={`text-[12px] px-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>v1.3.0 · Free and open source</p>
+          <p className={`text-[12px] px-1 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>v1.4.0 · Free and open source</p>
           <a href="https://github.com/Muna0/markman" target="_blank" rel="noopener noreferrer"
             className={`inline-block text-[12px] font-medium mt-1 px-1 underline-offset-2 hover:underline ${dark ? 'text-blu-300' : 'text-blu-600'}`}>GitHub</a>
         </div>

@@ -1,6 +1,6 @@
 {
   "name": "markman",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "IP law plugin for Claude Code. Drafts patent claim analyses, trademark clearance screens, FTO risk analyses, and matter intake summaries for attorney review, with deadline tracking, matter history, and Word export. Uses the USPTO API; WIPO support is experimental and requires WIPO API credentials. Does not provide legal advice.",
   "author": {
     "name": "Muna Omar"
