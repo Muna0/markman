@@ -66,3 +66,25 @@ test("single newlines inside a paragraph become line breaks", async () => {
   const xml = await exportXml("**Title:** Widget\n**Filing Date:** 2020-01-01");
   assert.match(xml, /Widget<\/w:t><\/w:r><w:r>(<w:rPr>[\s\S]*?<\/w:rPr>)?<w:br\/>/);
 });
+
+test("list items keep their marker even when they start with a block or are empty", async () => {
+  const xml = await exportXml("- ```\n  code in item\n  ```\n- > quoted item\n-\n- plain");
+  assert.equal((xml.match(/•/g) || []).length, 4);
+  assert.match(xml, /code in item/);
+});
+
+test("links keep their URL", async () => {
+  const r = await fetch(`${s.url}/api/export`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title: "Links", content: "See [the opinion](https://example.com/op) and <https://example.com/bare>.", memoType: "patent" }),
+  });
+  const zip = new AdmZip(Buffer.from(await r.arrayBuffer()));
+  const xml = zip.readAsText("word/document.xml");
+  const rels = zip.readAsText("word/_rels/document.xml.rels");
+  assert.match(xml, /<w:hyperlink/);
+  assert.match(xml, /the opinion/);
+  assert.match(xml, /\(https:\/\/example\.com\/op\)/);
+  assert.match(rels, /https:\/\/example\.com\/op/);
+  assert.match(xml, /https:\/\/example\.com\/bare/);
+  assert.ok(!xml.includes("(https://example.com/bare)"), "bare URL is not repeated");
+});

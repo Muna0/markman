@@ -41288,7 +41288,7 @@ function isCapsHeading(token) {
   return token.tokens?.length === 1 && token.tokens[0].type === "text" && !t.includes("\n") && t.length > 3 && t.length < 80 && t === t.toUpperCase() && /[A-Z]/.test(t);
 }
 function markdownToDocx(markdown, docx, opts = {}) {
-  const { Paragraph: Paragraph2, TextRun: TextRun2, HeadingLevel: HeadingLevel2, Table: Table2, TableRow: TableRow2, TableCell: TableCell2, WidthType: WidthType2, BorderStyle: BorderStyle2, ShadingType: ShadingType2, AlignmentType: AlignmentType2 } = docx;
+  const { Paragraph: Paragraph2, TextRun: TextRun2, ExternalHyperlink: ExternalHyperlink2, HeadingLevel: HeadingLevel2, Table: Table2, TableRow: TableRow2, TableCell: TableCell2, WidthType: WidthType2, BorderStyle: BorderStyle2, ShadingType: ShadingType2, AlignmentType: AlignmentType2 } = docx;
   const font = opts.font || "Times New Roman";
   const size = opts.size || 22;
   const MONO = "Courier New";
@@ -41307,7 +41307,8 @@ function markdownToDocx(markdown, docx, opts = {}) {
         size: fmt.code ? sz - 2 : sz,
         bold: fmt.bold,
         italics: fmt.italics,
-        strike: fmt.strike
+        strike: fmt.strike,
+        ...fmt.link ? { color: "0563C1", underline: {} } : {}
       });
     });
   }
@@ -41330,9 +41331,16 @@ function markdownToDocx(markdown, docx, opts = {}) {
         case "br":
           runs.push(new TextRun2({ break: 1 }));
           break;
-        case "link":
-          runs.push(...inline(t.tokens, fmt));
+        case "link": {
+          const href = String(t.href || "");
+          const linkable = /^(https?:|mailto:)/i.test(href);
+          const label = inline(t.tokens, linkable ? { ...fmt, link: true } : fmt);
+          if (linkable) runs.push(new ExternalHyperlink2({ link: href, children: label }));
+          else runs.push(...label);
+          const shown = String(t.text || "").replace(/^mailto:/i, "");
+          if (href && shown !== href && shown !== href.replace(/^mailto:/i, "")) runs.push(...textRuns(` (${href})`, fmt));
           break;
+        }
         case "text":
           if (t.tokens?.length) runs.push(...inline(t.tokens, fmt));
           else runs.push(...textRuns(t.text, fmt));
@@ -41359,23 +41367,23 @@ function markdownToDocx(markdown, docx, opts = {}) {
     t.items.forEach((item, idx) => {
       const marker = t.ordered ? `${start + idx}.` : "\u2022";
       const check = item.task ? item.checked ? "[x] " : "[ ] " : "";
-      let first = true;
-      for (const child of item.tokens) {
-        if (child.type === "list") {
-          out.push(...list(child, left));
-          continue;
-        }
-        if (first && (child.type === "text" || child.type === "paragraph")) {
-          first = false;
-          out.push(new Paragraph2({
-            spacing: { after: 60 },
-            indent: { left, hanging: 360 },
-            tabStops: [{ type: "left", position: left }],
-            children: [new TextRun2({ text: `${marker}	${check}`, font, size }), ...inline(child.tokens || [{ type: "text", text: child.text }])]
-          }));
-        } else {
-          out.push(...blocks([child], { indent: left }));
-        }
+      const markerPara = (runs) => new Paragraph2({
+        spacing: { after: 60 },
+        indent: { left, hanging: 360 },
+        tabStops: [{ type: "left", position: left }],
+        children: [new TextRun2({ text: `${marker}	${check}`, font, size }), ...runs]
+      });
+      const children = (item.tokens || []).filter((c2) => c2.type !== "space" && c2.type !== "checkbox");
+      const [first, ...rest] = children;
+      if (first && (first.type === "text" || first.type === "paragraph")) {
+        out.push(markerPara(inline(first.tokens || [{ type: "text", text: first.text }])));
+      } else {
+        out.push(markerPara([]));
+        if (first) rest.unshift(first);
+      }
+      for (const child of rest) {
+        if (child.type === "list") out.push(...list(child, left));
+        else out.push(...blocks([child], { indent: left }));
       }
     });
     return out;
