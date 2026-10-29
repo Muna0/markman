@@ -3,17 +3,17 @@
 /**
  * USPTO Open Data Portal MCP Server
  *
- * Connects to the USPTO Open Data Portal (data.uspto.gov) and the legacy
- * TSDR API (tsdrapi.uspto.gov) to provide patent and trademark search tools.
+ * Connects to the USPTO Open Data Portal API (api.uspto.gov) for patent
+ * application data and to TSDR (tsdrapi.uspto.gov) for trademark status.
  *
  * Environment variables:
- *   USPTO_API_KEY  - API key for data.uspto.gov (required)
+ *   USPTO_API_KEY  - Open Data Portal API key from data.uspto.gov/myodp
  *
  * Tools:
- *   search_patents       - Search patents by query and optional date range
- *   get_patent_details   - Get full details for a specific patent number
- *   search_trademarks    - Search trademark registrations by mark text and class
- *   check_trademark_status - Check current status of a trademark by serial number
+ *   search_patents         - Search patent applications by query and optional filing date range
+ *   get_patent_details     - Get bibliographic and transaction data for a patent or application number
+ *   search_trademarks      - Explains that USPTO has no trademark text search API and links to USPTO Trademark Search
+ *   check_trademark_status - Check the status of a trademark by serial number (TSDR)
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -29,7 +29,7 @@ import {
 
 const USPTO_API_KEY = process.env.USPTO_API_KEY;
 // Without a key the server still starts, so Claude can explain how to add one
-const MISSING_KEY_MESSAGE = "USPTO_API_KEY is not set. Get a free key at https://data.uspto.gov/myodp and add it to your shell environment, then restart Claude Code. Markman's skills still work on text you paste in.";
+const MISSING_KEY_MESSAGE = "USPTO_API_KEY is not set. Get a free key at https://data.uspto.gov/myodp (sign in with a USPTO.gov account verified through ID.me, and complete the required profile fields: job title, organization type, organization name, intended use). Add it to your shell environment (for example ~/.zshrc), then restart Claude Code. Markman's skills still work on text you paste in.";
 
 const ODP_BASE = "https://api.uspto.gov/api/v1";
 const TSDR_BASE = "https://tsdrapi.uspto.gov/ts/cd/casestatus";
@@ -130,65 +130,111 @@ async function searchPatents(query, dateRange) {
   const data = await fetchWithRetry(url);
 
   // ODP API returns patentFileWrapperDataBag with applicationMetaData inside each item
-  const bag = data.patentFileWrapperDataBag || data.results || data.patents || [];
-  const results = bag.map((p) => {
-    const meta = p.applicationMetaData || {};
-    const inventors = (meta.inventorBag || []).map(i => i.inventorNameText).filter(Boolean);
-    const assignees = (meta.applicantBag || []).map(a => a.applicantNameText || a.organizationNameText).filter(Boolean);
+  const bag = data.patentFileWrapperDataBag || [];
+  const results = bag.map((w) => {
+    const r = mapFileWrapper(w);
     return {
-      applicationNumber: p.applicationNumberText || meta.applicationNumber,
-      patentNumber: meta.patentNumber || meta.publicationNumber || p.applicationNumberText,
-      title: meta.inventionTitle || meta.inventionSubjectMatterCategory || "",
-      filingDate: meta.filingDate || meta.effectiveFilingDate,
-      status: meta.applicationStatusCode,
-      statusDescription: meta.applicationTypeLabelName,
-      type: meta.applicationTypeCategory,
-      class: meta.class,
-      uspcSymbol: meta.uspcSymbolText,
-      firstInventor: meta.firstInventorName,
-      inventors: inventors.length > 0 ? inventors : (meta.firstInventorName ? [meta.firstInventorName] : []),
-      assignee: assignees.length > 0 ? assignees.join("; ") : "",
+      applicationNumber: r.applicationNumber,
+      patentNumber: r.patentNumber,
+      title: r.title,
+      filingDate: r.filingDate,
+      grantDate: r.grantDate,
+      status: r.status,
+      applicationType: r.applicationType,
+      applicants: r.applicants,
+      inventors: r.inventors,
+      cpc: r.cpc,
     };
   });
 
   return {
     totalResults: data.count || results.length,
     query,
-    dateRange: dateRange || "all dates",
+    dateRange: dateRange ? `filing date ${dateRange.start} to ${dateRange.end || "present"}` : "all dates",
     results,
   };
 }
 
-async function getPatentDetails(patentNumber) {
-  // Normalize patent number: remove "US", commas, spaces
-  const normalized = patentNumber
-    .replace(/^US\s*/i, "")
-    .replace(/,/g, "")
-    .trim();
+// Map one ODP file wrapper record to the fields this server returns
+function mapFileWrapper(wrapper) {
+  const meta = wrapper.applicationMetaData || {};
+  const inventors = (meta.inventorBag || []).map((i) => i.inventorNameText).filter(Boolean);
+  const applicants = (meta.applicantBag || []).map((a) => a.applicantNameText || a.organizationNameText).filter(Boolean);
+  const assignees = (wrapper.assignmentBag || [])
+    .flatMap((a) => (a.assigneeBag || []).map((ae) => ae.assigneeNameText))
+    .filter(Boolean);
+  const events = (wrapper.eventDataBag || [])
+    .slice()
+    .sort((a, b) => new Date(b.eventDate) - new Date(a.eventDate))
+    .map((e) => `${e.eventDate}: ${e.eventDescriptionText} (${e.eventCode})`);
+  return {
+    applicationNumber: wrapper.applicationNumberText || meta.applicationNumber || null,
+    patentNumber: meta.patentNumber || null,
+    title: meta.inventionTitle || "",
+    filingDate: meta.filingDate || null,
+    effectiveFilingDate: meta.effectiveFilingDate || null,
+    grantDate: meta.grantDate || null,
+    status: meta.applicationStatusDescriptionText || meta.applicationStatusCode || null,
+    statusDate: meta.applicationStatusDate || null,
+    applicationType: meta.applicationTypeLabelName || null,
+    applicants,
+    assigneesOfRecord: [...new Set(assignees)],
+    inventors,
+    cpc: meta.cpcClassificationBag || [],
+    uspc: meta.uspcSymbolText || null,
+    groupArtUnit: meta.groupArtUnitNumber || null,
+    examiner: meta.examinerNameText || null,
+    entityStatus: meta.entityStatusData?.businessEntityStatusCategory || null,
+    patentTermAdjustmentDays: wrapper.patentTermAdjustmentData?.adjustmentTotalQuantity ?? null,
+    parentContinuity: (wrapper.parentContinuityBag || []).map((p) => ({
+      type: p.claimParentageTypeCodeDescriptionText,
+      parentApplication: p.parentApplicationNumberText,
+      parentFilingDate: p.parentApplicationFilingDate,
+    })),
+    foreignPriority: (wrapper.foreignPriorityBag || []).map((f) => ({
+      office: f.ipOfficeName,
+      applicationNumber: f.applicationNumberText,
+      filingDate: f.filingDate,
+    })),
+    transactionHistory: events,
+  };
+}
 
-  const url = `${ODP_BASE}/patent/applications/${normalized}`;
-  const data = await fetchWithRetry(url);
+const CLAIMS_NOTE =
+  "This USPTO endpoint does not return claim text or an abstract. Get the claims from the published patent (for example USPTO Patent Center or the patent PDF) and paste them in. Expiration is not computed here; check term, terminal disclaimers, and maintenance fee status before relying on any date.";
+
+async function getPatentDetails(number) {
+  const raw = String(number).trim();
+  // Application numbers are usually written with a slash (17/123,456); patent numbers are not
+  const looksLikeApplication = raw.includes("/");
+  const normalized = raw.replace(/^US\s*/i, "").replace(/[,\/\s]/g, "");
+  const n = encodeURIComponent(normalized);
+
+  let wrapper = null;
+  let matchedAs = null;
+  if (!looksLikeApplication) {
+    const params = new URLSearchParams({ q: `applicationMetaData.patentNumber:${normalized}`, rows: "1" });
+    try {
+      const data = await fetchWithRetry(`${ODP_BASE}/patent/applications/search?${params}`);
+      wrapper = data.patentFileWrapperDataBag?.[0] || null;
+      if (wrapper) matchedAs = "patent number";
+    } catch (err) {
+      // No patent with that number (USPTO answers 404); try it as an application number next
+      if (!/ 404/.test(err.message)) throw err;
+    }
+  }
+  if (!wrapper) {
+    const data = await fetchWithRetry(`${ODP_BASE}/patent/applications/${n}`);
+    wrapper = data.patentFileWrapperDataBag?.[0] || null;
+    if (wrapper) matchedAs = "application number";
+  }
+  if (!wrapper) throw new Error(`No USPTO record found for ${raw}.`);
 
   return {
-    patentNumber: data.patentNumber || normalized,
-    title: data.inventionTitle || data.title,
-    abstract: data.abstractText || data.abstract,
-    claims: data.claims || data.claimText,
-    grantDate: data.grantDate,
-    filingDate: data.filingDate,
-    expirationDate: data.expirationDate,
-    assignee: data.assigneeEntityName || data.assignee,
-    inventors: data.inventorNameArrayText || data.inventors,
-    classifications: {
-      cpc: data.cpcClassification || data.cpcCodes,
-      uspc: data.uspcClassification || data.uspcCodes,
-    },
-    references: {
-      citedBy: data.citedByCount || data.referencedByCount,
-      citesPatents: data.referenceCitedCount,
-    },
-    maintenanceFeeStatus: data.maintenanceFeeStatus || "check PAIR for current status",
-    prosecutionHistory: data.prosecutionHistory || "use USPTO PAIR for full history",
+    input: raw,
+    matchedAs,
+    ...mapFileWrapper(wrapper),
+    note: `Matched ${raw} as a ${matchedAs}. Confirm the title and number before relying on this record. ${CLAIMS_NOTE}`,
   };
 }
 
@@ -204,51 +250,22 @@ async function searchTrademarks(markText, niceClass) {
 
 async function checkTrademarkStatus(serialNumber) {
   // Normalize: remove dashes, spaces
-  const normalized = serialNumber.replace(/[-\s]/g, "").trim();
-
-  // Try ODP first, fall back to TSDR
+  const normalized = String(serialNumber).replace(/[-\s]/g, "").trim();
+  const tsdrUrl = `${TSDR_BASE}/sn${normalized}/info.json`;
   try {
-    const url = `${ODP_BASE}/trademark/applications/${normalized}`;
-    const data = await fetchWithRetry(url);
-
+    const data = await fetchWithRetry(tsdrUrl, { headers: { "USPTO-API-KEY": USPTO_API_KEY } });
+    const status = data?.trademarkBag?.trademark?.[0]?.status || {};
     return {
-      serialNumber: data.serialNumber || normalized,
-      registrationNumber: data.registrationNumber,
-      markText: data.wordMark || data.markLiteralElements,
-      status: data.statusCode || data.status,
-      statusDescription: data.statusDescription,
-      statusDate: data.statusDate,
-      filingDate: data.filingDate,
-      registrationDate: data.registrationDate,
-      owner: data.ownerName || data.applicantName,
-      ownerAddress: data.ownerAddress,
-      attorneys: data.attorneyName,
-      niceClasses: data.internationalClassCode,
-      goodsServices: data.goodsAndServicesDescription,
-      renewalDate: data.renewalDate,
-      filingBasis: data.filingBasisCode,
-      markType: data.markTypeCategory,
-      liveOrDead: data.liveDeadIndicator,
-      correspondenceAddress: data.correspondenceAddress,
+      serialNumber: normalized,
+      status: status.usCode || "unknown",
+      statusDescription: status.statusText || "See TSDR for details",
+      source: "TSDR",
+      note: "Confirm the full record at https://tsdr.uspto.gov/#caseNumber=" + normalized,
     };
-  } catch (odpError) {
-    // Fallback to TSDR XML endpoint
-    try {
-      const tsdrUrl = `${TSDR_BASE}/sn${normalized}/info.json`;
-      const data = await fetchWithRetry(tsdrUrl);
-      const header = data?.trademarkBag?.trademark?.[0]?.status || {};
-      return {
-        serialNumber: normalized,
-        status: header.usCode || "unknown",
-        statusDescription: header.statusText || "See TSDR for details",
-        source: "TSDR fallback",
-        note: "Full details available at https://tsdr.uspto.gov/#caseNumber=" + normalized,
-      };
-    } catch (tsdrError) {
-      throw new Error(
-        `Could not retrieve trademark status from ODP or TSDR. ODP: ${odpError.message}. TSDR: ${tsdrError.message}`
-      );
-    }
+  } catch (err) {
+    throw new Error(
+      `Could not retrieve trademark status from USPTO TSDR (${err.message}). TSDR was not responding reliably as of October 2026. Check the record at https://tsdr.uspto.gov/#caseNumber=${normalized}`
+    );
   }
 }
 
@@ -274,7 +291,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_patents",
       description:
-        "Search USPTO patent database by keyword query. Returns matching patents with titles, abstracts, dates, and assignees. Supports optional date range filtering.",
+        "Search USPTO patent application records (Open Data Portal) by keyword query. Returns up to 20 records with application and patent numbers, title, filing and grant dates, status, applicants, inventors, and CPC codes. Does not return abstracts or claim text. Supports an optional filing date range.",
       inputSchema: {
         type: "object",
         properties: {
@@ -284,7 +301,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
           },
           date_range: {
             type: "object",
-            description: "Optional date range filter for grant date",
+            description: "Optional filing date range filter",
             properties: {
               start: {
                 type: "string",
@@ -303,14 +320,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "get_patent_details",
       description:
-        "Get full details for a specific U.S. patent by number, including claims text, prosecution history references, assignee, inventors, classifications, and maintenance fee status.",
+        "Get the USPTO Open Data Portal record for a U.S. patent or application number: title, filing and grant dates, status, applicants, assignees of record, inventors, CPC codes, patent term adjustment, continuity, foreign priority, and the transaction history (which includes maintenance fee events). Does not return claim text or an abstract. Numbers without a slash are tried as patent numbers first, then as application numbers; numbers with a slash (e.g. 17/123,456) are treated as application numbers.",
       inputSchema: {
         type: "object",
         properties: {
           patent_number: {
             type: "string",
             description:
-              "U.S. patent number (e.g., 'US11,234,567', '11234567', or 'US2024/0123456')",
+              "U.S. patent number (e.g., 'US11,234,567' or '11234567') or application number (e.g., '17/123,456')",
           },
         },
         required: ["patent_number"],
@@ -319,7 +336,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_trademarks",
       description:
-        "Search USPTO trademark database by mark text and optional Nice Classification class number. Returns matching marks with owner, status, classes, and goods/services.",
+        "USPTO offers no API for trademark search by text. This tool returns no results; it returns a note pointing to USPTO Trademark Search (tmsearch.uspto.gov) so the user can run the search and paste what they find.",
       inputSchema: {
         type: "object",
         properties: {
@@ -339,7 +356,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "check_trademark_status",
       description:
-        "Check the current status of a U.S. trademark by serial number. Returns filing/registration dates, owner, status, goods/services, and renewal information.",
+        "Check the status of a U.S. trademark application or registration by serial number using USPTO TSDR. Returns the status code and status text when TSDR responds. TSDR was not responding reliably as of October 2026.",
       inputSchema: {
         type: "object",
         properties: {

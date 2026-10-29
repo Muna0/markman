@@ -3,13 +3,14 @@
 /**
  * WIPO CASE API MCP Server
  *
- * Connects to the WIPO Centralized Access to Search and Examination (CASE)
- * system for international patent data, including PCT applications.
- *
- * API documentation: https://www.wipo.int/case/en/
+ * Experimental. Calls wipocase.wipo.int/api/v1 and, as a fallback,
+ * patentscope.wipo.int/search/api/v1, sending WIPO_API_KEY as a bearer token.
+ * WIPO CASE is a system for participating patent offices, and PATENTSCOPE
+ * programmatic access is a paid WIPO subscription, so these calls work only
+ * with credentials WIPO has issued for them. See WIPO's current access terms.
  *
  * Environment variables:
- *   WIPO_API_KEY  - API key for WIPO CASE API (required)
+ *   WIPO_API_KEY  - WIPO API credential (bearer token)
  *
  * Tools:
  *   search_international_patents  - Search international patent applications
@@ -29,7 +30,7 @@ import {
 
 const WIPO_API_KEY = process.env.WIPO_API_KEY;
 // Without a key the server still starts, so Claude can explain how to add one
-const MISSING_KEY_MESSAGE = "WIPO_API_KEY is not set. Get a free key at https://www.wipo.int/case/en/ and add it to your shell environment, then restart Claude Code. Markman's skills still work on text you paste in.";
+const MISSING_KEY_MESSAGE = "WIPO_API_KEY is not set. WIPO support is experimental and requires WIPO API credentials; WIPO does not offer a self-service key for this. WIPO CASE is a system for participating patent offices, and PATENTSCOPE programmatic access is a paid WIPO subscription (see https://www.wipo.int/en/web/patentscope/data/index). You can search PCT applications for free on the PATENTSCOPE website (https://patentscope.wipo.int) and paste what you find. Markman's skills still work on text you paste in.";
 
 const WIPO_BASE = "https://wipocase.wipo.int/api/v1";
 const PATENTSCOPE_BASE = "https://patentscope.wipo.int/search/api/v1";
@@ -289,7 +290,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_international_patents",
       description:
-        "Search WIPO international patent database (CASE/PATENTSCOPE) for PCT and international patent applications. Returns matching applications with titles, abstracts, applicants, filing dates, IPC classifications, and designated states.",
+        "Experimental. Search international patent applications through WIPO endpoints (CASE, then PATENTSCOPE as a fallback). Requires WIPO API credentials in WIPO_API_KEY. When a call succeeds, returns whatever of these fields the response includes: application and publication numbers, title, abstract, applicant, inventors, dates, IPC codes, and status. Without credentials, use the PATENTSCOPE website and paste results.",
       inputSchema: {
         type: "object",
         properties: {
@@ -305,7 +306,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "get_pct_application",
       description:
-        "Get detailed information about a specific PCT application, including bibliographic data, priority claims, national phase entries, search report citations, and key deadlines (30-month national phase, priority date).",
+        "Experimental. Look up a PCT application through WIPO endpoints (CASE, then PATENTSCOPE as a fallback). Requires WIPO API credentials in WIPO_API_KEY. When a call succeeds, returns whatever bibliographic, priority, publication, and status fields the response includes. Does not compute deadlines; calculate the 30-month national phase date from the priority date yourself.",
       inputSchema: {
         type: "object",
         properties: {
