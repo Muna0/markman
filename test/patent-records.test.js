@@ -13,6 +13,16 @@ test("earliestPriority: picks the earliest continuity or foreign priority date",
   assert.deepEqual(r, { date: "2013-11-14", source: "61904175", basis: "PRO" });
 });
 
+test("earliestPriority: ignores national-stage (371) parent entries", () => {
+  const r = earliestPriority(
+    [{ parentApplicationFilingDate: "2019-03-01", parentApplicationNumberText: "PCT/US2019/012345", claimParentageTypeCode: "NST", claimParentageTypeCodeDescriptionText: "is a National Stage Entry of" },
+     { parentApplicationFilingDate: "2019-05-01", parentApplicationNumberText: "PCT/US2019/099999", claimParentageTypeCode: "371", claimParentageTypeCodeDescriptionText: "is a 371 of" }],
+    [{ filingDate: "2018-03-02", applicationNumberText: "GB1803333.1", ipOfficeName: "UK" }],
+  );
+  assert.deepEqual(r, { date: "2018-03-02", source: "GB1803333.1", basis: "Foreign (UK)" });
+  assert.equal(earliestPriority([{ parentApplicationFilingDate: "2019-03-01", parentApplicationNumberText: "PCT/US2019/012345", claimParentageTypeCode: "NST" }], []), null);
+});
+
 test("earliestPriority: returns null when the record has no priority claims", () => {
   assert.equal(earliestPriority([], []), null);
   assert.equal(earliestPriority(undefined, undefined), null);

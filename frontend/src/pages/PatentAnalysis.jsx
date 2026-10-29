@@ -73,10 +73,29 @@ function identityLines(patent, details) {
   ].filter(Boolean)
 }
 
+// Readable label for the record's continuity type code ("PRO" -> "provisional")
+const PRIORITY_TYPES = { PRO: 'provisional', CIP: 'CIP', CON: 'continuation', DIV: 'divisional', REI: 'reissue' }
+function priorityTypeLabel(type) {
+  if (!type) return ''
+  const foreign = /^Foreign \((.+)\)$/.exec(type)
+  if (foreign) return `foreign priority, ${foreign[1]}`
+  if (/^Foreign$/.test(type)) return 'foreign priority'
+  return PRIORITY_TYPES[type] || type
+}
+
+// "from 61/904,175 (provisional)" for the earliest claimed priority source
+function prioritySource(d) {
+  const b = d?.priorityBasis
+  if (!b?.application) return ''
+  const type = priorityTypeLabel(b.type)
+  return `from ${formatAppNumber(b.application)}${type ? ` (${type})` : ''}`
+}
+
 // Earliest priority date the USPTO record claims, with its source, or "Not in record"
 function priorityLine(d) {
   if (!d?.priorityDate) return 'Not in record'
-  const app = d.priorityBasis?.application ? ` (${d.priorityBasis.type ? `${d.priorityBasis.type} ` : ''}${formatAppNumber(d.priorityBasis.application)})` : ''
+  const src = prioritySource(d)
+  const app = `${src ? `, ${src}` : ''}; entitlement of each claim to this date not determined`
   return `${d.priorityDate}${app}`
 }
 
@@ -472,9 +491,9 @@ export default function PatentAnalysis() {
                   ['Filing date', formatDate(patentDetails?.filingDate || selectedPatent.filingDate) || 'Not in record'],
                   ['Earliest claimed priority date', loadingDetails ? 'Loading...' : patentDetails
                     ? (patentDetails.priorityDate
-                      ? `${formatDate(patentDetails.priorityDate)}${patentDetails.priorityBasis?.application ? ` (from ${formatAppNumber(patentDetails.priorityBasis.application)})` : ''}`
+                      ? `${formatDate(patentDetails.priorityDate)}${prioritySource(patentDetails) ? `, ${prioritySource(patentDetails)}` : ''}`
                       : 'Not in record')
-                    : 'Not in record'],
+                    : 'Not retrieved (USPTO details unavailable)'],
                   ['Grant date', formatDate(patentDetails?.grantDate || selectedPatent.grantDate) || 'Not granted'],
                   ['Status', patentDetails?.statusDescription || selectedPatent.statusDescription || 'Not in record'],
                   ['Expiration', 'Not computed (term depends on adjustments and fees)'],

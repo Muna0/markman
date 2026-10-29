@@ -13,7 +13,7 @@ const JURISDICTIONS = ['US', 'EU', 'UK', 'CA', 'AU', 'JP', 'KR', 'IN', 'BR', 'MX
 function jurisdictionInfo(code, markText) {
   const q = encodeURIComponent(markText)
   const info = {
-    US: { name: 'United States', office: 'USPTO', searchUrl: 'https://tmsearch.uspto.gov/search/search-information', note: 'Use-based system' },
+    US: { name: 'United States', office: 'USPTO', searchUrl: 'https://tmsearch.uspto.gov/search/search-information', note: 'Rights arise from use; filings may be use-based or intent-to-use' },
     EU: { name: 'European Union', office: 'EUIPO', searchUrl: `https://euipo.europa.eu/eSearch/#basic/${q}` },
     UK: { name: 'United Kingdom', office: 'UKIPO', searchUrl: 'https://www.gov.uk/search-for-trademark' },
     CA: { name: 'Canada', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search?searchType=basic&keyword=${q}`, note: 'Use not required to register (since June 2019)' },
@@ -47,7 +47,7 @@ function buildContext({ mark, goods, jurisdictions, pastedMarks }) {
   return [
     `Mark: ${mark}`,
     `Goods/services: ${goods}`,
-    `Jurisdictions: ${jurisdictions.join(', ')}`,
+    `Jurisdictions: ${jurisdictions.map(c => jurisdictionInfo(c, mark).name || c).join(', ')}`,
     pastedMarks ? `Marks pasted by the user:\n${pastedMarks}` : 'Marks pasted by the user: none',
   ].join('\n')
 }
