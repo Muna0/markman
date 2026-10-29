@@ -5,58 +5,6 @@ import { api } from '../store/api'
 import { localHistory } from '../store/localHistory'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
-const SAMPLE_RESULT = {
-  patent: 'US 11,987,654',
-  title: 'System and Method for Context-Aware Content Recommendation Using Multi-Modal Neural Embeddings',
-  filingDate: '2024-03-15',
-  priorityDate: '2024-03-15',
-  claims: [
-    { num: 1, type: 'Method', indDep: 'Independent', dependsOn: '-', category: 'Process' },
-    { num: 2, type: 'Method', indDep: 'Dependent', dependsOn: '1', category: 'Process' },
-    { num: 3, type: 'Method', indDep: 'Dependent', dependsOn: '1', category: 'Process' },
-    { num: 4, type: 'Method', indDep: 'Dependent', dependsOn: '1', category: 'Process' },
-    { num: 5, type: 'System', indDep: 'Independent', dependsOn: '-', category: 'Machine' },
-    { num: 6, type: 'CRM', indDep: 'Independent', dependsOn: '-', category: 'Manufacture' },
-  ],
-  scope: [
-    {
-      claim: 1,
-      limitations: [
-        { element: 'Receiving user interaction signal from client device', breadth: 'Broad', flag: 'Generic - nearly any user input qualifies. Extensive prior art.' },
-        { element: 'Generating multi-modal embedding vector via trained neural network', breadth: 'Medium', flag: '"Multi-modal" narrows scope. Close to functional claiming at point of novelty.' },
-        { element: 'Comparing embedding to content vectors in vector database', breadth: 'Medium', flag: 'Vector similarity search (ANN, cosine) is well-known since 2019+.' },
-        { element: 'Identifying candidates by similarity score exceeding threshold', breadth: 'Narrow', flag: '"Predetermined threshold" excludes top-k and dynamic cutoffs. Recommend broadening.' },
-        { element: 'Transmitting candidate content items for display', breadth: 'Broad', flag: 'Standard output step. Low novelty.' },
-      ],
-    },
-    {
-      claim: 5,
-      limitations: [
-        { element: 'System claim referencing method of Claim 1', breadth: 'Dependent', flag: 'Not standalone. If Claim 1 invalidated, Claim 5 falls. Rewrite as fully recited independent claim.' },
-      ],
-    },
-    {
-      claim: 6,
-      limitations: [
-        { element: 'CRM claim referencing method of Claim 1', breadth: 'Dependent', flag: 'Same issue as Claim 5. Rewrite independently.' },
-      ],
-    },
-  ],
-  priorArt: [
-    { issue: 'Alice/Mayo 101', severity: 'HIGH', detail: 'Directed to abstract idea of "recommending content based on user preferences." Generic ML/neural network references may be insufficient for Step 2A Prong 2.' },
-    { issue: 'KSR Obviousness 103', severity: 'HIGH', detail: 'Each element is well-known: user signals (Google Analytics), neural embeddings (Word2Vec/BERT), vector search (Faiss), threshold filtering (standard IR).' },
-    { issue: 'Indefiniteness 112(b)', severity: 'LOW', detail: '"Multi-modal" may need spec support. "Predetermined threshold" is adequately definite.' },
-  ],
-  recommendations: [
-    'Amend Claim 1 to recite specific technical improvement (e.g., cross-attention fusion architecture)',
-    'Replace "predetermined threshold" with "similarity metric" to cover top-k and dynamic approaches',
-    'Rewrite Claims 5 and 6 as standalone independent claims with full limitations',
-    'Add dependent claims for specific architectures, privacy techniques, and processing modes',
-    'Prepare prior art distinction charts vs. YouTube rec system, two-tower models, and CLIP',
-    'Consider provisional filing if none exists to preserve priority',
-  ],
-}
-
 function SeverityBadge({ severity, dark }) {
   const styles = {
     HIGH: dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700',

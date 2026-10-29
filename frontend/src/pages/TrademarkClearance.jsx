@@ -7,40 +7,6 @@ import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 const JURISDICTIONS = ['US', 'EU', 'UK', 'CA', 'AU', 'JP', 'KR', 'IN', 'BR', 'MX']
 
-const SAMPLE_RESULT = {
-  mark: 'NEXAFLOW',
-  markType: 'Word Mark (Standard Characters)',
-  distinctiveness: 'Suggestive',
-  niceClasses: ['042 - Computer Software & SaaS', '009 - Downloadable Software'],
-  registrability: 'Likely registrable. "NEXA" is a coined prefix; "FLOW" is suggestive of workflow but not descriptive of software itself.',
-  identicalMarks: [
-    { mark: 'NEXAFLOW', serial: '98-765-432', owner: 'NexaTech Solutions LLC', status: 'ABANDONED', class: '042', filed: '2023-08-15', risk: 'LOW' },
-  ],
-  similarMarks: [
-    { mark: 'NEXFLOW', serial: '97-234-567', owner: 'NexFlow Technologies Inc.', status: 'REGISTERED', class: '042', filed: '2022-03-10', similarity: 0.85, risk: 'HIGH' },
-    { mark: 'NEXA', serial: '88-456-789', owner: 'Nexa Digital Corp.', status: 'REGISTERED', class: '009', filed: '2020-11-22', similarity: 0.6, risk: 'MEDIUM' },
-    { mark: 'FLOWLOGIC', serial: '97-890-123', owner: 'FlowLogic Software Inc.', status: 'PENDING', class: '042', filed: '2024-01-05', similarity: 0.35, risk: 'LOW' },
-  ],
-  dupontFactors: [
-    { factor: 'Similarity of Marks (sight, sound, meaning)', score: 'HIGH', detail: 'NEXAFLOW vs NEXFLOW: one letter difference. Nearly identical in sound and appearance.' },
-    { factor: 'Similarity of Goods/Services', score: 'HIGH', detail: 'Both Class 042 for software and SaaS. Directly overlapping goods.' },
-    { factor: 'Trade Channels', score: 'HIGH', detail: 'Both marketed to enterprise/business users through similar channels.' },
-    { factor: 'Conditions of Purchase', score: 'MEDIUM', detail: 'SaaS buyers exercise moderate care (not impulse purchases).' },
-    { factor: 'Fame of Prior Mark', score: 'LOW', detail: 'NEXFLOW is not a famous mark. Limited commercial recognition.' },
-    { factor: 'Similar Marks in Use', score: 'MEDIUM', detail: 'Several "NEX-" prefix marks exist in tech space, somewhat diluting distinctiveness.' },
-    { factor: 'Actual Confusion', score: 'LOW', detail: 'No evidence of actual confusion (mark not yet in use).' },
-    { factor: 'Concurrent Use Without Confusion', score: 'N/A', detail: 'Not applicable - proposed mark not yet in use.' },
-  ],
-  jurisdictions: [
-    { code: 'US', status: 'CONFLICT', detail: 'NEXFLOW registered in Class 042' },
-    { code: 'EU', status: 'CLEAR', detail: 'No identical or confusingly similar marks found' },
-    { code: 'UK', status: 'CLEAR', detail: 'No conflicts identified' },
-    { code: 'CA', status: 'CLEAR', detail: 'No conflicts identified' },
-  ],
-  overall: 'CLEAR WITH RISK',
-  recommendation: 'Do not use in the US market without further investigation. NEXFLOW in Class 042 presents significant likelihood of confusion. Consider: (1) design-around to a more distinct mark, (2) coexistence agreement with NexFlow Technologies, or (3) proceeding in non-US markets where clearance is stronger.',
-}
-
 function RiskIcon({ risk }) {
   if (risk === 'HIGH') return <XCircle className="w-4 h-4 text-red-500" />
   if (risk === 'MEDIUM') return <MinusCircle className="w-4 h-4 text-amb-500" />
