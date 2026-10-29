@@ -16,6 +16,8 @@ export default function FtoAnalysis() {
   const [patentContext, setPatentContext] = useState('')
   const [usedQuery, setUsedQuery] = useState('')
   const [searchError, setSearchError] = useState('')
+  // found | none | nonUtility | noTerms | failed
+  const [outcome, setOutcome] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -26,13 +28,15 @@ export default function FtoAnalysis() {
     setPatentContext('')
     setUsedQuery('')
     setSearchError('')
+    setOutcome('')
     setSubmitted(false)
 
     // Step 1: search USPTO with a few distinctive terms, narrow first, then broader
     const queries = ftoSearchQueries(description)
     let used = ''
     let utilities = []
-    let failed = queries.length ? '' : 'The description has no searchable technical terms. Add a few specific technical words.'
+    let failed = ''
+    let sawNonUtility = false
     for (const q of queries) {
       used = q
       try {
@@ -40,6 +44,7 @@ export default function FtoAnalysis() {
         if (data.error) { failed = data.error; break }
         // Utility filings only (no provisionals or PCT records)
         utilities = (data.results || []).filter(r => r.type === 'REGULAR' || !r.type).slice(0, 10)
+        if (!utilities.length && data.results?.length) sawNonUtility = true
         if (utilities.length) break
       } catch (err) {
         failed = err.message || 'The USPTO search could not be completed.'
@@ -48,9 +53,10 @@ export default function FtoAnalysis() {
     }
     setUsedQuery(used)
     setSearchError(failed)
+    setOutcome(!queries.length ? 'noTerms' : failed ? 'failed' : utilities.length ? 'found' : sawNonUtility ? 'nonUtility' : 'none')
     setFoundPatents(utilities)
     setPatentContext(utilities.map(p =>
-      `${p.patentNumber ? `U.S. Patent ${p.patentNumber} (App. ${p.applicationNumber})` : `App. ${p.applicationNumber}`}: "${p.title}" | Status: ${p.statusDescription || 'Not listed'} | Filed: ${p.filingDate || 'Not listed'} | Granted: ${p.grantDate || 'Not granted'} | Assignee: ${p.assignee || 'Not listed'}`
+      `${p.patentNumber ? `U.S. Patent ${p.patentNumber} (App. ${p.applicationNumber})` : `App. ${p.applicationNumber}`}: "${p.title}" | Status: ${p.statusDescription || 'Not listed'} | Filed: ${p.filingDate || 'Not listed'} | Granted: ${p.grantDate || 'Not granted'} | Applicant: ${p.assignee || 'Not listed'}`
     ).join('\n'))
 
     setSearching(false)
@@ -59,17 +65,20 @@ export default function FtoAnalysis() {
   }
 
   const quoted = usedQuery ? `"${usedQuery}"` : 'this technology'
-  const searchSummary = patentContext
-    ? `The USPTO search for ${quoted} returned the candidate patents and applications listed below. Only bibliographic data is available; no claim text was provided.
+  const noPatents = 'Do not name or invent patents. Recommend broader search strategies (synonyms, CPC classes, applicant and assignee searches, Google Patents), and list the steps needed before any FTO conclusion. Do not state or guess claim language.'
+  const searchSummary = {
+    found: `The USPTO search for ${quoted} returned the candidate patents and applications listed below. Only bibliographic data is available; no claim text was provided.
 
 Using only the titles, status, and dates below, rank the candidate patents by apparent relevance, explain what to check in each, and list the claims the attorney must obtain (from Google Patents or the file wrapper) before any element-by-element mapping. Do not state or guess claim language.
 
 ${patentContext}
 
-Treat abandoned applications and expired filings as lower priority but say why. Give any overall risk level only as a preliminary screening view pending claim review, and describe design-around directions at the feature level, not against claim language.`
-    : searchError
-      ? `The USPTO search for ${quoted} could not be completed, so no candidate patents are listed. Do not name or invent patents. Explain what remains to be searched, recommend search strategies (synonyms, CPC classes, assignee searches, Google Patents), and list the steps needed before any FTO conclusion. Do not state or guess claim language.`
-      : `The USPTO search for ${quoted} returned no matches. Do not name or invent patents. Explain what a zero-result keyword search does and does not show (U.S. only, keyword-dependent), recommend broader search strategies (synonyms, CPC classes, assignee searches, Google Patents), and list the steps needed before any FTO conclusion. Do not state or guess claim language.`
+Treat abandoned applications and expired filings as lower priority but say why. Give any overall risk level only as a preliminary screening view pending claim review, and describe design-around directions at the feature level, not against claim language.`,
+    noTerms: `No USPTO search was run because the description had no distinctive technical terms. ${noPatents}`,
+    failed: `The USPTO search for ${quoted} could not be completed, so no candidate patents are listed. ${noPatents}`,
+    nonUtility: `The USPTO search for ${quoted} found only provisional or PCT records; no utility filings matched. ${noPatents}`,
+    none: `The USPTO search for ${quoted} returned no matches. Explain what a zero-result keyword search does and does not show (U.S. only, keyword-dependent). ${noPatents}`,
+  }[outcome || 'none']
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
@@ -140,7 +149,19 @@ Treat abandoned applications and expired filings as lower priority but say why. 
             </div>
           )}
 
-          {!searchError && foundPatents.length === 0 && (
+          {outcome === 'noTerms' && (
+            <div role="status" className={`px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
+              Add more technical detail to search USPTO (e.g. components, methods).
+            </div>
+          )}
+
+          {outcome === 'nonUtility' && (
+            <div role="status" className={`px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
+              No utility filings matched: {usedQuery}. Only provisional or PCT records were found. Try fewer or broader words.
+            </div>
+          )}
+
+          {outcome === 'none' && (
             <div role="status" className={`px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
               No USPTO matches for: {usedQuery}. Try fewer or broader words.
             </div>
@@ -166,7 +187,7 @@ Treat abandoned applications and expired filings as lower priority but say why. 
                       <div className="flex items-center gap-3 mt-1">
                         <span className={`mono text-[11px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{p.filingDate}</span>
                         {p.statusDescription && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.statusDescription}</span>}
-                        {p.assignee && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.assignee}</span>}
+                        {p.assignee && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Applicant: {p.assignee}</span>}
                       </div>
                     </div>
                   </div>
@@ -186,7 +207,7 @@ ${searchSummary}
 
 Follow the FTO memo skill structure, adapting the claim analysis section to list the claims to obtain and what to check in each.`}
             skillType="fto"
-            context={`Technology description: ${submittedQuery}\nUSPTO search query: ${usedQuery || 'none'}\nUSPTO candidates found: ${foundPatents.length}${searchError ? ' (search failed)' : ''}`}
+            context={`Technology description: ${submittedQuery}\nUSPTO search query: ${usedQuery || 'none'}\nUSPTO candidates found: ${foundPatents.length}${outcome === 'failed' ? ' (search failed)' : outcome === 'noTerms' ? ' (no search run)' : outcome === 'nonUtility' ? ' (no utility filings matched)' : ''}`}
           />
 
           {/* Disclaimer */}

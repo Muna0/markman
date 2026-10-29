@@ -22,6 +22,18 @@ test("a leading memo title in the model output is dropped", () => {
   assert.equal(stripLeadingTitle("Plain first line\nText"), "Plain first line\nText");
 });
 
+test("a disclaimer line is never stripped, even when followed by a rule or written in caps", () => {
+  const fto = "DRAFT FOR ATTORNEY REVIEW. This AI-assisted FTO analysis does not constitute legal advice.\n---\n## Executive Summary";
+  assert.equal(stripLeadingTitle(fto), fto);
+  const tm = "This AI-assisted trademark screen does not constitute legal advice and is not a comprehensive clearance search.\n---\nBody";
+  assert.equal(stripLeadingTitle(tm), tm);
+  assert.equal(stripLeadingTitle("DRAFT FOR ATTORNEY REVIEW\nBody"), "DRAFT FOR ATTORNEY REVIEW\nBody");
+  assert.equal(stripLeadingTitle("# Trademark Clearance Screen: Draft For Attorney Review\nBody"), "# Trademark Clearance Screen: Draft For Attorney Review\nBody");
+  const long = "Trademark clearance notes for the proposed mark covering software and related services in class 9\n===\nBody";
+  assert.equal(stripLeadingTitle(long), long, "long lines are not headings");
+  assert.equal(stripLeadingTitle("Trademark screen complete.\n---\nBody"), "Trademark screen complete.\n---\nBody", "sentences are not headings");
+});
+
 test("system prompt sets the memo voice and single disclaimer/limitations rule", () => {
   const p = buildSystemPrompt({ skill: "SKILL", playbook: "PLAYBOOK", context: "", isPublic: false });
   assert.match(p, /third-person/i);
@@ -50,4 +62,10 @@ test("memoFooter (used by the web and plugin exports) puts the fixed disclaimer 
   const footer = zip.getEntries().filter((e) => /^word\/footer\d*\.xml$/.test(e.entryName)).map((e) => zip.readAsText(e)).join("");
   assert.match(footer, /Draft for attorney review\. Not legal advice\. Prepared with Markman; verify all citations and conclusions\./);
   assert.match(footer, /PAGE/);
+});
+
+test("the print view disclaimer matches the Word footer disclaimer", async () => {
+  const { FOOTER_DISCLAIMER } = await import("../lib/memo.js");
+  const { PRINT_DISCLAIMER } = await import("../frontend/src/store/disclaimer.js");
+  assert.equal(PRINT_DISCLAIMER, FOOTER_DISCLAIMER);
 });

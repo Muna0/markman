@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
+import { PRINT_DISCLAIMER } from '../store/disclaimer'
 import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
 
 // Loaded on demand so the Markdown renderer stays out of the main bundle
@@ -105,7 +106,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   function downloadPDF() {
     // Print the formatted draft. The HTML comes from the rendered Markdown above,
     // which React has already escaped; raw HTML in the output is never rendered.
-    // The draft carries its own disclaimer line and LIMITATIONS section, so none is added.
+    // A fixed closing disclaimer is always added, independent of the draft text.
     const content = bodyRef.current?.innerHTML || ''
     const title = MEMO_TITLES[skillType] || MEMO_TITLES.patent
     const draftLabel = '<div class="draft">DRAFT FOR ATTORNEY REVIEW</div>'
@@ -116,8 +117,8 @@ p{margin:0 0 8pt}ul,ol{margin:0 0 8pt;padding-left:24pt}li{margin:2pt 0}
 table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font-size:11pt}th,td{border:1px solid #999;padding:4pt 6pt;text-align:left;vertical-align:top}th{background:#eee}
 code{font-family:'Courier New',monospace;font-size:10.5pt}pre{background:#f4f4f4;padding:8pt;white-space:pre-wrap}
 blockquote{margin:0 0 8pt;padding-left:12pt;border-left:3px solid #ccc;color:#444}hr{border:0;border-top:1px solid #ccc;margin:12pt 0}
-a{color:#111}`
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>${draftLabel}${content}</body></html>`
+a{color:#111}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:10px;margin-top:32px}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>${draftLabel}${content}<div class="disclaimer">${PRINT_DISCLAIMER}</div></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const printFrame = document.createElement('iframe')

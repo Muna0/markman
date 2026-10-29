@@ -41474,9 +41474,10 @@ function stripLeadingTitle(markdown) {
   const text = String(markdown || "");
   const m2 = /^\s*(?:#{1,2}[ \t]+([^\n]+)|([^\n]+)\n[ \t]*(?:=+|-+)[ \t]*(?=\n|$)|\*{0,2}([A-Z0-9 \-:&()]+)\*{0,2})[ \t]*(?:\n|$)/.exec(text);
   if (!m2) return text;
-  const heading = (m2[1] || m2[2] || m2[3] || "").trim();
+  const heading = (m2[1] || m2[2] || m2[3] || "").replace(/\*+/g, "").trim();
+  if (heading.length >= 80 || /[.!?]$/.test(heading)) return text;
+  if (/legal advice|draft for attorney review/i.test(heading)) return text;
   if (!TITLE_WORDS.test(heading)) return text;
-  if (m2[3] && heading !== heading.toUpperCase()) return text;
   return text.slice(m2[0].length).replace(/^\s*\n/, "");
 }
 var FOOTER_DISCLAIMER = "Draft for attorney review. Not legal advice. Prepared with Markman; verify all citations and conclusions.";

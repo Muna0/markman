@@ -24,11 +24,11 @@ This playbook defines the default standards, thresholds, and preferences for IP 
 **LOW RISK**
 - Strong non-infringement arguments on at least one claim limitation
 - Viable design-around is already incorporated in the product design
-- Patent has expired or lapsed for nonpayment of maintenance fees (exposure for past damages may remain; see 35 U.S.C. § 286)
+- Patent has expired, or lapsed for nonpayment of maintenance fees (exposure for past damages may remain; see 35 U.S.C. § 286). A lapsed patent may be revived on petition (37 C.F.R. § 1.378), subject to intervening rights (35 U.S.C. § 41(c)); check the maintenance fee record before relying on a lapse
 - Action required: Document the analysis. Proceed with standard monitoring.
 
 **Separate considerations (do not by themselves make a patent LOW RISK)**
-- Invalidity: prior art that may invalidate relevant claims can reduce practical risk, but issued claims are presumed valid (35 U.S.C. § 282) and invalidity requires a separate validity analysis under the clear and convincing evidence standard. Rate infringement risk on the claims as issued and report invalidity arguments separately.
+- Invalidity: prior art that may invalidate relevant claims can reduce practical risk, but issued claims are presumed valid (35 U.S.C. § 282) and invalidity requires a separate validity analysis. The standard is clear and convincing evidence in district court (*Microsoft Corp. v. i4i Ltd. P'ship*, 564 U.S. 91 (2011)); in PTAB inter partes or post-grant review it is a preponderance of the evidence (35 U.S.C. §§ 316(e), 326(e)). Rate infringement risk on the claims as issued and report invalidity arguments separately.
 - Remaining term: a patent near expiration affects remedies and timing (for example, the practical value of an injunction or the length of exposure), not whether the product infringes. Note the estimated expiration date and its effect on strategy separately from the infringement risk rating.
 
 ## Trademark Clearance Standards
