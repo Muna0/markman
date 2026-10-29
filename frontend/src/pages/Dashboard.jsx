@@ -72,7 +72,7 @@ export default function Dashboard() {
               </div>
             </div>
             <p className={`mt-3 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-              International (WIPO) search is available in the free plugin.
+              International (WIPO) search is not available on the public demo. It works in the free plugin with your own WIPO key.
             </p>
           </>
         ) : (

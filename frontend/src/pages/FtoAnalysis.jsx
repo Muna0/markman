@@ -211,9 +211,9 @@ export default function FtoAnalysis() {
       {/* Results */}
       {submitted && (
         <div className="space-y-6">
-          {/* Privilege Banner */}
+          {/* Draft Banner */}
           <div className={`rounded-lg px-4 py-2.5 text-[13px] font-semibold text-center tracking-wide uppercase ${dark ? 'bg-ink-100 text-ink-900' : 'bg-ink-900 text-white'}`}>
-            Attorney Work Product / Privileged and Confidential
+            Draft for Attorney Review
           </div>
 
           {/* Real Patents Found */}
@@ -242,12 +242,12 @@ export default function FtoAnalysis() {
                 ))}
               </div>
               <p className={`mt-3 text-[12px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>
-                These real patents from the USPTO database will be included in the Claude analysis below.
+                These patents from the USPTO database will be included in the analysis below.
               </p>
             </div>
           )}
 
-          {/* Claude FTO Analysis — with real patent data */}
+          {/* Claude FTO Analysis: with real patent data */}
           <ClaudeAnalysis
             query={`Run a full freedom-to-operate analysis for this technology: ${submittedQuery}.
 
@@ -260,7 +260,7 @@ Assess literal infringement and doctrine of equivalents for each relevant patent
 
           {/* Disclaimer */}
           <div className={`rounded-lg border p-4 text-[13px] italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
-            This FTO analysis is a risk assessment and does not constitute a definitive "freedom to operate" opinion. Analysis covers U.S. patents only. All patent numbers, claim constructions, and legal conclusions should be verified by licensed patent counsel before reliance.
+            This is a draft FTO risk assessment for attorney review, not a "freedom to operate" opinion. It covers U.S. patents only, and relevant patents may not have been identified. Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney; verify all patent numbers, claim constructions, and legal conclusions before reliance.
           </div>
         </div>
       )}

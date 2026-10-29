@@ -123,7 +123,7 @@ function buildAnalysisQuery(patent, details) {
   parts.push(`\nGrant Date: ${d.grantDate || 'Not yet granted'}`)
   parts.push(`Expiration Date: ${d.expirationDate || 'N/A'}`)
 
-  parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. You have VERIFIED USPTO data above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application — clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
+  parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. You have VERIFIED USPTO data above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application; clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
 
   return parts.filter(Boolean).join('\n')
 }
@@ -219,7 +219,7 @@ export default function PatentAnalysis() {
           setApiError('No results found. Try different keywords.')
         }
       } else {
-        // Pasted claims mode — select as pasted input for Claude analysis
+        // Pasted claims mode: select as pasted input for Claude analysis
         setSelectedPatent({
           applicationNumber: 'Pasted Claims',
           title: input.trim().slice(0, 80),
@@ -344,7 +344,7 @@ export default function PatentAnalysis() {
       {/* Live USPTO Results */}
       {apiError && (
         <div className={`mb-4 px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
-          API Error: {apiError}. Showing sample analysis below.
+          USPTO search error: {apiError}. You can still paste claim text to analyze.
         </div>
       )}
 
@@ -427,10 +427,10 @@ export default function PatentAnalysis() {
         </div>
       )}
 
-      {/* Selected Patent — Dynamic Analysis Workspace */}
+      {/* Selected Patent: Dynamic Analysis Workspace */}
       {selectedPatent && (
         <div className="space-y-6 mb-6">
-          {/* Patent Header — real data */}
+          {/* Patent Header: real data */}
           <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <div className="flex items-start justify-between mb-3">
               <div>

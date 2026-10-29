@@ -302,7 +302,7 @@ export default function TrademarkClearance() {
             <p className={`text-[14px] leading-[1.6] ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{result.registrability}</p>
           </div>
 
-          {/* Phonetic Variants — dynamically generated */}
+          {/* Phonetic Variants: dynamically generated */}
           <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <h2 className={`text-lg font-semibold mb-4 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Phonetic Variants to Search</h2>
             <p className={`text-[13px] mb-4 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
@@ -330,7 +330,7 @@ export default function TrademarkClearance() {
             </div>
           </div>
 
-          {/* Jurisdiction Coverage — with live search links */}
+          {/* Jurisdiction Coverage: with live search links */}
           <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <h2 className={`text-lg font-semibold mb-2 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Jurisdiction Coverage</h2>
             <p className={`text-[13px] mb-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
@@ -371,7 +371,7 @@ export default function TrademarkClearance() {
 
           {/* Disclaimer */}
           <div className={`rounded-lg border p-4 text-[13px] italic ${dark ? 'bg-ink-800 border-ink-700 text-ink-400' : 'bg-ink-100 border-ink-200 text-ink-500'}`}>
-            This is a preliminary clearance screen, not a comprehensive trademark search. Common law marks, state registrations, and domain name conflicts require separate investigation. This analysis does not constitute legal advice.
+            This is a draft preliminary clearance screen for attorney review, not a comprehensive trademark search. Common law marks, state registrations, and domain name conflicts require separate investigation. Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney.
           </div>
         </div>
       )}
