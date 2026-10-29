@@ -23,7 +23,7 @@ export default function Dashboard() {
   const tools = [
     { to: '/app/intake', label: 'Matter Intake', desc: 'Classify an IP matter, extract facts, flag deadlines', icon: FileSearch },
     { to: '/app/patent', label: 'Patent Analysis', desc: 'Parse claims, map scope, surface prior art risks', icon: FlaskConical },
-    { to: '/app/trademark', label: 'TM Clearance', desc: 'Screen marks across jurisdictions with DuPont scoring', icon: Stamp },
+    { to: '/app/trademark', label: 'TM Clearance', desc: 'Screen marks across jurisdictions with a DuPont factor analysis', icon: Stamp },
     { to: '/app/fto', label: 'FTO Analysis', desc: 'Element-by-element claim mapping, design-arounds', icon: ShieldCheck },
   ]
 
@@ -72,7 +72,7 @@ export default function Dashboard() {
               </div>
             </div>
             <p className={`mt-3 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-              International (WIPO) search is not available on the public demo. It works in the free plugin with your own WIPO key.
+              International (WIPO) search is not available on the public demo. The plugin includes experimental WIPO support that requires WIPO API credentials.
             </p>
           </>
         ) : (
@@ -102,7 +102,7 @@ export default function Dashboard() {
           <div className={`mt-3 rounded-lg px-4 py-2.5 flex items-center gap-2 ${dark ? 'bg-amb-400/10 border border-amb-400/20' : 'bg-amb-100 border border-amb-500/20'}`}>
             <AlertTriangle className="w-3.5 h-3.5 text-amb-400" />
             <span className={`text-[12px] ${dark ? 'text-amb-400' : 'text-amb-500'}`}>
-              Install the <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className="underline font-semibold">plugin</a> and add your API keys to enable live USPTO & WIPO data.
+              Install the <a href="https://github.com/Muna0/markman#quick-start" target="_blank" rel="noreferrer" className="underline font-semibold">plugin</a> and add your USPTO API key to enable live USPTO data.
             </span>
           </div>
         )}

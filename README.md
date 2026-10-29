@@ -21,12 +21,14 @@ Free and open source. No subscription, no seat licenses. Apache-2.0.
 Markman teaches Claude Code how to do structured IP work. You describe what you need in natural language. Claude reads the skill definitions, calls the USPTO API (and the WIPO API, if you have a WIPO key) through MCP servers, references your firm's playbook for risk thresholds and standards, and drafts structured analysis for attorney review.
 
 ```
-You: Analyze the claims in US11,234,567
+You: Analyze the claims in US X,XXX,XXX
 
 Claude: [reads patent-analysis skill]
-        [calls get_patent_details via USPTO MCP server]
+        [calls get_patent_details via USPTO MCP server for the record:
+         title, dates, status, parties, classifications, transactions]
+        [asks you to paste the claims; the USPTO API does not return claim text]
         [references playbook for claim drafting preferences]
-        [outputs structured claim map, scope assessment, prior art flags]
+        [drafts a claim map, scope assessment, and prior art flags for review]
 ```
 
 ## Quick start
@@ -44,10 +46,10 @@ The skills and commands work right away on patents and marks you paste in. To ad
 
 ## Components
 
-**Skills** (fire automatically):
+**Skills** (can activate automatically when your request matches, or when you ask for them):
 - `patent-analysis`: parse claims, map scope, flag Alice and KSR issues
 - `fto-memo`: draft FTO analysis for attorney review: element-by-element claim mapping, possible non-infringement positions, design-around ideas
-- `trademark-screen`: likelihood-of-confusion (DuPont) analysis, phonetic variants, jurisdiction coverage
+- `trademark-screen`: likelihood-of-confusion analysis using the relevant DuPont factors, phonetic variants, jurisdiction coverage
 - `ip-triage`: classify IP type, extract facts, identify deadlines, assign risk
 
 **Commands** (invoke explicitly):
@@ -59,8 +61,8 @@ The skills and commands work right away on patents and marks you paste in. To ad
 - `/export-memo`: export analysis as a Word document marked as a draft for attorney review
 
 **MCP servers** (3 servers, 12 tools):
-- `uspto`: patent search and full patent file wrapper details (api.uspto.gov), trademark status by serial number
-- `wipo`: international patent search, PCT application details
+- `uspto`: patent application search and record details (bibliographic data and transaction history, no claim text) from the USPTO Open Data Portal API (api.uspto.gov); trademark status by serial number through TSDR
+- `wipo`: experimental international patent search and PCT application lookup; requires WIPO API credentials
 - `markman-store`: deadline tracking, matter history, Word export (stored locally in `~/.markman/data`)
 
 **Playbook** (configurable, `playbooks/ip-playbook.md`):
@@ -69,20 +71,20 @@ The skills and commands work right away on patents and marks you paste in. To ad
 - Patent claim drafting preferences
 - Deadline rules with alert intervals (90, 60, 30, 7 days)
 
-## API keys (optional, free)
+## API keys (optional)
 
-Markman reads keys from your shell environment. Add them to `~/.zshrc` (or `~/.bashrc`), then restart Claude Code:
+The plugin reads keys from your shell environment, not from a `.env` file. Add them to `~/.zshrc` (or `~/.bashrc`), then restart Claude Code:
 
 ```bash
 export USPTO_API_KEY="your_key"
-export WIPO_API_KEY="your_key"
+export WIPO_API_KEY="your_key"   # optional, experimental
 ```
 
-**USPTO**: Sign in at [data.uspto.gov/myodp](https://data.uspto.gov/myodp) with a USPTO.gov account verified through ID.me, then open Manage API Key. Since August 2026, USPTO requires four profile fields (job title, organization type, organization name, intended use) before a key works. New keys can take a couple of minutes to activate.
+**USPTO** (free): Sign in at [data.uspto.gov/myodp](https://data.uspto.gov/myodp) with a USPTO.gov account verified through ID.me, then open Manage API Key. USPTO requires four profile fields (job title, organization type, organization name, intended use) before a key works. New keys can take a couple of minutes to activate.
 
-**WIPO**: Apply for API access at [wipo.int/case/en](https://www.wipo.int/case/en/). Approval may take one to three business days.
+**WIPO** (experimental): WIPO support requires WIPO API credentials; see WIPO's current access terms. WIPO CASE is a system for participating patent offices, and PATENTSCOPE programmatic access is a paid WIPO subscription ([PATENTSCOPE data products](https://www.wipo.int/en/web/patentscope/data/index)). Without credentials, search the free [PATENTSCOPE](https://patentscope.wipo.int) website and paste what you find.
 
-**Trademark search**: USPTO offers no API for trademark search by text. Markman points you to [USPTO Trademark Search](https://tmsearch.uspto.gov) for the knockout search and runs the clearance analysis on what you find. Trademark status lookups by serial number depend on USPTO's TSDR service, which was not responding reliably as of October 2026.
+**Trademark search**: USPTO offers no API for trademark search by text. Markman points you to [USPTO Trademark Search](https://tmsearch.uspto.gov) for the knockout search and runs the clearance analysis on what you find. Trademark status lookup by serial number depends on USPTO's TSDR service, which was not responding reliably as of October 2026; it uses your USPTO key. It is not available on the public demo.
 
 Without keys, the servers still start and explain how to add a key. The skills work on text you paste in.
 
@@ -91,12 +93,12 @@ Without keys, the servers still start and explain how to add a key. The skills w
 Once installed, use Markman by talking to Claude Code naturally or using slash commands:
 
 ```
-# Natural language (skills fire automatically)
+# Natural language (skills can activate automatically)
 You: We're developing an ML recommendation engine. Need to check
      if it infringes any existing patents.
 
 # Slash commands (explicit invocation)
-You: /review-claims US11,234,567
+You: /review-claims US X,XXX,XXX
 You: /tm-clearance NEXAFLOW | SaaS workflow software | US, EU, UK
 You: /fto-analysis Transformer-based medical NER with FHIR output
 
@@ -120,7 +122,7 @@ The repo also includes a web dashboard for patent search, FTO, and trademark cle
 git clone https://github.com/Muna0/markman.git
 cd markman
 npm install && (cd frontend && npm install)
-cp .env.example .env   # then add USPTO_API_KEY and ANTHROPIC_API_KEY
+cp .env.example .env   # web dashboard only: add USPTO_API_KEY and ANTHROPIC_API_KEY
 npm run dev            # opens on http://localhost:5173
 ```
 
