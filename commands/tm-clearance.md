@@ -51,10 +51,10 @@ The user provides:
 A draft trademark clearance screen for attorney review, including:
 - Mark assessment (type, distinctiveness, registrability concerns)
 - Identical marks table
-- Similar marks table with similarity scores
-- Likelihood of confusion analysis using the relevant DuPont factors for each conflict
+- Similar marks table (marks the user provided only; no numeric similarity scores)
+- Likelihood of confusion analysis weighing the relevant DuPont factors qualitatively for each mark the user provided
 - Jurisdiction coverage map
-- Preliminary conflict risk (LOW / MEDIUM / HIGH)
+- Preliminary conflict risk (LOW / MEDIUM / HIGH) only for marks the user provided; "Not rated" when none were provided. Never invent conflicting marks
 - Recommended next steps
 - Standard limitations
 

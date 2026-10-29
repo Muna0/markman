@@ -167,7 +167,7 @@ export default function IpTriage() {
             </div>
           </div>
 
-          {/* Risk Assessment */}
+          {/* Preliminary triage level, computed from keywords in the description */}
           <div className={`rounded-[14px] border p-6 ${
             result.risk === 'HIGH' ? `${dark ? 'bg-red-950/30 border-red-900' : 'bg-red-50 border-red-200'}` :
             result.risk === 'MEDIUM' ? `${dark ? 'bg-amb-950/30 border-amb-900' : 'bg-amb-50 border-amb-200'}` :
@@ -179,9 +179,10 @@ export default function IpTriage() {
                 result.risk === 'MEDIUM' ? `${dark ? 'text-amb-400' : 'text-amb-600'}` :
                 `${dark ? 'text-grn-400' : 'text-grn-600'}`
               }`} />
-              <h2 className="text-lg font-semibold">Risk Assessment: {result.risk}</h2>
+              <h2 className="text-lg font-semibold">Preliminary triage (rule-based): {result.risk}</h2>
             </div>
             <p className="text-sm">{result.rationale}</p>
+            <p className={`text-[12px] mt-2 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>Computed from keywords in the description to help sort matters. It is not a legal risk assessment.</p>
           </div>
 
           {/* Missing Information */}
@@ -214,7 +215,7 @@ export default function IpTriage() {
           <ClaudeAnalysis
             query={`Perform a detailed IP matter triage for this situation: ${description}. Classify the IP type (patent, trademark, trade secret, copyright), extract all key facts, identify every relevant deadline with specific dates where possible, assign a risk level (HIGH/MEDIUM/LOW) with rationale, list missing information needed for a complete assessment, and provide specific recommended next steps. Follow the matter intake skill definition exactly.`}
             skillType="intake"
-            context={`User description: ${description}\nPreliminary classification: ${result.classification.primary}\nSecondary types: ${result.classification.secondary.join(', ')}\nPreliminary risk: ${result.risk}`}
+            context={`User description: ${description}\nPreliminary classification: ${result.classification.primary}\nSecondary types: ${result.classification.secondary.join(', ')}\nPreliminary triage (rule-based, from keywords): ${result.risk}`}
           />
         </div>
       )}

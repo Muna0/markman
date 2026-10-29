@@ -45,6 +45,12 @@ These are preliminary screening ratings for attorney review, not clearance opini
 - **MEDIUM**: No identical marks found, but one or more similar marks rated MEDIUM on likelihood of confusion. Coexistence may be possible. Document the risk for the reviewing attorney.
 - **HIGH**: Identical mark found in a same/related class in any target jurisdiction, OR a similar mark rated HIGH on likelihood of confusion in a primary market (US or EU).
 
+**Jurisdiction Notes**
+- United States: trademark rights arise from use. Applications may be filed on a use or intent-to-use basis; some foreign-based filings follow different rules.
+- Canada: since June 17, 2019, use of the mark (and a declaration of use) is no longer required before registration. A registration may be vulnerable to cancellation for non-use (section 45 of the Trademarks Act) once three years have passed from registration. Confirm current requirements with Canadian counsel.
+- Do not label jurisdictions with one-word regime labels such as "first-to-file" or "first-to-use".
+- Rate conflict risk only for marks the user actually provides; never invent conflicting marks.
+
 **Search Scope**
 - Federal registrations and applications (USPTO Trademark Search; TESS was retired in 2023) and state registrations
 - Common law use (preliminary web search; note as limitation)
