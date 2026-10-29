@@ -30,7 +30,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
-import { toPatentQuery } from "./lib/patent-query.js";
+import { toPatentQuery, numberQueryDigits, exactNumberMatches } from "./lib/patent-query.js";
 import { markdownToDocx } from "./lib/markdown-docx.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -150,15 +150,18 @@ app.post("/api/patents/search", async (req, res) => {
     const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/search?${params}`);
 
     const bag = data.patentFileWrapperDataBag || [];
-    const results = bag.map((p) => {
+    const mapped = bag.map((p) => {
       const meta = p.applicationMetaData || {};
       const inventors = (meta.inventorBag || []).map(i => i.inventorNameText).filter(Boolean);
       const assignees = (meta.applicantBag || []).map(a => a.applicantNameText || a.organizationNameText).filter(Boolean);
       return {
         applicationNumber: p.applicationNumberText || "",
+        patentNumber: meta.patentNumber || "",
         title: meta.inventionTitle || meta.applicationTypeLabelName || "",
         filingDate: meta.filingDate || meta.effectiveFilingDate || "",
+        grantDate: meta.grantDate || "",
         status: meta.applicationStatusCode,
+        statusDescription: meta.applicationStatusDescriptionText || "",
         type: meta.applicationTypeCategory || "",
         class: meta.class || "",
         firstInventor: meta.firstInventorName || "",
@@ -167,7 +170,10 @@ app.post("/api/patents/search", async (req, res) => {
       };
     });
 
-    res.json({ totalResults: data.count || results.length, query, results });
+    // A search for one patent or application number shows only the exact match when there is one
+    const results = exactNumberMatches(mapped, numberQueryDigits(query));
+    const totalResults = results.length < mapped.length ? results.length : (data.count || results.length);
+    res.json({ totalResults, query, results });
   } catch (err) {
     logError("patents/search", err);
     res.status(500).json({ error: usptoErrorMessage(err) });
@@ -232,7 +238,7 @@ app.post("/api/patents/details", async (req, res) => {
     const entityStatus = meta.entityStatusData?.businessEntityStatusCategory || null;
 
     res.json({
-      patentNumber: meta.patentNumber || normalized,
+      patentNumber: meta.patentNumber || null,
       applicationNumber: wrapper.applicationNumberText || normalized,
       title: meta.inventionTitle || meta.applicationTypeLabelName || "",
       abstract: meta.abstractText || meta.inventionAbstractText || null,

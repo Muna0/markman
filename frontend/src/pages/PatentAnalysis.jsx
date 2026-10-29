@@ -32,18 +32,87 @@ function BreadthBadge({ breadth, dark }) {
   return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[breadth]}`}>{breadth}</span>
 }
 
+// "10000000" -> "US 10,000,000"; reissue/design numbers ("RE49123") are kept as-is
+function formatPatentNumber(num) {
+  const n = String(num || '').replace(/^US\s*/i, '').replace(/,/g, '').trim()
+  if (!n) return ''
+  return /^\d+$/.test(n) ? `US ${Number(n).toLocaleString('en-US')}` : `US ${n}`
+}
+
+// "14643719" -> "14/643,719"; PCT and other formats are kept as-is
+function formatAppNumber(num) {
+  const n = String(num || '').trim()
+  return /^\d{8}$/.test(n) ? `${n.slice(0, 2)}/${n.slice(2, 5)},${n.slice(5)}` : n
+}
+
+// "2018-06-19" -> "Jun 19, 2018"
+function formatDate(iso) {
+  if (!/^\d{4}-\d{2}-\d{2}/.test(iso || '')) return iso || ''
+  return new Date(`${iso.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
+}
+
+// Patent number, application number, status, and grant date for headers and prompts
+function patentIdentity(patent, details) {
+  const d = details || {}
+  const patentNumber = d.patentNumber || patent.patentNumber || ''
+  return {
+    patentNumber,
+    patentLabel: formatPatentNumber(patentNumber),
+    appLabel: formatAppNumber(d.applicationNumber || patent.applicationNumber),
+    status: d.statusDescription || patent.statusDescription || '',
+    grantDate: d.grantDate || patent.grantDate || '',
+  }
+}
+
+function patentHeaderLine(patent, details) {
+  const id = patentIdentity(patent, details)
+  if (patent.applicationNumber === 'Pasted Claims') return id.appLabel
+  return [
+    id.patentLabel,
+    id.appLabel && `App. ${id.appLabel}`,
+    id.status,
+    id.grantDate && `Granted ${formatDate(id.grantDate)}`,
+  ].filter(Boolean).join(' · ')
+}
+
+function analysisSubject(patent, details) {
+  const id = patentIdentity(patent, details)
+  return id.patentLabel
+    ? `U.S. Patent No. ${id.patentLabel.replace(/^US /, '')} (application ${id.appLabel})`
+    : `patent application ${id.appLabel}`
+}
+
+function identityLines(patent, details) {
+  const id = patentIdentity(patent, details)
+  return [
+    id.patentLabel ? `Patent Number: ${id.patentLabel}` : null,
+    `Application Number: ${id.appLabel}`,
+    id.status ? `Status: ${id.status}` : null,
+    `Grant Date: ${id.grantDate || 'Not yet granted'}`,
+  ].filter(Boolean)
+}
+
+function buildFallbackQuery(p) {
+  return `Analyze ${analysisSubject(p)}: "${p.title}". ${identityLines(p).join('. ')}. Filed ${p.filingDate}. Type: ${p.type}. Class: ${p.class}. Inventor: ${p.firstInventor}. Assignee: ${p.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`
+}
+
+function buildFallbackContext(p) {
+  return [...identityLines(p), `Title: ${p.title}`, `Filing Date: ${p.filingDate}`, `Type: ${p.type}`, `Class: ${p.class}`, `Inventor: ${p.firstInventor}`, `Assignee: ${p.assignee}`].join('\n')
+}
+
 function buildAnalysisQuery(patent, details) {
   const d = details
   const parts = [
-    `Analyze patent application ${patent.applicationNumber}: "${d.title || patent.title}".`,
+    `Analyze ${analysisSubject(patent, d)}: "${d.title || patent.title}".`,
     `\nAPPLICATION DATA RETRIEVED FROM USPTO:`,
+    ...identityLines(patent, d),
     `Filing Date: ${d.filingDate || patent.filingDate}`,
     d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
     `Type: ${patent.type}`,
     `USPC Class/Subclass: ${d.class || patent.class}/${d.subclass || ''}`,
     `USPC Symbol: ${d.uspcSymbol || 'N/A'}`,
     d.groupArtUnit ? `Art Unit: ${d.groupArtUnit}` : null,
-    `Status: ${d.statusDescription || 'Pending'} (as of ${d.statusDate || 'unknown'})`,
+    d.statusDate ? `Status Date: ${d.statusDate}` : null,
     d.entityStatus ? `Entity Status: ${d.entityStatus}` : null,
     d.nationalStage ? `National Stage Entry: Yes (PCT application)` : null,
     d.docketNumber ? `Attorney Docket: ${d.docketNumber}` : null,
@@ -76,8 +145,7 @@ function buildAnalysisQuery(patent, details) {
   if (d.abstract) parts.push(`\nABSTRACT:\n${d.abstract}`)
   if (d.claims) parts.push(`\nCLAIMS:\n${typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims, null, 2)}`)
 
-  parts.push(`\nGrant Date: ${d.grantDate || 'Not yet granted'}`)
-  parts.push(`Expiration Date: ${d.expirationDate || 'N/A'}`)
+  parts.push(`\nExpiration Date: ${d.expirationDate || 'N/A'}`)
 
   parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. Data retrieved from USPTO is above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application; clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
 
@@ -87,7 +155,7 @@ function buildAnalysisQuery(patent, details) {
 function buildAnalysisContext(patent, details) {
   const d = details
   const parts = [
-    `Patent: ${patent.applicationNumber}`,
+    ...identityLines(patent, d),
     `Title: ${d.title || patent.title}`,
     `Filing Date: ${d.filingDate || patent.filingDate}`,
     d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
@@ -101,10 +169,8 @@ function buildAnalysisContext(patent, details) {
     d.nationalStage ? `National Stage: Yes` : null,
     d.continuity?.length ? `Continuity: ${d.continuity.map(c => `${c.type} ${c.parentApplication}`).join('; ')}` : null,
     d.foreignPriority?.length ? `Foreign Priority: ${d.foreignPriority.length} claims (earliest: ${d.foreignPriority[d.foreignPriority.length - 1]?.filingDate})` : null,
-    `Status: ${d.statusDescription || 'Pending'}`,
     d.abstract ? `Abstract: ${d.abstract}` : null,
     d.claims ? `Claims: ${(typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims)).slice(0, 4000)}` : null,
-    `Grant Date: ${d.grantDate || 'Pending'}`,
     `Prosecution Events: ${d.eventCount || 0}`,
   ]
   return parts.filter(Boolean).join('\n')
@@ -395,7 +461,7 @@ export default function PatentAnalysis() {
           <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <div className="flex items-start justify-between mb-3">
               <div>
-                <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
+                <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{patentHeaderLine(selectedPatent, patentDetails)}</h2>
                 <p className={`text-[14px] mt-1 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{selectedPatent.title}</p>
               </div>
               <a href={googlePatentsUrl(selectedPatent.applicationNumber)}
@@ -486,11 +552,11 @@ export default function PatentAnalysis() {
             disabledLabel="Loading patent details..."
             query={patentDetails
               ? buildAnalysisQuery(selectedPatent, patentDetails)
-              : `Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}
+              : buildFallbackQuery(selectedPatent)}
             skillType="patent"
             context={patentDetails
               ? buildAnalysisContext(selectedPatent, patentDetails)
-              : `Patent: ${selectedPatent.applicationNumber}\nTitle: ${selectedPatent.title}\nFiling Date: ${selectedPatent.filingDate}\nType: ${selectedPatent.type}\nClass: ${selectedPatent.class}\nInventor: ${selectedPatent.firstInventor}\nAssignee: ${selectedPatent.assignee}`}
+              : buildFallbackContext(selectedPatent)}
           />
         </div>
       )}
