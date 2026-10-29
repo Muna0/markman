@@ -4,7 +4,7 @@
 
 A free, open-source Claude Code plugin for intellectual property work, built for solo practitioners and boutique firms. It drafts patent claim analyses, freedom-to-operate (FTO) risk analyses, trademark clearance screens, and matter intake summaries for attorney review, and adds deadline tracking, matter history, and Word export. Patent lookups use USPTO data when you add a free API key.
 
-Free and open source. No subscription, no seat licenses. Apache-2.0.
+Free and open source. No subscription, no seat licenses. Apache-2.0. Markman is free; Claude Code itself requires a Claude plan or API key.
 
 **Markman does not provide legal advice.** Output is a draft and must be reviewed by a licensed attorney. Using Markman does not create an attorney-client relationship, and it is not a substitute for professional judgment.
 

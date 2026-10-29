@@ -158,7 +158,7 @@ function Hero() {
           IP research for the rest of the bar.
         </h1>
         <p className={`mt-6 mx-auto max-w-[620px] text-[clamp(16px,1.4vw,18px)] leading-relaxed ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-          Patent search plus draft freedom-to-operate and trademark clearance analyses for attorney review, built for solo practitioners and boutique firms. USPTO patent data. No subscription.
+          Patent search plus draft freedom-to-operate and trademark clearance analyses for attorney review, built for solo practitioners and boutique firms. USPTO patent data. Markman is free; Claude Code itself requires a Claude plan or API key.
         </p>
         <div className="mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
           <Link to="/app" className={`${PRIMARY_BTN} group text-[15px] px-5 py-3`}>
@@ -301,7 +301,7 @@ function OpenSourcePanel() {
             Free and open source.
           </p>
           <p className="relative mt-3 mx-auto max-w-[760px] text-[clamp(16px,1.4vw,18px)] leading-relaxed text-blu-300">
-            No subscription, no seat licenses. Apache-2.0.
+            No subscription, no seat licenses. Apache-2.0. Markman is free; Claude Code itself requires a Claude plan or API key.
           </p>
         </div>
       </div>
@@ -380,7 +380,7 @@ function DemoNote() {
             dark ? 'border-ink-800 bg-ink-900/60 text-ink-400' : 'border-blu-100 bg-blu-50 text-ink-600'
           }`}
         >
-          The public demo allows 3 analyses per visitor per day. For unlimited use, install the plugin.
+          The public demo allows 3 analyses per visitor per day. For more, install the plugin. Markman is free; Claude Code itself requires a Claude plan or API key.
         </p>
       </div>
     </section>

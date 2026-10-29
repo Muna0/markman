@@ -226,7 +226,7 @@ Search NEXAFLOW at tmsearch.uspto.gov and paste any
 similar marks you find. Drafting the screen now...
 
 DRAFT TRADEMARK SCREEN: NEXAFLOW
-Distinctiveness: likely fanciful
+Distinctiveness: likely suggestive
 Phonetic variants to search: NEXFLOW, NEXA FLOW, NEKSAFLOW
 Relevant DuPont factors: assessed against marks you provide
 ...`}</Block>
