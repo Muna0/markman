@@ -24,7 +24,7 @@ This playbook defines the default standards, thresholds, and preferences for IP 
 **LOW RISK**
 - Strong non-infringement arguments on at least one claim limitation
 - Viable design-around is already incorporated in the product design
-- Patent is near expiration, or maintenance fees have lapsed
+- Patent is near expiration, or has expired or lapsed for nonpayment of maintenance fees (exposure for past damages may remain; see 35 U.S.C. § 286)
 - Prior art identified that may invalidate relevant claims
 - Action required: Document the analysis. Proceed with standard monitoring.
 
@@ -36,13 +36,14 @@ Require clearance in: United States, European Union, United Kingdom, Canada
 **Extended Coverage (when applicable)**
 Add: Australia, Japan, South Korea, India, Brazil, Mexico
 
-**Clearance Recommendation Thresholds**
-- **CLEAR**: No identical marks in same/related classes across target jurisdictions. No similar marks scoring above LOW on likelihood of confusion.
-- **CLEAR WITH RISK**: No identical marks, but one or more similar marks scoring MEDIUM on likelihood of confusion. Coexistence may be possible. Document risk and obtain client sign-off.
-- **DO NOT USE**: Identical mark in same/related class in any target jurisdiction, OR similar mark scoring HIGH on likelihood of confusion in a primary market (US or EU).
+**Preliminary Conflict Risk Ratings**
+These are preliminary screening ratings for attorney review, not clearance opinions.
+- **LOW**: No identical marks found in same/related classes across target jurisdictions, and no similar marks rated above LOW on likelihood of confusion.
+- **MEDIUM**: No identical marks found, but one or more similar marks rated MEDIUM on likelihood of confusion. Coexistence may be possible. Document the risk for the reviewing attorney.
+- **HIGH**: Identical mark found in a same/related class in any target jurisdiction, OR a similar mark rated HIGH on likelihood of confusion in a primary market (US or EU).
 
 **Search Scope**
-- Federal (USPTO TESS) and state registrations
+- Federal registrations and applications (USPTO Trademark Search; TESS was retired in 2023) and state registrations
 - Common law use (preliminary web search; note as limitation)
 - Domain name availability (.com, primary ccTLDs for target markets)
 - Social media handle availability (note but do not treat as blocking)
@@ -73,47 +74,46 @@ Add: Australia, Japan, South Korea, India, Brazil, Mexico
 
 | Deadline | Timeframe | Notes |
 |----------|-----------|-------|
-| Provisional to non-provisional (U.S.) | 12 months from provisional filing | No extensions available |
+| Provisional to non-provisional (U.S.) | 12 months from provisional filing | Not extendable; benefit can be restored up to 2 months later only by petition showing unintentional delay (37 C.F.R. § 1.78(b)) |
 | PCT filing from priority | 12 months from earliest priority date | Paris Convention priority |
 | PCT national phase entry | 30 months from earliest priority date | 31 months in some jurisdictions (e.g., EP via Euro-PCT) |
-| USPTO non-final OA response | 3 months (extendable to 6 months) | Extension fees increase monthly |
-| USPTO final OA response | 3 months (extendable to 6 months) | Consider RCE, appeal, or After Final |
-| Notice of Allowance issue fee | 3 months | No extension available |
-| Maintenance fees (U.S.) | 3.5, 7.5, 11.5 years from grant | 6-month grace period with surcharge |
-| Foreign filing license | Before filing abroad | 35 U.S.C. § 184 |
+| USPTO non-final OA response | Typically a 3-month shortened statutory period | Extendable up to the 6-month statutory maximum with extension fees (37 C.F.R. § 1.136(a)) |
+| USPTO final OA response | Typically a 3-month shortened statutory period | Extendable up to the 6-month statutory maximum with fees; consider RCE, appeal, or after-final practice |
+| Notice of Allowance issue fee | 3 months from the notice | Statutory; not extendable |
+| Maintenance fees (U.S.) | Due 3 to 3.5, 7 to 7.5, and 11 to 11.5 years after grant | 6-month grace period with surcharge |
+| Foreign filing license | Before filing abroad an invention made in the U.S. | 35 U.S.C. § 184 |
 
 **Trademark Deadlines**
 
 | Deadline | Timeframe | Notes |
 |----------|-----------|-------|
-| Statement of Use (after NOA) | 6 months from NOA | Up to 5 extensions (6 months each) |
-| Section 8 Declaration | Years 5-6 after registration | File within 1-year window |
-| Section 15 (Incontestability) | After 5 years continuous use | File with Section 8 |
-| Section 8/9 Renewal | Years 9-10 after registration | Combined filing; 10-year renewal cycle thereafter |
-| Madrid Protocol renewal | 10 years from international registration | Managed through WIPO |
-| Opposition period (U.S.) | 30 days after publication | Extendable |
+| Statement of Use (after NOA) | 6 months from Notice of Allowance | Up to 5 six-month extensions on request |
+| Section 8 Declaration | Between the 5th and 6th year after registration | 6-month grace period with surcharge |
+| Section 15 (Incontestability) | After 5 consecutive years of continuous use following registration | Optional; often filed with Section 8 |
+| Section 8/9 Renewal | Within the year before each 10-year anniversary of registration | Combined filing; 6-month grace period with surcharge |
+| Madrid Protocol renewal | Every 10 years from the international registration date | Filed with WIPO; 6-month grace period with surcharge |
+| Opposition period (U.S.) | 30 days after publication in the Official Gazette | Extendable on request |
 
 **General Deadline Management**
 - Set internal reminders at: 90 days, 60 days, 30 days, and 7 days before each deadline
-- Flag any deadline within 30 days as URGENT in triage
-- Flag any deadline within 60 days as UPCOMING in triage
+- Status labels (the same labels and thresholds /deadlines uses): OVERDUE (date has passed), URGENT (7 days or fewer), UPCOMING (8 to 30 days), APPROACHING (31 to 60 days), OK (more than 60 days)
 - For deadlines with grace periods, always target the primary deadline, not the grace period
 
 ## General Practice Standards
 
-**Privilege and Confidentiality**
-- Mark all FTO memos and infringement analyses as "Attorney Work Product / Privileged and Confidential"
+**Labeling and Confidentiality**
+- Label all outputs DRAFT FOR ATTORNEY REVIEW; do not add privilege or work-product labels
 - Do not include client-identifying information in skill outputs unless explicitly provided
-- Recommend anonymization for any analysis that may be shared outside privilege
+- Recommend anonymization for any analysis that may be shared outside the client relationship
 
 **Quality Standards**
 - All analyses should cite specific claim numbers, statutory provisions, and case law where applicable
 - Use Bluebook citation format for formal deliverables
-- Informal analysis may use information cite format
+- Informal analysis may use an informal citation format
 - Always include a limitations section noting the scope and boundaries of the analysis
 - Recommend professional review by licensed counsel before reliance
 
-**AI-Specific Disclaimers**
+**Disclaimers**
 - Note that AI-assisted analysis does not constitute legal advice
 - Flag any patent numbers, case citations, or statutory references for verification
 - Do not represent AI-generated claim constructions as authoritative

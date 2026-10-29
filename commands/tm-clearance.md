@@ -1,7 +1,6 @@
 ---
 name: tm-clearance
 description: Draft a preliminary trademark clearance screen for attorney review. Links to USPTO Trademark Search for the knockout search, analyzes likelihood of confusion against marks found, and identifies jurisdiction coverage gaps.
-command: /ip:tm-clearance
 arguments:
   - name: mark
     description: The proposed mark (word, phrase, or description of design mark)
@@ -14,7 +13,7 @@ arguments:
     required: false
 ---
 
-# /ip:tm-clearance
+# /tm-clearance
 
 Run a preliminary trademark clearance screen.
 
@@ -31,19 +30,19 @@ The user provides:
 
 2. **Nice Classification**: Determine the appropriate International Class(es) for the stated goods/services
 
-3. **USPTO search** (if connector is available):
-   - Search for identical marks: `search_trademarks(mark_text, class)`
-   - Search for phonetic variants and common misspellings
-   - For each hit, retrieve status: `check_trademark_status(serial_number)`
-   - If connector is unavailable, note that results are based on general knowledge and recommend a formal search on USPTO Trademark Search
+3. **USPTO search**:
+   - USPTO offers no API for trademark search by text. `search_trademarks` returns no results; it points to USPTO Trademark Search (tmsearch.uspto.gov)
+   - Ask the user to search the mark and its phonetic variants and common misspellings there, and paste the marks they find
+   - For a specific serial number, `check_trademark_status(serial_number)` may return its status from TSDR (TSDR was not responding reliably as of October 2026)
+   - Do not present conflicts from general knowledge as search results; base the conflict analysis only on marks the user provides
 
 4. **Run the trademark-screen skill** with:
    - The proposed mark and its characterization
    - Goods/services and Nice Classification
-   - Search results from USPTO (if available)
+   - Marks the user found and pasted from USPTO Trademark Search
    - Target jurisdictions
 
-5. **Apply playbook standards** from ip-playbook.md for clearance thresholds and jurisdiction requirements
+5. **Apply playbook standards** from ip-playbook.md for preliminary conflict risk ratings and jurisdiction requirements
 
 6. **Output the structured clearance screen** per the trademark-screen skill format
 
@@ -53,16 +52,16 @@ A draft trademark clearance screen for attorney review, including:
 - Mark assessment (type, distinctiveness, registrability concerns)
 - Identical marks table
 - Similar marks table with similarity scores
-- Likelihood of confusion analysis (DuPont factors) for each conflict
+- Likelihood of confusion analysis using the relevant DuPont factors for each conflict
 - Jurisdiction coverage map
-- Overall clearance recommendation (CLEAR / CLEAR WITH RISK / DO NOT USE)
+- Preliminary conflict risk (LOW / MEDIUM / HIGH)
 - Recommended next steps
 - Standard limitations
 
 ## Example Usage
 
 ```
-/ip:tm-clearance NEXAFLOW | AI-powered workflow automation software | US, EU, UK, CA, AU
-/ip:tm-clearance BRIGHTPATH | Educational consulting services
-/ip:tm-clearance VOXIS | Voice-controlled smart home devices | US
+/tm-clearance NEXAFLOW | AI-powered workflow automation software | US, EU, UK, CA, AU
+/tm-clearance BRIGHTPATH | Educational consulting services
+/tm-clearance VOXIS | Voice-controlled smart home devices | US
 ```

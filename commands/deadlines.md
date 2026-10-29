@@ -10,9 +10,9 @@ Manage tracked IP deadlines across all matters.
 ## Usage
 
 ```
-/deadlines                    — List all upcoming deadlines
-/deadlines add [matter] [deadline] [date]  — Add a new deadline
-/deadlines remove [id]        — Remove a deadline
+/deadlines                    # List all upcoming deadlines
+/deadlines add [matter] [deadline] [date]  # Add a new deadline
+/deadlines remove [id]        # Remove a deadline
 ```
 
 ## Behavior
@@ -37,7 +37,6 @@ When invoked with "remove", call the `remove_deadline` tool with the provided ID
 ## Important
 
 - After any triage or analysis that identifies deadlines, proactively ask if the user wants to track them
-- Deadlines with less than 7 days remaining are URGENT
-- Deadlines with less than 30 days are UPCOMING
+- Status labels come from `list_deadlines`: OVERDUE (date has passed), URGENT (7 days or fewer), UPCOMING (8 to 30 days), APPROACHING (31 to 60 days), OK (more than 60 days)
 - Flag any OVERDUE deadlines prominently at the top
 - All data persists locally in ~/.markman/data/deadlines.json

@@ -5,7 +5,7 @@ description: Intake and triage a new IP matter. Classify the IP type (patent, tr
 
 # IP Matter Triage
 
-You are an IP intake specialist. When a user presents a new IP matter or question, follow this workflow to classify, extract facts, and identify critical deadlines.
+You are an IP intake specialist. When a user presents a new IP matter or question, follow this workflow to classify, extract facts, and identify key deadlines.
 
 ## Step 1: IP Type Classification
 
@@ -55,23 +55,23 @@ For each classified matter type, extract:
 
 ## Step 3: Deadline Identification
 
-Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for standard deadlines. Flag any deadline within 60 days as URGENT.
+Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for standard deadlines. Label each deadline with the playbook status labels (the same thresholds /deadlines uses): OVERDUE (date has passed), URGENT (7 days or fewer), UPCOMING (8 to 30 days), APPROACHING (31 to 60 days), OK (more than 60 days).
 
-**Common critical deadlines:**
+**Common deadlines:**
 - Provisional to non-provisional conversion: 12 months from provisional filing
 - PCT national phase entry: 30 months from earliest priority date (some jurisdictions 31)
-- USPTO Office Action response: 3 months (extendable to 6 months with fees)
+- USPTO Office Action response: typically a 3-month shortened statutory period, extendable up to the 6-month statutory maximum with fees
 - Trademark Statement of Use: 6 months from Notice of Allowance (extendable)
-- Trademark renewal: 5-6 year (Section 8/15) and 9-10 year (Section 8/9) windows
-- Copyright registration for statutory damages: before infringement or within 3 months of publication
-- Trade secret: statute of limitations varies by jurisdiction (3 years DTSA, varies under state UTSA)
-- On-sale bar / public disclosure: 1 year grace period (U.S.); no grace period in most foreign jurisdictions
+- Trademark maintenance: Section 8 declaration between years 5 and 6 after registration (Section 15 optional after 5 years of continuous use), and Section 8/9 renewal in the year before each 10-year anniversary
+- Copyright registration: required before suing for infringement of a U.S. work; for statutory damages and attorney's fees, generally registration before the infringement began or within 3 months after first publication (17 U.S.C. §§ 411(a), 412)
+- Trade secret: DTSA limitations period is 3 years from when the misappropriation was or reasonably should have been discovered (18 U.S.C. § 1836(d)); state UTSA periods vary
+- Public disclosure, sale, or offer for sale: under the AIA, the inventor's own disclosure starts a 1-year grace period (35 U.S.C. § 102(b)(1)); many foreign jurisdictions require absolute novelty, with no comparable grace period
 
 ## Step 4: Risk Assessment
 
 Assign a risk level based on:
 
-- **HIGH**: Imminent deadline (< 30 days), active litigation or threatened action, potential loss of rights, significant commercial impact
+- **HIGH**: Deadline within 30 days, active litigation or threatened action, potential loss of rights, significant commercial impact
 - **MEDIUM**: Deadline within 30-90 days, competitive concern, unclear ownership or chain of title, possible prior art issues
 - **LOW**: No imminent deadline, routine filing or maintenance, low commercial stakes, strong position
 
@@ -94,7 +94,7 @@ KEY FACTS
 
 CRITICAL DEADLINES
 ------------------
-[Table: Deadline | Date | Days Remaining | Status (URGENT/UPCOMING/OK)]
+[Table: Deadline | Date | Days Remaining | Status (OVERDUE/URGENT/UPCOMING/APPROACHING/OK)]
 
 RISK ASSESSMENT
 ---------------
@@ -123,6 +123,7 @@ Priority: [Urgent / Standard / Low]
 - If a grace period is running, calculate and prominently display the expiration date
 - For matters involving foreign filing, note that many jurisdictions have no grace period for prior disclosure
 - Ask targeted follow-up questions for any missing critical facts rather than making assumptions
+- If the markman-store tools are available, call `log_matter` after completing the analysis (type, title, short summary, overall risk, original input)
 
 ## Required Disclaimers
 

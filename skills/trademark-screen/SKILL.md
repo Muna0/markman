@@ -1,6 +1,6 @@
 ---
 name: trademark-screen
-description: Conduct trademark clearance screening including identical marks, phonetically similar marks, design class analysis, likelihood of confusion scoring, and jurisdiction coverage gaps. Triggers on trademark search, clearance, brand naming, or mark availability discussions.
+description: Draft a preliminary trademark clearance screen for attorney review, covering identical and phonetically similar marks the user provides, design codes, likelihood of confusion, and jurisdiction coverage gaps. Triggers on trademark search, clearance, brand naming, or mark availability discussions.
 ---
 
 # Trademark Clearance Screen
@@ -17,38 +17,43 @@ You are assisting trademark counsel with a preliminary clearance screen. When th
 
 ## Step 2: Identical Marks Search
 
-- If USPTO tools are connected, search for identical registered marks and pending applications in the relevant classes
-- Search for identical marks across all specified jurisdictions
-- For each hit, document: mark text, registration/serial number, owner, status (live/dead), goods/services, filing date
+- USPTO offers no API for trademark search by text, so Markman cannot run this search itself. Ask the user to search USPTO Trademark Search (tmsearch.uspto.gov) and the relevant foreign registers for the mark in the relevant classes, and to paste what they find
+- Base the conflict analysis only on marks the user provides; do not present marks from general knowledge as search results
+- For each mark provided, document: mark text, registration/serial number, owner, status (live/dead), goods/services, filing date
 - Flag any identical marks in the same or related classes as BLOCKING
 
 ## Step 3: Phonetically Similar Marks
 
 - Generate phonetic variants of the proposed mark (homophones, common misspellings, sound-alikes)
-- Search for each variant in relevant classes
-- Apply the sight, sound, and meaning test from the DuPont factors
+- Ask the user to search each variant in the relevant classes
+- Compare appearance, sound, connotation, and commercial impression (the first DuPont factor)
 - Document near-matches with similarity scores
 
 ## Step 4: Design Class Analysis
 
 - If the mark includes a design element, identify the relevant USPTO Design Search Codes
-- Search for similar design marks in relevant classes
+- Ask the user to search those design codes in USPTO Trademark Search
 - For word marks, check if existing design marks incorporate similar wording
 
 ## Step 5: Likelihood of Confusion Analysis
 
-Apply the DuPont factors (or equivalent multi-jurisdiction framework):
+For U.S. conflicts, assess the relevant factors from In re E. I. du Pont de Nemours & Co., 476 F.2d 1357, 1361 (C.C.P.A. 1973). There are thirteen; not every factor is relevant in every case, and the USPTO and TTAB weigh the factors for which there is relevant evidence and argument (see TMEP § 1207.01). For other jurisdictions, apply the equivalent local framework.
 
-1. Similarity of the marks (sight, sound, meaning, commercial impression)
-2. Similarity/relatedness of the goods/services
-3. Similarity of trade channels
-4. Conditions of purchase (sophisticated vs. impulse buyers)
+1. Similarity of the marks in their entireties (appearance, sound, connotation, commercial impression)
+2. Similarity and nature of the goods or services
+3. Similarity of established, likely-to-continue trade channels
+4. Conditions of purchase and buyers (impulse vs. careful, sophisticated purchasing)
 5. Fame of the prior mark
-6. Number and nature of similar marks in use
+6. Number and nature of similar marks in use on similar goods
 7. Nature and extent of any actual confusion
-8. Length of concurrent use without confusion
+8. Length of time and conditions of concurrent use without evidence of actual confusion
+9. Variety of goods on which the mark is or is not used (house mark, family mark, product mark)
+10. Market interface between the applicant and the owner of the prior mark
+11. Extent to which the applicant has a right to exclude others from use of its mark on its goods
+12. Extent of potential confusion (de minimis or substantial)
+13. Any other established fact probative of the effect of use
 
-Score each identified conflict:
+State which factors you assessed and why the others were not relevant on the facts provided. Rate each identified conflict:
 - **HIGH RISK**: Likely to be refused or challenged; same/similar mark in same/related class with overlapping channels
 - **MEDIUM RISK**: Arguable; some DuPont factors favor coexistence, others do not
 - **LOW RISK**: Minimal overlap; strong differentiation on multiple factors
@@ -86,20 +91,20 @@ Jurisdictions: [list]
    [Results with design codes]
 
 5. LIKELIHOOD OF CONFUSION ANALYSIS
-   [For each HIGH/MEDIUM conflict: DuPont factor analysis]
+   [For each HIGH/MEDIUM conflict: analysis of the relevant DuPont factors]
 
 6. JURISDICTION COVERAGE
    [Table: Jurisdiction | Status | Key Conflicts | Filing Strategy Notes]
 
 7. OVERALL ASSESSMENT
-   Clearance Recommendation: [CLEAR / CLEAR WITH RISK / DO NOT USE]
+   Preliminary Conflict Risk: [LOW / MEDIUM / HIGH]
    [Summary rationale]
 
 8. RECOMMENDED NEXT STEPS
    - [Specific actions: full search, watch service, filing strategy, etc.]
 
 9. LIMITATIONS
-   - Preliminary screen only; not a substitute for comprehensive search
+   - Preliminary screen only, limited to marks the user provided; not a substitute for a comprehensive search
    - Does not cover common law/unregistered marks
    - State registrations not included unless separately searched
    - Review by licensed trademark counsel required
@@ -110,7 +115,8 @@ Jurisdictions: [list]
 - Always caveat that this is a preliminary screen, not a comprehensive search
 - Common law marks and state registrations require separate investigation
 - If the mark raises descriptiveness issues, note the potential need for a 2(f) acquired distinctiveness showing
-- Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for jurisdiction minimums and clearance standards
+- Reference the playbook (`${CLAUDE_PLUGIN_ROOT}/playbooks/ip-playbook.md`) for jurisdiction minimums and preliminary conflict risk ratings
+- If the markman-store tools are available, call `log_matter` after completing the analysis (type, title, short summary, overall risk, original input)
 
 ## Required Disclaimers
 
