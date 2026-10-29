@@ -88,6 +88,21 @@ export WIPO_API_KEY="your_key"   # optional, experimental
 
 Without keys, the servers still start and explain how to add a key. The skills work on text you paste in.
 
+## Data and network access
+
+The plugin's MCP servers run locally and contact only these services:
+
+| Server | Destination | When | What is sent |
+|---|---|---|---|
+| `uspto` | `api.uspto.gov` | Patent search and record lookups | Your search terms or patent/application number, with your USPTO API key |
+| `uspto` | `tsdrapi.uspto.gov` | Trademark status by serial number | The serial number, with your USPTO API key |
+| `wipo` | `wipocase.wipo.int`, `patentscope.wipo.int` | Only if you set `WIPO_API_KEY` | Your search terms or PCT number, with your WIPO credentials |
+| `markman-store` | None (local only) | Deadlines, history, Word export | Nothing leaves your machine; data is stored in `~/.markman/data` |
+
+Links to `patents.google.com`, `tmsearch.uspto.gov`, and `tsdr.uspto.gov` in tool output are for you to open; the servers do not call them. Markman has no analytics or telemetry. The analysis itself is done by Claude in your Claude Code session under your own Anthropic account.
+
+Markman drafts analysis for a licensed attorney to review; it does not file anything, contact anyone, or take action on a matter. Do not paste confidential client information you are not permitted to share with your AI provider.
+
 ## Usage
 
 Once installed, use Markman by talking to Claude Code naturally or using slash commands:
