@@ -15357,6 +15357,12 @@ function toPatentQuery(query) {
   if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
   return q.split(/\s+/).join(" AND ");
 }
+function exactNumberMatches(results, digits) {
+  if (!digits) return results;
+  const bare = (v) => String(v || "").replace(/\D/g, "");
+  const exact = results.filter((r) => bare(r.patentNumber) === digits || bare(r.applicationNumber) === digits);
+  return exact.length ? exact : results;
+}
 
 // mcp/uspto-server.js
 var USPTO_API_KEY = process.env.USPTO_API_KEY;
@@ -15432,7 +15438,7 @@ async function searchPatents(query, dateRange) {
   const url = `${ODP_BASE}/patent/applications/search?${params}`;
   const data = await fetchWithRetry(url);
   const bag = data.patentFileWrapperDataBag || [];
-  const results = bag.map((w) => {
+  const mapped = bag.map((w) => {
     const r = mapFileWrapper(w);
     return {
       applicationNumber: r.applicationNumber,
@@ -15447,8 +15453,9 @@ async function searchPatents(query, dateRange) {
       cpc: r.cpc
     };
   });
+  const results = exactNumberMatches(mapped, numberQueryDigits(query));
   return {
-    totalResults: data.count || results.length,
+    totalResults: results.length < mapped.length ? results.length : data.count || results.length,
     query,
     dateRange: dateRange ? `filing date ${dateRange.start} to ${dateRange.end || "present"}` : "all dates",
     results

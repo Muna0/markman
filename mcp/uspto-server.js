@@ -22,7 +22,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { toPatentQuery } from "../lib/patent-query.js";
+import { toPatentQuery, numberQueryDigits, exactNumberMatches } from "../lib/patent-query.js";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -130,7 +130,7 @@ async function searchPatents(query, dateRange) {
 
   // ODP API returns patentFileWrapperDataBag with applicationMetaData inside each item
   const bag = data.patentFileWrapperDataBag || [];
-  const results = bag.map((w) => {
+  const mapped = bag.map((w) => {
     const r = mapFileWrapper(w);
     return {
       applicationNumber: r.applicationNumber,
@@ -146,8 +146,11 @@ async function searchPatents(query, dateRange) {
     };
   });
 
+  // A search for one patent or application number returns only the exact match when there is one
+  const results = exactNumberMatches(mapped, numberQueryDigits(query));
+
   return {
-    totalResults: data.count || results.length,
+    totalResults: results.length < mapped.length ? results.length : (data.count || results.length),
     query,
     dateRange: dateRange ? `filing date ${dateRange.start} to ${dateRange.end || "present"}` : "all dates",
     results,
