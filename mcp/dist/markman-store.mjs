@@ -41603,31 +41603,13 @@ async function exportMemo(title, content, memoType) {
     HeadingLevel: HeadingLevel2,
     AlignmentType: AlignmentType2,
     Packer: Packer2,
-    BorderStyle: BorderStyle2
+    Header: Header3
   } = docx;
   const timestamp = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
   const heading = memoTitle(memoType, title);
   const filename = `${heading.replace(/\(Draft\)/, "").trim().replace(/[^a-zA-Z0-9]+/g, "_")}_${timestamp}.docx`;
   const filepath = path.join(EXPORT_DIR, filename);
   const children = [];
-  children.push(
-    new Paragraph2({
-      alignment: AlignmentType2.CENTER,
-      spacing: { after: 400 },
-      border: {
-        bottom: { style: BorderStyle2.SINGLE, size: 1, color: "999999" }
-      },
-      children: [
-        new TextRun2({
-          text: "DRAFT FOR ATTORNEY REVIEW",
-          bold: true,
-          size: 20,
-          font: "Times New Roman",
-          color: "666666"
-        })
-      ]
-    })
-  );
   children.push(
     new Paragraph2({
       heading: HeadingLevel2.HEADING_1,
@@ -41657,7 +41639,20 @@ async function exportMemo(title, content, memoType) {
   );
   children.push(...markdownToDocx(stripLeadingTitle(content), docx));
   const doc = new Document2({
-    sections: [{ footers: { default: memoFooter(docx) }, children }]
+    sections: [{
+      // Draft label in the page header on every page; the body keeps only the draft's own
+      // disclaimer line. Privilege and work-product labels are left to the user.
+      headers: {
+        default: new Header3({
+          children: [new Paragraph2({
+            alignment: AlignmentType2.RIGHT,
+            children: [new TextRun2({ text: "DRAFT FOR ATTORNEY REVIEW", size: 14, font: "Times New Roman", color: "AAAAAA", italics: true })]
+          })]
+        })
+      },
+      footers: { default: memoFooter(docx) },
+      children
+    }]
   });
   const buffer2 = await Packer2.toBuffer(doc);
   fs.writeFileSync(filepath, buffer2);

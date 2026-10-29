@@ -184,7 +184,7 @@ async function exportMemo(title, content, memoType) {
     HeadingLevel,
     AlignmentType,
     Packer,
-    BorderStyle,
+    Header,
   } = docx;
 
   const timestamp = new Date().toISOString().split("T")[0];
@@ -193,26 +193,6 @@ async function exportMemo(title, content, memoType) {
   const filepath = path.join(EXPORT_DIR, filename);
 
   const children = [];
-
-  // Draft header on every export. Privilege and work-product labels are left to the user.
-  children.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 400 },
-      border: {
-        bottom: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
-      },
-      children: [
-        new TextRun({
-          text: "DRAFT FOR ATTORNEY REVIEW",
-          bold: true,
-          size: 20,
-          font: "Times New Roman",
-          color: "666666",
-        }),
-      ],
-    })
-  );
 
   // Title
   children.push(
@@ -250,7 +230,20 @@ async function exportMemo(title, content, memoType) {
   children.push(...markdownToDocx(stripLeadingTitle(content), docx));
 
   const doc = new Document({
-    sections: [{ footers: { default: memoFooter(docx) }, children }],
+    sections: [{
+      // Draft label in the page header on every page; the body keeps only the draft's own
+      // disclaimer line. Privilege and work-product labels are left to the user.
+      headers: {
+        default: new Header({
+          children: [new Paragraph({
+            alignment: AlignmentType.RIGHT,
+            children: [new TextRun({ text: "DRAFT FOR ATTORNEY REVIEW", size: 14, font: "Times New Roman", color: "AAAAAA", italics: true })],
+          })],
+        }),
+      },
+      footers: { default: memoFooter(docx) },
+      children,
+    }],
   });
 
   const buffer = await Packer.toBuffer(doc);

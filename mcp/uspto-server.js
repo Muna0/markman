@@ -119,8 +119,8 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 async function searchPatents(query, dateRange) {
   const params = new URLSearchParams({
     q: toPatentQuery(query),
-    rows: "20",
-    start: "0",
+    limit: "20",
+    offset: "0",
   });
 
   if (dateRange?.start) {
@@ -225,7 +225,7 @@ async function getPatentDetails(number) {
   let wrapper = null;
   let matchedAs = null;
   if (!looksLikeApplication) {
-    const params = new URLSearchParams({ q: `applicationMetaData.patentNumber:${normalized}`, rows: "1" });
+    const params = new URLSearchParams({ q: `applicationMetaData.patentNumber:${normalized}`, limit: "1" });
     try {
       const data = await fetchWithRetry(`${ODP_BASE}/patent/applications/search?${params}`);
       wrapper = data.patentFileWrapperDataBag?.[0] || null;

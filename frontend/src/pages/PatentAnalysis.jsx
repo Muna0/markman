@@ -73,6 +73,13 @@ function identityLines(patent, details) {
   ].filter(Boolean)
 }
 
+// Earliest priority date the USPTO record claims, with its source, or "Not in record"
+function priorityLine(d) {
+  if (!d?.priorityDate) return 'Not in record'
+  const app = d.priorityBasis?.application ? ` (${d.priorityBasis.type ? `${d.priorityBasis.type} ` : ''}${formatAppNumber(d.priorityBasis.application)})` : ''
+  return `${d.priorityDate}${app}`
+}
+
 function buildFallbackQuery(p) {
   return `Analyze ${analysisSubject(p)}: "${p.title}". ${identityLines(p).join('. ')}. Filed ${p.filingDate}. Type: ${p.type}. Class: ${p.class}. Inventor: ${p.firstInventor}. Assignee: ${p.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`
 }
@@ -89,6 +96,7 @@ function buildAnalysisQuery(patent, details) {
     ...identityLines(patent, d),
     `Filing Date: ${d.filingDate || patent.filingDate}`,
     d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
+    `Earliest Claimed Priority Date: ${priorityLine(d)}`,
     `Type: ${patent.type}`,
     `USPC Class/Subclass: ${d.class || patent.class}/${d.subclass || ''}`,
     `USPC Symbol: ${d.uspcSymbol || 'N/A'}`,
@@ -96,7 +104,7 @@ function buildAnalysisQuery(patent, details) {
     d.statusDate ? `Status Date: ${d.statusDate}` : null,
     d.entityStatus ? `Entity Status: ${d.entityStatus}` : null,
     d.nationalStage ? `National Stage Entry: Yes (PCT application)` : null,
-    d.docketNumber ? `Attorney Docket: ${d.docketNumber}` : null,
+    d.docketNumber ? `Applicant docket number: ${d.docketNumber}` : null,
     d.firmName ? `Prosecuting Firm: ${d.firmName}` : null,
     `\nINVENTORS (${d.inventors?.length || 0}):`,
     ...(d.inventors || []).map(inv => typeof inv === 'string' ? `- ${inv}` : `- ${inv.name} (${inv.city}, ${inv.country})`),
@@ -126,7 +134,7 @@ function buildAnalysisQuery(patent, details) {
   if (d.abstract) parts.push(`\nABSTRACT:\n${d.abstract}`)
   if (d.claims) parts.push(`\nCLAIMS:\n${typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims, null, 2)}`)
 
-  parts.push(`\nExpiration Date: ${d.expirationDate || 'N/A'}`)
+  parts.push(`\nExpiration Date: Not computed (term depends on adjustments, terminal disclaimers, and maintenance fees)`)
 
   parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. Data retrieved from USPTO is above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application; clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
 
@@ -140,6 +148,7 @@ function buildAnalysisContext(patent, details) {
     `Title: ${d.title || patent.title}`,
     `Filing Date: ${d.filingDate || patent.filingDate}`,
     d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
+    `Earliest Claimed Priority Date: ${priorityLine(d)}`,
     `Type: ${patent.type}`,
     `Class: ${d.class || patent.class}/${d.subclass || ''}`,
     d.groupArtUnit ? `Art Unit: ${d.groupArtUnit}` : null,
@@ -149,7 +158,7 @@ function buildAnalysisContext(patent, details) {
     d.firmName ? `Firm: ${d.firmName}` : null,
     d.nationalStage ? `National Stage: Yes` : null,
     d.continuity?.length ? `Continuity: ${d.continuity.map(c => `${c.type} ${c.parentApplication}`).join('; ')}` : null,
-    d.foreignPriority?.length ? `Foreign Priority: ${d.foreignPriority.length} claims (earliest: ${d.foreignPriority[d.foreignPriority.length - 1]?.filingDate})` : null,
+    d.foreignPriority?.length ? `Foreign Priority: ${d.foreignPriority.length} claims` : null,
     d.abstract ? `Abstract: ${d.abstract}` : null,
     d.claims ? `Claims: ${(typeof d.claims === 'string' ? d.claims : JSON.stringify(d.claims)).slice(0, 4000)}` : null,
     `Prosecution Events: ${d.eventCount || 0}`,
@@ -244,9 +253,7 @@ export default function PatentAnalysis() {
   async function selectPatent(patent) {
     setSelectedPatent(patent)
     setPatentDetails(null)
-    setClaims([
-      { num: 1, type: 'Method', indDep: 'Independent', dependsOn: '', category: 'Process', notes: '' },
-    ])
+    setClaims([])
 
     // Fetch full patent details (claims, abstract, etc.) from USPTO
     const reqId = ++detailsReqRef.current
@@ -266,7 +273,9 @@ export default function PatentAnalysis() {
 
   function addClaim() {
     const num = claims.length + 1
-    setClaims([...claims, { num, type: 'Method', indDep: 'Dependent', dependsOn: String(num - 1), category: 'Process', notes: '' }])
+    setClaims([...claims, num === 1
+      ? { num, type: 'Method', indDep: 'Independent', dependsOn: '', category: 'Process', notes: '' }
+      : { num, type: 'Method', indDep: 'Dependent', dependsOn: String(num - 1), category: 'Process', notes: '' }])
   }
 
   function updateClaim(index, field, value) {
@@ -323,6 +332,7 @@ export default function PatentAnalysis() {
           />
           <p className={`mt-1.5 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
             Search USPTO patent data by keywords, patent number, or application number.
+            Searches titles and bibliographic data, not full text or claims.
           </p>
           </>
         ) : (
@@ -357,7 +367,7 @@ export default function PatentAnalysis() {
 
       {noMatch && (
         <div role="status" className={`mb-4 px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
-          No USPTO matches for: {noMatch}. Try fewer or broader words.
+          No matches. Try fewer or broader terms.
         </div>
       )}
 
@@ -456,23 +466,26 @@ export default function PatentAnalysis() {
                 View on Google Patents →
               </a>
             </div>
-            <div className="flex flex-wrap gap-4 text-[14px]">
-              <div className="flex items-center gap-2">
-                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Filing Date:</span>
-                <input type="date" defaultValue={selectedPatent.filingDate || ''} onChange={e => setSelectedPatent(p => ({...p, filingDate: e.target.value}))}
-                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Priority Date:</span>
-                <input type="date" defaultValue={selectedPatent.filingDate || ''} onChange={e => setSelectedPatent(p => ({...p, priorityDate: e.target.value}))}
-                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={dark ? 'text-ink-400' : 'text-ink-500'}>Expiration:</span>
-                <input type="date" onChange={e => setSelectedPatent(p => ({...p, expirationDate: e.target.value}))}
-                  className={`mono text-[13px] px-2 py-1 rounded border ${dark ? 'bg-ink-800 border-ink-700 text-ink-100' : 'bg-ink-50 border-ink-200 text-ink-800'}`} />
-              </div>
-            </div>
+            {selectedPatent.applicationNumber !== 'Pasted Claims' && (
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-[14px]">
+                {[
+                  ['Filing date', formatDate(patentDetails?.filingDate || selectedPatent.filingDate) || 'Not in record'],
+                  ['Earliest claimed priority date', loadingDetails ? 'Loading...' : patentDetails
+                    ? (patentDetails.priorityDate
+                      ? `${formatDate(patentDetails.priorityDate)}${patentDetails.priorityBasis?.application ? ` (from ${formatAppNumber(patentDetails.priorityBasis.application)})` : ''}`
+                      : 'Not in record')
+                    : 'Not in record'],
+                  ['Grant date', formatDate(patentDetails?.grantDate || selectedPatent.grantDate) || 'Not granted'],
+                  ['Status', patentDetails?.statusDescription || selectedPatent.statusDescription || 'Not in record'],
+                  ['Expiration', 'Not computed (term depends on adjustments and fees)'],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex gap-2">
+                    <dt className={dark ? 'text-ink-400' : 'text-ink-500'}>{label}:</dt>
+                    <dd className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
             <div className="flex flex-wrap gap-6 text-[14px] mt-3">
               <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Type:</span> <span className={`font-medium ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.type || 'Utility'}</span></div>
               <div><span className={dark ? 'text-ink-400' : 'text-ink-500'}>Class:</span> <span className={`font-medium mono ${dark ? 'text-ink-100' : 'text-ink-800'}`}>{selectedPatent.class || 'N/A'}</span></div>
@@ -531,6 +544,15 @@ export default function PatentAnalysis() {
             <div className={`flex items-center gap-2 px-4 py-3 rounded-[14px] text-[13px] ${dark ? 'bg-ink-800 text-ink-400' : 'bg-ink-50 text-ink-500'}`}>
               <Loader2 className="w-4 h-4 animate-spin" /> Fetching full patent details from USPTO...
             </div>
+          )}
+          {selectedPatent.applicationNumber !== 'Pasted Claims' && !patentDetails?.claims && (
+            <p role="note" className={`px-4 py-3 rounded-[14px] text-[13px] ${dark ? 'bg-ink-800/50 border border-ink-700/40 text-ink-300' : 'bg-ink-50 border border-ink-200 text-ink-600'}`}>
+              USPTO data does not include claim text. For a claim-level analysis, paste the claims (Paste Claims tab) from the patent PDF or Google Patents.{' '}
+              <a href={googlePatentsUrl(patentDetails?.patentNumber || selectedPatent.patentNumber ? `US${patentDetails?.patentNumber || selectedPatent.patentNumber}` : selectedPatent.applicationNumber)}
+                target="_blank" rel="noopener noreferrer" className="underline font-medium">
+                Open {formatPatentNumber(patentDetails?.patentNumber || selectedPatent.patentNumber) || formatAppNumber(selectedPatent.applicationNumber)} on Google Patents
+              </a>
+            </p>
           )}
           <ClaudeAnalysis
             key={selectedPatent.applicationNumber}

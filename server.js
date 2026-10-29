@@ -30,7 +30,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
-import { toPatentQuery, numberQueryDigits, exactNumberMatches, isNoMatchResponse } from "./lib/patent-query.js";
+import { toPatentQuery, numberQueryDigits, exactNumberMatches, isNoMatchResponse, earliestPriority } from "./lib/patent-query.js";
 import { markdownToDocx } from "./lib/markdown-docx.js";
 import { memoTitle, stripLeadingTitle, memoFooter } from "./lib/memo.js";
 import { buildSystemPrompt } from "./lib/system-prompt.js";
@@ -152,7 +152,8 @@ app.post("/api/patents/search", async (req, res) => {
     const start = clampInt(req.body.start, 0, Number.MAX_SAFE_INTEGER, 0);
     if (searchLimitReached(req, res)) return;
 
-    const params = new URLSearchParams({ q: toPatentQuery(query), rows: String(rows), start: String(start) });
+    // The Open Data Portal pages with limit/offset; it ignores rows/start and returns 25
+    const params = new URLSearchParams({ q: toPatentQuery(query), limit: String(rows), offset: String(start) });
     let data;
     try {
       data = await usptoFetch(`${USPTO_BASE}/api/v1/patent/applications/search?${params}`);
@@ -235,6 +236,9 @@ app.post("/api/patents/details", async (req, res) => {
       filingDate: fp.filingDate,
     }));
 
+    // Earliest priority date the record claims (null when it claims none). Never the filing date.
+    const priority = earliestPriority(wrapper.parentContinuityBag, wrapper.foreignPriorityBag);
+
     // Assignment data
     const assignments = (wrapper.assignmentBag || []).map(a => ({
       assignee: (a.assigneeBag || []).map(ae => ae.assigneeNameText).join("; "),
@@ -259,7 +263,8 @@ app.post("/api/patents/details", async (req, res) => {
       grantDate: meta.grantDate || null,
       filingDate: meta.filingDate || "",
       effectiveFilingDate: meta.effectiveFilingDate || null,
-      expirationDate: meta.expirationDate || null,
+      priorityDate: priority?.date || null,
+      priorityBasis: priority ? { application: priority.source, type: priority.basis } : null,
       assignee: assignees.join("; ") || "",
       inventors,
       firstInventor: meta.firstInventorName || "",
@@ -438,7 +443,6 @@ app.post("/api/export", async (req, res) => {
     const metaFields = [
       ["Date:", timestamp],
       ["Prepared with:", "Markman (open-source IP drafting tool)"],
-      ["Status:", "Draft for attorney review"],
     ];
 
     for (const [label, value] of metaFields) {
