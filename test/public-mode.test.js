@@ -43,7 +43,7 @@ test("export streams a docx and writes nothing to disk", async () => {
     body: JSON.stringify({ title: "Test Memo", content: "CLAIM SCOPE\nBody", memoType: "patent" }),
   });
   assert.equal(r.status, 200);
-  assert.match(r.headers.get("content-disposition"), /attachment; filename="Test_Memo_/);
+  assert.match(r.headers.get("content-disposition"), /attachment; filename="Patent_Analysis_/);
   const bytes = Buffer.from(await r.arrayBuffer());
   assert.equal(bytes.subarray(0, 2).toString(), "PK");
   const after = fs.existsSync("markman-data/exports") ? fs.readdirSync("markman-data/exports").length : 0;
@@ -129,4 +129,9 @@ test("skillType 'constructor' falls back to the patent skill instead of a 500", 
     s2.stop();
     stub.close();
   }
+});
+
+test("HEAD / and HEAD on an app route return 200", { skip: !fs.existsSync(new URL("../frontend/dist/index.html", import.meta.url)) && "frontend not built" }, async () => {
+  assert.equal((await fetch(`${s.url}/`, { method: "HEAD" })).status, 200);
+  assert.equal((await fetch(`${s.url}/app/fto`, { method: "HEAD" })).status, 200);
 });

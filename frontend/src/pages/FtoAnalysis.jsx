@@ -3,6 +3,7 @@ import { ShieldCheck, ChevronRight, Loader2 } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
 import { localHistory } from '../store/localHistory'
+import { ftoSearchQueries } from '../store/ftoQuery'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
 export default function FtoAnalysis() {
@@ -13,6 +14,8 @@ export default function FtoAnalysis() {
   const [searching, setSearching] = useState(false)
   const [foundPatents, setFoundPatents] = useState([])
   const [patentContext, setPatentContext] = useState('')
+  const [usedQuery, setUsedQuery] = useState('')
+  const [searchError, setSearchError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -21,30 +24,52 @@ export default function FtoAnalysis() {
     setSearching(true)
     setFoundPatents([])
     setPatentContext('')
+    setUsedQuery('')
+    setSearchError('')
     setSubmitted(false)
 
-    // Step 1: Extract key terms and search USPTO for real blocking patents
-    const terms = description.replace(/[^a-zA-Z0-9 ]/g, ' ').split(' ').filter(w => w.length > 4).slice(0, 6).join(' ')
-    try {
-      const data = await api.searchPatents(terms, 20, 0)
-      if (data.results && data.results.length > 0) {
-        // Filter to utility patents only
-        const utilities = data.results.filter(r => r.type === 'REGULAR' || !r.type).slice(0, 10)
-        setFoundPatents(utilities)
-        // Build context string of real patents for Claude
-        const ctx = utilities.map(p =>
-          `Patent App ${p.applicationNumber}: "${p.title}" | Filed: ${p.filingDate} | Inventor: ${p.firstInventor} | Assignee: ${p.assignee} | Class: ${p.class}`
-        ).join('\n')
-        setPatentContext(ctx)
+    // Step 1: search USPTO with a few distinctive terms, narrow first, then broader
+    const queries = ftoSearchQueries(description)
+    let used = ''
+    let utilities = []
+    let failed = queries.length ? '' : 'The description has no searchable technical terms. Add a few specific technical words.'
+    for (const q of queries) {
+      used = q
+      try {
+        const data = await api.searchPatents(q, 20, 0)
+        if (data.error) { failed = data.error; break }
+        // Utility filings only (no provisionals or PCT records)
+        utilities = (data.results || []).filter(r => r.type === 'REGULAR' || !r.type).slice(0, 10)
+        if (utilities.length) break
+      } catch (err) {
+        failed = err.message || 'The USPTO search could not be completed.'
+        break
       }
-    } catch (err) {
-      // If search fails, Claude will use training knowledge
     }
+    setUsedQuery(used)
+    setSearchError(failed)
+    setFoundPatents(utilities)
+    setPatentContext(utilities.map(p =>
+      `${p.patentNumber ? `U.S. Patent ${p.patentNumber} (App. ${p.applicationNumber})` : `App. ${p.applicationNumber}`}: "${p.title}" | Status: ${p.statusDescription || 'Not listed'} | Filed: ${p.filingDate || 'Not listed'} | Granted: ${p.grantDate || 'Not granted'} | Assignee: ${p.assignee || 'Not listed'}`
+    ).join('\n'))
 
     setSearching(false)
     setSubmitted(true)
     localHistory.logMatter('fto-memo', `FTO: ${description.slice(0, 60)}`, 'Analysis with USPTO search', 'UNKNOWN', description)
   }
+
+  const quoted = usedQuery ? `"${usedQuery}"` : 'this technology'
+  const searchSummary = patentContext
+    ? `The USPTO search for ${quoted} returned the candidate patents and applications listed below. Only bibliographic data is available; no claim text was provided.
+
+Using only the titles, status, and dates below, rank the candidate patents by apparent relevance, explain what to check in each, and list the claims the attorney must obtain (from Google Patents or the file wrapper) before any element-by-element mapping. Do not state or guess claim language.
+
+${patentContext}
+
+Treat abandoned applications and expired filings as lower priority but say why. Give any overall risk level only as a preliminary screening view pending claim review, and describe design-around directions at the feature level, not against claim language.`
+    : searchError
+      ? `The USPTO search for ${quoted} could not be completed, so no candidate patents are listed. Do not name or invent patents. Explain what remains to be searched, recommend search strategies (synonyms, CPC classes, assignee searches, Google Patents), and list the steps needed before any FTO conclusion. Do not state or guess claim language.`
+      : `The USPTO search for ${quoted} returned no matches. Do not name or invent patents. Explain what a zero-result keyword search does and does not show (U.S. only, keyword-dependent), recommend broader search strategies (synonyms, CPC classes, assignee searches, Google Patents), and list the steps needed before any FTO conclusion. Do not state or guess claim language.`
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl mx-auto">
@@ -103,6 +128,24 @@ export default function FtoAnalysis() {
             Draft for Attorney Review
           </div>
 
+          {usedQuery && (
+            <p className={`text-[13px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+              USPTO search query used: <span className="mono">{usedQuery}</span>
+            </p>
+          )}
+
+          {searchError && (
+            <div role="alert" className={`px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+              USPTO search failed: {searchError} The draft below will not list candidate patents.
+            </div>
+          )}
+
+          {!searchError && foundPatents.length === 0 && (
+            <div role="status" className={`px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
+              No USPTO matches for: {usedQuery}. Try fewer or broader words.
+            </div>
+          )}
+
           {/* Real Patents Found */}
           {foundPatents.length > 0 && (
             <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
@@ -122,6 +165,7 @@ export default function FtoAnalysis() {
                       </div>
                       <div className="flex items-center gap-3 mt-1">
                         <span className={`mono text-[11px] ${dark ? 'text-ink-500' : 'text-ink-400'}`}>{p.filingDate}</span>
+                        {p.statusDescription && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.statusDescription}</span>}
                         {p.assignee && <span className={`text-[11px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>{p.assignee}</span>}
                       </div>
                     </div>
@@ -136,13 +180,13 @@ export default function FtoAnalysis() {
 
           {/* Claude FTO Analysis: with real patent data */}
           <ClaudeAnalysis
-            query={`Run a full freedom-to-operate analysis for this technology: ${submittedQuery}.
+            query={`Prepare a draft freedom-to-operate risk screen for this technology: ${submittedQuery}
 
-${patentContext ? `The following REAL patents were found in the USPTO database that may be relevant. Analyze these specific patents for potential infringement:\n\n${patentContext}\n\nFor each relevant patent above, map its claim limitations against the described technology element-by-element.` : 'Search the USPTO database for potentially blocking patents based on the technology description.'}
+${searchSummary}
 
-Assess literal infringement and doctrine of equivalents for each relevant patent. Rate non-infringement arguments as STRONG/MODERATE/WEAK. Propose specific design-around options for any HIGH or MEDIUM risk claims. Provide an overall FTO risk rating (HIGH/MEDIUM/LOW) with rationale. Follow the FTO memo skill definition exactly.`}
+Follow the FTO memo skill structure, adapting the claim analysis section to list the claims to obtain and what to check in each.`}
             skillType="fto"
-            context={`Technology description: ${submittedQuery}${patentContext ? '\n\nReal USPTO patents found:\n' + patentContext : ''}`}
+            context={`Technology description: ${submittedQuery}\nUSPTO search query: ${usedQuery || 'none'}\nUSPTO candidates found: ${foundPatents.length}${searchError ? ' (search failed)' : ''}`}
           />
 
           {/* Disclaimer */}

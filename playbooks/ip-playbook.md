@@ -24,9 +24,12 @@ This playbook defines the default standards, thresholds, and preferences for IP 
 **LOW RISK**
 - Strong non-infringement arguments on at least one claim limitation
 - Viable design-around is already incorporated in the product design
-- Patent is near expiration, or has expired or lapsed for nonpayment of maintenance fees (exposure for past damages may remain; see 35 U.S.C. § 286)
-- Prior art identified that may invalidate relevant claims
+- Patent has expired or lapsed for nonpayment of maintenance fees (exposure for past damages may remain; see 35 U.S.C. § 286)
 - Action required: Document the analysis. Proceed with standard monitoring.
+
+**Separate considerations (do not by themselves make a patent LOW RISK)**
+- Invalidity: prior art that may invalidate relevant claims can reduce practical risk, but issued claims are presumed valid (35 U.S.C. § 282) and invalidity requires a separate validity analysis under the clear and convincing evidence standard. Rate infringement risk on the claims as issued and report invalidity arguments separately.
+- Remaining term: a patent near expiration affects remedies and timing (for example, the practical value of an injunction or the length of exposure), not whether the product infringes. Note the estimated expiration date and its effect on strategy separately from the infringement risk rating.
 
 ## Trademark Clearance Standards
 
@@ -110,10 +113,10 @@ These are preliminary screening ratings for attorney review, not clearance opini
 - All analyses should cite specific claim numbers, statutory provisions, and case law where applicable
 - Use Bluebook citation format for formal deliverables
 - Informal analysis may use an informal citation format
-- Always include a limitations section noting the scope and boundaries of the analysis
+- Include exactly one limitations section, at the end, noting the scope and boundaries of the analysis
 - Recommend professional review by licensed counsel before reliance
 
 **Disclaimers**
-- Note that AI-assisted analysis does not constitute legal advice
+- State once, in the opening disclaimer line, that the analysis does not constitute legal advice; do not repeat disclaimers elsewhere
 - Flag any patent numbers, case citations, or statutory references for verification
 - Do not represent AI-generated claim constructions as authoritative

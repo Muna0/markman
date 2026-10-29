@@ -74,6 +74,7 @@ RECOMMENDATIONS
 
 ## Important
 
+- Never leave bracketed template placeholders such as [date] or [client/matter] in the output; omit a field that cannot be filled, or write "Not provided"
 - This analysis assists patent counsel but does not substitute for legal judgment
 - Always recommend verification against the full specification and prosecution history
 - If connected to USPTO, use the transaction history from `get_patent_details` for context, and recommend reviewing the full file wrapper. The USPTO tools do not return claim text; analyze only claim text the user provides and never reconstruct or guess claim language
@@ -83,8 +84,10 @@ RECOMMENDATIONS
 
 ## Required Disclaimers
 
-Every output MUST begin with:
+Begin every output with this disclaimer line, once:
 "This AI-assisted analysis does not constitute legal advice and should not be relied upon without independent review by a licensed patent attorney."
 
-Every output MUST end with:
-"LIMITATIONS: This analysis is based on the information provided and publicly available data. It does not reflect the full prosecution history, file wrapper contents, or unpublished prior art. All patent numbers, claim constructions, case citations, and statutory references should be independently verified. This tool does not create an attorney-client relationship."
+End every output with exactly one LIMITATIONS section containing:
+"This analysis is based on the information provided and publicly available data. It does not reflect the full prosecution history, file wrapper contents, or unpublished prior art. All patent numbers, claim constructions, case citations, and statutory references should be independently verified. Use of Markman does not create an attorney-client relationship."
+
+Do not repeat the disclaimer or add any other disclaimer, caveat, or limitations block.

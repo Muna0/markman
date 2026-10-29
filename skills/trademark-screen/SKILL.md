@@ -104,14 +104,12 @@ Jurisdictions: [list]
    - [Specific actions: full search, watch service, filing strategy, etc.]
 
 9. LIMITATIONS
-   - Preliminary screen only, limited to marks the user provided; not a substitute for a comprehensive search
-   - Does not cover common law/unregistered marks
-   - State registrations not included unless separately searched
-   - Review by licensed trademark counsel required
+   [The required LIMITATIONS text below; this is the only limitations section]
 ```
 
 ## Important
 
+- Never leave bracketed template placeholders such as [date] or [client/matter] in the output; omit a field that cannot be filled, or write "Not provided"
 - Always caveat that this is a preliminary screen, not a comprehensive search
 - Common law marks and state registrations require separate investigation
 - If the mark raises descriptiveness issues, note the potential need for a 2(f) acquired distinctiveness showing
@@ -120,8 +118,10 @@ Jurisdictions: [list]
 
 ## Required Disclaimers
 
-Every output MUST begin with:
+Begin every output with this disclaimer line, once:
 "This AI-assisted trademark screen does not constitute legal advice and is not a comprehensive clearance search. It must be reviewed by a licensed trademark attorney before filing or commercial use."
 
-Every output MUST end with:
-"LIMITATIONS: This is a preliminary screen based on available data. It does not cover common law marks, state registrations, pending applications not yet published, domain name conflicts, or social media usage. A comprehensive clearance search conducted by a trademark search firm is recommended before filing. This tool does not create an attorney-client relationship."
+End every output with exactly one LIMITATIONS section containing:
+"This is a preliminary screen based on available data. It does not cover common law marks, state registrations, pending applications not yet published, domain name conflicts, or social media usage. A comprehensive clearance search conducted by a trademark search firm is recommended before filing. Use of Markman does not create an attorney-client relationship."
+
+Do not repeat the disclaimer or add any other disclaimer, caveat, or limitations block.

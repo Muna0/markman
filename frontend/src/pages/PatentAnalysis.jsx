@@ -167,6 +167,7 @@ export default function PatentAnalysis() {
 
   const [liveResults, setLiveResults] = useState(null)
   const [apiError, setApiError] = useState('')
+  const [noMatch, setNoMatch] = useState('')
   const [page, setPage] = useState(0)
   const [perPage] = useState(25)
   const [loadingMore, setLoadingMore] = useState(false)
@@ -206,6 +207,7 @@ export default function PatentAnalysis() {
     setSelectedPatent(null)
     setClaims([])
     setApiError('')
+    setNoMatch('')
     setPage(0)
     setSearchQuery(input.trim())
 
@@ -217,7 +219,7 @@ export default function PatentAnalysis() {
           setLiveResults(data)
           localHistory.logMatter('patent-analysis', `Patent Search: ${input.trim()}`, `${data.totalResults} results found`, 'UNKNOWN', input.trim())
         } else {
-          setApiError('No results found. Try different keywords.')
+          setNoMatch(input.trim())
         }
       } else {
         // Pasted claims mode: select as pasted input for Claude analysis
@@ -350,6 +352,12 @@ export default function PatentAnalysis() {
       {apiError && (
         <div className={`mb-4 px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-red-400/10 border border-red-400/20 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           USPTO search error: {apiError}. You can still paste claim text to analyze.
+        </div>
+      )}
+
+      {noMatch && (
+        <div role="status" className={`mb-4 px-4 py-3 rounded-[14px] text-[14px] ${dark ? 'bg-amb-400/10 border border-amb-400/20 text-amb-400' : 'bg-amb-100 border border-amb-400/40 text-amb-500'}`}>
+          No USPTO matches for: {noMatch}. Try fewer or broader words.
         </div>
       )}
 

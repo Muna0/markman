@@ -78,7 +78,7 @@ export default function TrademarkClearance() {
         US: { system: 'First-to-use', office: 'USPTO', searchUrl: `https://tmsearch.uspto.gov/search/search-information` },
         EU: { system: 'First-to-file', office: 'EUIPO', searchUrl: `https://euipo.europa.eu/eSearch/#basic/${encodeURIComponent(markText)}` },
         UK: { system: 'First-to-file', office: 'UKIPO', searchUrl: `https://www.gov.uk/search-for-trademark` },
-        CA: { system: 'First-to-file (since 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search?searchType=basic&keyword=${encodeURIComponent(markText)}` },
+        CA: { system: 'Use no longer required to register (since June 2019)', office: 'CIPO', searchUrl: `https://ised-isde.canada.ca/cipo/trade-marks/search?searchType=basic&keyword=${encodeURIComponent(markText)}` },
         AU: { system: 'First-to-use', office: 'IP Australia', searchUrl: `https://search.ipaustralia.gov.au/trademarks/search/quick/result?q=${encodeURIComponent(markText)}` },
         JP: { system: 'First-to-file', office: 'JPO', searchUrl: `https://www.j-platpat.inpit.go.jp/` },
         KR: { system: 'First-to-file', office: 'KIPO', searchUrl: `https://engdtj.kipris.or.kr/engdtj/grrt1000a.do?method=basicSearch` },

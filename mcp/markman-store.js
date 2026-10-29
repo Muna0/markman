@@ -33,6 +33,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import os from "os";
 import { markdownToDocx } from "../lib/markdown-docx.js";
+import { memoTitle, stripLeadingTitle } from "../lib/memo.js";
 // Persistent data lives outside the plugin folder so it survives plugin updates
 const DATA_DIR = process.env.MARKMAN_DATA_DIR || path.join(os.homedir(), ".markman", "data");
 
@@ -187,7 +188,8 @@ async function exportMemo(title, content, memoType) {
   } = docx;
 
   const timestamp = new Date().toISOString().split("T")[0];
-  const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
+  const heading = memoTitle(memoType, title);
+  const filename = `${heading.replace(/\(Draft\)/, "").trim().replace(/[^a-zA-Z0-9]+/g, "_")}_${timestamp}.docx`;
   const filepath = path.join(EXPORT_DIR, filename);
 
   const children = [];
@@ -219,7 +221,7 @@ async function exportMemo(title, content, memoType) {
       spacing: { after: 200 },
       children: [
         new TextRun({
-          text: title,
+          text: heading,
           bold: true,
           size: 32,
           font: "Times New Roman",
@@ -243,28 +245,9 @@ async function exportMemo(title, content, memoType) {
     })
   );
 
-  // Content: Markdown converted to Word formatting
-  children.push(...markdownToDocx(content, docx));
-
-  // Disclaimer
-  children.push(
-    new Paragraph({ spacing: { before: 400 } }),
-    new Paragraph({
-      border: {
-        top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC" },
-      },
-      spacing: { before: 200 },
-      children: [
-        new TextRun({
-          text: "Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations, patent numbers, and legal conclusions before reliance.",
-          italics: true,
-          size: 18,
-          font: "Times New Roman",
-          color: "999999",
-        }),
-      ],
-    })
-  );
+  // Content: Markdown converted to Word formatting. The draft carries its own disclaimer
+  // line and LIMITATIONS section, so none is added here.
+  children.push(...markdownToDocx(stripLeadingTitle(content), docx));
 
   const doc = new Document({
     sections: [{ children }],
@@ -406,7 +389,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "export_memo",
       description:
-        "Export an analysis as a Word (.docx) document marked DRAFT FOR ATTORNEY REVIEW, with a standard disclaimer. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.",
+        "Export an analysis as a Word (.docx) document marked DRAFT FOR ATTORNEY REVIEW, titled by memo type (for example \"Freedom-to-Operate Analysis (Draft)\"). The content should already include the skill's disclaimer line and LIMITATIONS section; none is added. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.",
       inputSchema: {
         type: "object",
         properties: {

@@ -322,7 +322,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
         <H3 dark={dark}>/export-memo</H3>
         <Block dark={dark}>{`/export-memo                  # Export last analysis as .docx
 /export-memo "Custom Title"   # Export with custom title`}</Block>
-        <P dark={dark}>Generates a Word document with Times New Roman body text, a heading hierarchy, and a disclaimer. Every export is marked "DRAFT FOR ATTORNEY REVIEW". Markman does not apply privilege or work-product labels; you decide how to label and protect your work. Files are saved to <Code dark={dark}>~/.markman/data/exports/</Code>.</P>
+        <P dark={dark}>Generates a Word document titled by memo type (for example "Freedom-to-Operate Analysis (Draft)"), with Times New Roman body text and a heading hierarchy. It keeps the analysis's own disclaimer line and LIMITATIONS section rather than adding another. Every export is marked "DRAFT FOR ATTORNEY REVIEW". Markman does not apply privilege or work-product labels; you decide how to label and protect your work. Files are saved to <Code dark={dark}>~/.markman/data/exports/</Code>.</P>
 
         {/* ── MCP TOOLS ── */}
         <H2 dark={dark} id="mcp-tools">MCP Tools Reference</H2>
@@ -358,7 +358,7 @@ clinical text, outputs FHIR-compliant JSON, runs on-device.`}</Block>
             ['remove_deadline', 'Remove a tracked deadline by ID'],
             ['log_matter', 'Record an analysis to persistent history (type, title, summary, risk, input)'],
             ['search_history', 'Search past analyses by keyword and/or type filter'],
-            ['export_memo', 'Generate a .docx marked as a draft for attorney review, with heading hierarchy and disclaimer'],
+            ['export_memo', 'Generate a .docx marked as a draft for attorney review, titled by memo type, with heading hierarchy'],
           ]}
         />
         <P dark={dark}>The store server requires no API keys. Data is stored locally in <Code dark={dark}>~/.markman/data/</Code> (<Code dark={dark}>deadlines.json</Code>, <Code dark={dark}>history.json</Code>) and Word documents export to <Code dark={dark}>~/.markman/data/exports/</Code>. Set <Code dark={dark}>MARKMAN_DATA_DIR</Code> to use a different folder.</P>

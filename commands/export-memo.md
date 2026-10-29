@@ -1,6 +1,6 @@
 ---
 name: export-memo
-description: Export the most recent analysis as a Word document (.docx) marked DRAFT FOR ATTORNEY REVIEW, with Times New Roman body text, heading hierarchy, and a standard AI-assistance disclaimer. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.
+description: Export the most recent analysis as a Word document (.docx) marked DRAFT FOR ATTORNEY REVIEW, titled by memo type, with Times New Roman body text and heading hierarchy. Keeps the analysis's own disclaimer line and LIMITATIONS section. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.
 ---
 
 # /export-memo
@@ -11,7 +11,7 @@ Export an analysis as a Word document marked as a draft for attorney review.
 
 ```
 /export-memo                  # Export the last analysis discussed in this conversation
-/export-memo [title]          # Export with a custom title
+/export-memo [title]          # Export with a custom title (used for "general" memos)
 ```
 
 ## Behavior
@@ -26,7 +26,7 @@ Export an analysis as a Word document marked as a draft for attorney review.
 
 3. Call the `export_memo` tool from the markman-store MCP server with:
    - title: the analysis title or user-provided title
-   - content: the full formatted analysis text
+   - content: the full formatted analysis text, including its disclaimer line and LIMITATIONS section
    - memo_type: "FTO", "patent", "trademark", "triage", or "general"
 
 4. Report the file path where the .docx was saved.
@@ -36,17 +36,17 @@ Export an analysis as a Word document marked as a draft for attorney review.
 The generated .docx includes:
 
 - **Header**: DRAFT FOR ATTORNEY REVIEW (all memo types)
-- **Title**: Document title in 16pt Times New Roman Bold
+- **Title**: By memo type: "Freedom-to-Operate Analysis (Draft)", "Patent Analysis (Draft)", "Trademark Clearance Screen (Draft)", or "IP Matter Intake Summary (Draft)"; the custom title for "general" memos
 - **Date**: Analysis date
 - **Body**: Full analysis with proper heading hierarchy
   - HEADING 1: Major sections (EXECUTIVE SUMMARY, CLAIM ANALYSIS, etc.)
   - HEADING 2: Subsections
   - Body: 11pt Times New Roman
-- **Disclaimer**: Standard AI-assistance disclaimer in italics
+- **Disclaimer and LIMITATIONS**: The analysis's own disclaimer line and LIMITATIONS section; the export does not add a second one
 
 ## Important
 
 - Always ask the user to review the exported document before relying on it
-- The export does not change the analysis; it formats the existing content and adds the draft header and disclaimer
+- The export does not change the analysis; it formats the existing content and adds the draft header
 - Files are saved to ~/.markman/data/exports/ with timestamped filenames
 - Recommend the user add their firm letterhead, any additional sections, and whatever labels their own practice requires

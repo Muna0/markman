@@ -41457,6 +41457,29 @@ function markdownToDocx(markdown, docx, opts = {}) {
   return blocks(O.lex(String(markdown || ""), { gfm: true, breaks: true }));
 }
 
+// lib/memo.js
+var TITLES = [
+  [/fto|freedom/i, "Freedom-to-Operate Analysis (Draft)"],
+  [/trademark/i, "Trademark Clearance Screen (Draft)"],
+  [/intake|triage/i, "IP Matter Intake Summary (Draft)"],
+  [/patent/i, "Patent Analysis (Draft)"]
+];
+function memoTitle(memoType, fallback) {
+  const type2 = String(memoType || "");
+  for (const [re2, title] of TITLES) if (re2.test(type2)) return title;
+  return fallback || "Patent Analysis (Draft)";
+}
+var TITLE_WORDS = /freedom.to.operate|fto|patent analysis|trademark|clearance|triage|intake|memorandum|ip matter/i;
+function stripLeadingTitle(markdown) {
+  const text = String(markdown || "");
+  const m2 = /^\s*(?:#{1,2}[ \t]+([^\n]+)|([^\n]+)\n[ \t]*(?:=+|-+)[ \t]*(?=\n|$)|\*{0,2}([A-Z0-9 \-:&()]+)\*{0,2})[ \t]*(?:\n|$)/.exec(text);
+  if (!m2) return text;
+  const heading = (m2[1] || m2[2] || m2[3] || "").trim();
+  if (!TITLE_WORDS.test(heading)) return text;
+  if (m2[3] && heading !== heading.toUpperCase()) return text;
+  return text.slice(m2[0].length).replace(/^\s*\n/, "");
+}
+
 // mcp/markman-store.js
 var __dirname = path.dirname(fileURLToPath(import.meta.url));
 var DATA_DIR = process.env.MARKMAN_DATA_DIR || path.join(os.homedir(), ".markman", "data");
@@ -41566,7 +41589,8 @@ async function exportMemo(title, content, memoType) {
     BorderStyle: BorderStyle2
   } = docx;
   const timestamp = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
-  const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
+  const heading = memoTitle(memoType, title);
+  const filename = `${heading.replace(/\(Draft\)/, "").trim().replace(/[^a-zA-Z0-9]+/g, "_")}_${timestamp}.docx`;
   const filepath = path.join(EXPORT_DIR, filename);
   const children = [];
   children.push(
@@ -41593,7 +41617,7 @@ async function exportMemo(title, content, memoType) {
       spacing: { after: 200 },
       children: [
         new TextRun2({
-          text: title,
+          text: heading,
           bold: true,
           size: 32,
           font: "Times New Roman"
@@ -41614,25 +41638,7 @@ async function exportMemo(title, content, memoType) {
       ]
     })
   );
-  children.push(...markdownToDocx(content, docx));
-  children.push(
-    new Paragraph2({ spacing: { before: 400 } }),
-    new Paragraph2({
-      border: {
-        top: { style: BorderStyle2.SINGLE, size: 1, color: "CCCCCC" }
-      },
-      spacing: { before: 200 },
-      children: [
-        new TextRun2({
-          text: "Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations, patent numbers, and legal conclusions before reliance.",
-          italics: true,
-          size: 18,
-          font: "Times New Roman",
-          color: "999999"
-        })
-      ]
-    })
-  );
+  children.push(...markdownToDocx(stripLeadingTitle(content), docx));
   const doc = new Document2({
     sections: [{ children }]
   });
@@ -41755,7 +41761,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     },
     {
       name: "export_memo",
-      description: "Export an analysis as a Word (.docx) document marked DRAFT FOR ATTORNEY REVIEW, with a standard disclaimer. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.",
+      description: `Export an analysis as a Word (.docx) document marked DRAFT FOR ATTORNEY REVIEW, titled by memo type (for example "Freedom-to-Operate Analysis (Draft)"). The content should already include the skill's disclaimer line and LIMITATIONS section; none is added. Does not add privilege or work-product labels. Saves to ~/.markman/data/exports/.`,
       inputSchema: {
         type: "object",
         properties: {

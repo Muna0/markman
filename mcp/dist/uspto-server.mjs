@@ -17059,6 +17059,9 @@ function exactNumberMatches(results, digits) {
   const exact = results.filter((r) => bare(r.patentNumber) === digits || bare(r.applicationNumber) === digits);
   return exact.length ? exact : results;
 }
+function isNoMatchResponse(status, body) {
+  return status === 404 && /no matching records/i.test(String(body || ""));
+}
 
 // mcp/uspto-server.js
 var USPTO_API_KEY = process.env.USPTO_API_KEY;
@@ -17109,6 +17112,8 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
         const err = new Error(
           `USPTO API error ${response.status}: ${response.statusText}. ${body}`
         );
+        err.status = response.status;
+        err.body = body;
         if (response.status >= 400 && response.status < 500) err.noRetry = true;
         throw err;
       }
@@ -17132,7 +17137,13 @@ async function searchPatents(query, dateRange) {
     params.set("fq", `filingDate:[${dateRange.start} TO ${dateRange.end || "*"}]`);
   }
   const url = `${ODP_BASE}/patent/applications/search?${params}`;
-  const data = await fetchWithRetry(url);
+  let data;
+  try {
+    data = await fetchWithRetry(url);
+  } catch (err) {
+    if (!isNoMatchResponse(err.status, err.body)) throw err;
+    data = { count: 0, patentFileWrapperDataBag: [] };
+  }
   const bag = data.patentFileWrapperDataBag || [];
   const mapped = bag.map((w) => {
     const r = mapFileWrapper(w);
@@ -17154,7 +17165,8 @@ async function searchPatents(query, dateRange) {
     totalResults: results.length < mapped.length ? results.length : data.count || results.length,
     query,
     dateRange: dateRange ? `filing date ${dateRange.start} to ${dateRange.end || "present"}` : "all dates",
-    results
+    results,
+    ...results.length === 0 ? { note: "No USPTO matches for this query. Try fewer or broader words, or OR-join alternatives." } : {}
   };
 }
 function mapFileWrapper(wrapper) {

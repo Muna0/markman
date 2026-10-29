@@ -119,6 +119,7 @@ Priority: [Urgent / Standard / Low]
 
 ## Important
 
+- Never leave bracketed template placeholders such as [date] or [client/matter] in the output; omit a field that cannot be filled, or write "Not provided"
 - Always flag if the user's description suggests rights may be at risk of forfeiture
 - If a grace period is running, calculate and prominently display the expiration date
 - For matters involving foreign filing, note that many jurisdictions have no grace period for prior disclosure
@@ -127,8 +128,10 @@ Priority: [Urgent / Standard / Low]
 
 ## Required Disclaimers
 
-Every output MUST begin with:
+Begin every output with this disclaimer line, once:
 "This AI-assisted triage does not constitute legal advice. Classification, risk assessment, and deadline identification should be verified by a licensed IP attorney."
 
-Every output MUST end with:
-"LIMITATIONS: This triage is based solely on the information provided. Critical facts may be missing. Deadlines are estimates based on standard rules and may not reflect case-specific extensions, grace periods, or jurisdiction-specific variations. Consult licensed counsel before acting on any deadline or risk assessment. This tool does not create an attorney-client relationship."
+End every output with exactly one LIMITATIONS section containing:
+"This triage is based solely on the information provided. Critical facts may be missing. Deadlines are estimates based on standard rules and may not reflect case-specific extensions, grace periods, or jurisdiction-specific variations. Consult licensed counsel before acting on any deadline or risk assessment. Use of Markman does not create an attorney-client relationship."
+
+Do not repeat the disclaimer or add any other disclaimer, caveat, or limitations block.

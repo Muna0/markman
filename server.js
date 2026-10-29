@@ -30,8 +30,10 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { createDailyLimiter } from "./lib/rate-limit.js";
-import { toPatentQuery, numberQueryDigits, exactNumberMatches } from "./lib/patent-query.js";
+import { toPatentQuery, numberQueryDigits, exactNumberMatches, isNoMatchResponse } from "./lib/patent-query.js";
 import { markdownToDocx } from "./lib/markdown-docx.js";
+import { memoTitle, stripLeadingTitle } from "./lib/memo.js";
+import { buildSystemPrompt } from "./lib/system-prompt.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -47,6 +49,7 @@ try {
 
 const USPTO_API_KEY = process.env.USPTO_API_KEY || "";
 const WIPO_API_KEY = process.env.WIPO_API_KEY || "";
+const USPTO_BASE = (process.env.USPTO_BASE_URL || "https://api.uspto.gov").replace(/\/$/, "");
 const PORT = process.env.PORT || 3001;
 const PUBLIC = process.env.MARKMAN_PUBLIC === "1";
 const MODEL = process.env.MARKMAN_MODEL || (PUBLIC ? "claude-sonnet-5-5" : "claude-opus-5-5");
@@ -105,7 +108,10 @@ async function usptoFetch(url) {
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");
-    throw new Error(`USPTO API ${res.status}: ${body.slice(0, 200)}`);
+    const err = new Error(`USPTO API ${res.status}: ${body.slice(0, 200)}`);
+    err.status = res.status;
+    err.body = body;
+    throw err;
   }
   return res.json();
 }
@@ -147,7 +153,14 @@ app.post("/api/patents/search", async (req, res) => {
     if (searchLimitReached(req, res)) return;
 
     const params = new URLSearchParams({ q: toPatentQuery(query), rows: String(rows), start: String(start) });
-    const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/search?${params}`);
+    let data;
+    try {
+      data = await usptoFetch(`${USPTO_BASE}/api/v1/patent/applications/search?${params}`);
+    } catch (err) {
+      // No matches comes back as a 404; that is an empty result, not an outage
+      if (isNoMatchResponse(err.status, err.body)) return res.json({ totalResults: 0, query, results: [] });
+      throw err;
+    }
 
     const bag = data.patentFileWrapperDataBag || [];
     const mapped = bag.map((p) => {
@@ -189,7 +202,7 @@ app.post("/api/patents/details", async (req, res) => {
     const normalized = String(patentNumber).replace(/\s+/g, "").replace(/^US/i, "").replace(/,/g, "");
     if (!/^[0-9A-Z\/]{5,20}$/i.test(normalized)) return res.status(400).json({ error: "Invalid patent or application number" });
     if (searchLimitReached(req, res)) return;
-    const data = await usptoFetch(`https://api.uspto.gov/api/v1/patent/applications/${encodeURIComponent(normalized)}`);
+    const data = await usptoFetch(`${USPTO_BASE}/api/v1/patent/applications/${encodeURIComponent(normalized)}`);
 
     // Parse the file wrapper response into a clean structure
     const wrapper = data.patentFileWrapperDataBag?.[0] || data;
@@ -407,34 +420,18 @@ app.post("/api/export", async (req, res) => {
     if (!title || !content) return res.status(400).json({ error: "title and content required" });
 
     const docx = await import("docx");
-    const { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber, TableOfContents } = docx;
+    const { Document, Paragraph, TextRun, AlignmentType, Packer, BorderStyle, Header, Footer, PageNumber } = docx;
     const timestamp = new Date().toISOString().split("T")[0];
-    const filename = `${title.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.docx`;
-
-    const isFTO = /fto/i.test(memoType);
-    const memoLabel = isFTO ? "Freedom-to-Operate Analysis" : /trademark/i.test(memoType) ? "Trademark Clearance Report" : /intake/i.test(memoType) ? "IP Triage Report" : "Patent Analysis Memorandum";
+    const heading = memoTitle(memoType, title);
+    const filename = `${heading.replace(/\(Draft\)/, "").trim().replace(/[^a-zA-Z0-9]+/g, "_")}_${timestamp}.docx`;
 
     const children = [];
 
-    // ─── Draft header (all memo types). Privilege labels are left to the user. ───
-    children.push(new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { after: 100 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
-      children: [new TextRun({ text: "DRAFT FOR ATTORNEY REVIEW", bold: true, size: 18, font: "Times New Roman", color: "888888" })],
-    }));
-
-    children.push(new Paragraph({ spacing: { after: 200 } }));
-
-    // ─── Memo heading block ───
-    children.push(new Paragraph({
-      alignment: AlignmentType.CENTER, spacing: { after: 60 },
-      children: [new TextRun({ text: memoLabel.toUpperCase(), bold: true, size: 28, font: "Times New Roman", allCaps: true })],
-    }));
-
+    // ─── Title (one, by memo type). The draft label is in the page header; privilege labels are left to the user. ───
     children.push(new Paragraph({
       alignment: AlignmentType.CENTER, spacing: { after: 300 },
       border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: "333333", space: 12 } },
-      children: [new TextRun({ text: title, bold: true, size: 24, font: "Times New Roman" })],
+      children: [new TextRun({ text: heading, bold: true, size: 28, font: "Times New Roman" })],
     }));
 
     // ─── Memo metadata block ───
@@ -459,43 +456,9 @@ app.post("/api/export", async (req, res) => {
       border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
     }));
 
-    // ─── Table of Contents ───
-    children.push(new Paragraph({
-      heading: HeadingLevel.HEADING_2, spacing: { after: 100 },
-      children: [new TextRun({ text: "TABLE OF CONTENTS", bold: true, size: 22, font: "Times New Roman" })],
-    }));
-
-    children.push(new TableOfContents("Table of Contents", {
-      hyperlink: true,
-      headingStyleRange: "1-3",
-    }));
-
-    children.push(new Paragraph({
-      spacing: { after: 200 },
-      children: [new TextRun({ text: "[Update table of contents in Word: right-click above → Update Field]", italics: true, size: 16, font: "Times New Roman", color: "999999" })],
-    }));
-
-    children.push(new Paragraph({
-      spacing: { after: 200 },
-      border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } },
-    }));
-
-    // ─── Body content: Markdown converted to Word formatting ───
-    children.push(...markdownToDocx(content, docx));
-
-    // ─── Disclaimer ───
-    children.push(new Paragraph({ spacing: { before: 400 }, border: { top: { style: BorderStyle.SINGLE, size: 1, color: "CCCCCC", space: 8 } } }));
-    children.push(new Paragraph({
-      spacing: { after: 40 },
-      children: [new TextRun({ text: "DISCLAIMER", bold: true, size: 18, font: "Times New Roman", color: "888888" })],
-    }));
-    children.push(new Paragraph({
-      spacing: { after: 40 },
-      children: [new TextRun({ text: "Markman does not provide legal advice. This document is a draft prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations, statutory references, and legal conclusions before reliance. Use of Markman does not create an attorney-client relationship.", italics: true, size: 18, font: "Times New Roman", color: "888888" })],
-    }));
-    children.push(new Paragraph({
-      children: [new TextRun({ text: `Drafted with Markman, ${timestamp}`, italics: true, size: 16, font: "Times New Roman", color: "AAAAAA" })],
-    }));
+    // ─── Body content: Markdown converted to Word formatting. The draft carries its own
+    // disclaimer line and LIMITATIONS section, so none is added here. ───
+    children.push(...markdownToDocx(stripLeadingTitle(content), docx));
 
     const doc = new Document({
       styles: {
@@ -596,22 +559,7 @@ app.post("/api/analyze", async (req, res) => {
   const skill = loadSkill(skillType || "patent");
   const playbook = loadPlaybook();
 
-  const systemPrompt = `You are Markman, an IP law analysis assistant. Follow this skill definition exactly:
-
-${skill}
-
-Reference these practice standards:
-
-${playbook}
-
-${context ? `Additional context:\n${context}` : ""}
-
-Important:
-- Produce structured, formatted output following the skill's output template
-- Use Bluebook citation format where applicable
-- Include a limitations section
-- Present the output as a draft for attorney review; do not label it privileged, confidential, or attorney work product
-- Be specific and actionable${PUBLIC ? "\n\nThis is a public demo with a limited response length. Keep the draft under about 1,500 words. Use short sections and bullet points, avoid restating the input data, and always finish with the Limitations section. If you must cut, shorten earlier sections rather than omitting Limitations." : ""}`;
+  const systemPrompt = buildSystemPrompt({ skill, playbook, context, isPublic: PUBLIC });
 
   // Set up SSE streaming
   res.setHeader("Content-Type", "text/event-stream");
@@ -689,7 +637,7 @@ const DIST = path.join(__dirname, "frontend", "dist");
 if (fs.existsSync(DIST)) {
   app.use(express.static(DIST, { index: false, maxAge: "1h" }));
   app.use((req, res, next) => {
-    if (req.method !== "GET" || req.path.startsWith("/api")) return next();
+    if ((req.method !== "GET" && req.method !== "HEAD") || req.path.startsWith("/api")) return next();
     res.sendFile(path.join(DIST, "index.html"));
   });
 }

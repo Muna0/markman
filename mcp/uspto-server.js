@@ -22,7 +22,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { toPatentQuery, numberQueryDigits, exactNumberMatches } from "../lib/patent-query.js";
+import { toPatentQuery, numberQueryDigits, exactNumberMatches, isNoMatchResponse } from "../lib/patent-query.js";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -93,6 +93,8 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
         const err = new Error(
           `USPTO API error ${response.status}: ${response.statusText}. ${body}`
         );
+        err.status = response.status;
+        err.body = body;
         // Client errors (bad number, no match, bad key) will not succeed on retry
         if (response.status >= 400 && response.status < 500) err.noRetry = true;
         throw err;
@@ -126,7 +128,14 @@ async function searchPatents(query, dateRange) {
   }
 
   const url = `${ODP_BASE}/patent/applications/search?${params}`;
-  const data = await fetchWithRetry(url);
+  let data;
+  try {
+    data = await fetchWithRetry(url);
+  } catch (err) {
+    // No matches comes back as a 404; report an empty result, not an error
+    if (!isNoMatchResponse(err.status, err.body)) throw err;
+    data = { count: 0, patentFileWrapperDataBag: [] };
+  }
 
   // ODP API returns patentFileWrapperDataBag with applicationMetaData inside each item
   const bag = data.patentFileWrapperDataBag || [];
@@ -154,6 +163,7 @@ async function searchPatents(query, dateRange) {
     query,
     dateRange: dateRange ? `filing date ${dateRange.start} to ${dateRange.end || "present"}` : "all dates",
     results,
+    ...(results.length === 0 ? { note: "No USPTO matches for this query. Try fewer or broader words, or OR-join alternatives." } : {}),
   };
 }
 

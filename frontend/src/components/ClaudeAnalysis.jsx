@@ -17,6 +17,13 @@ const MarkdownBody = lazy(() => import('./MarkdownBody'))
  *   disabled?: boolean - disable the Run button (e.g. while inputs are still loading)
  *   disabledLabel?: string - button label while disabled
  */
+const MEMO_TITLES = {
+  fto: 'Freedom-to-Operate Analysis (Draft)',
+  patent: 'Patent Analysis (Draft)',
+  trademark: 'Trademark Clearance Screen (Draft)',
+  intake: 'IP Matter Intake Summary (Draft)',
+}
+
 const STOP_WARNINGS = {
   max_tokens: 'This draft was cut off before it finished; the limitations section may be missing. Try a narrower question.',
   refusal: 'The model declined to complete this request.',
@@ -88,8 +95,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   async function downloadWord() {
     setExporting(true)
     try {
-      const title = `Markman ${skillType.charAt(0).toUpperCase() + skillType.slice(1)} Analysis`
-      await api.exportMemo(title, output, skillType === 'fto' ? 'FTO' : skillType)
+      await api.exportMemo(MEMO_TITLES[skillType] || MEMO_TITLES.patent, output, skillType)
     } catch (err) {
       setError(err)
     }
@@ -99,8 +105,9 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   function downloadPDF() {
     // Print the formatted draft. The HTML comes from the rendered Markdown above,
     // which React has already escaped; raw HTML in the output is never rendered.
+    // The draft carries its own disclaimer line and LIMITATIONS section, so none is added.
     const content = bodyRef.current?.innerHTML || ''
-    const title = `Markman ${skillType} Analysis`.replace(/[<>&"]/g, '')
+    const title = MEMO_TITLES[skillType] || MEMO_TITLES.patent
     const draftLabel = '<div class="draft">DRAFT FOR ATTORNEY REVIEW</div>'
     const css = `body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.55;max-width:7in;margin:0.75in auto;color:#111}
 .draft{text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px}
@@ -109,8 +116,8 @@ p{margin:0 0 8pt}ul,ol{margin:0 0 8pt;padding-left:24pt}li{margin:2pt 0}
 table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font-size:11pt}th,td{border:1px solid #999;padding:4pt 6pt;text-align:left;vertical-align:top}th{background:#eee}
 code{font-family:'Courier New',monospace;font-size:10.5pt}pre{background:#f4f4f4;padding:8pt;white-space:pre-wrap}
 blockquote{margin:0 0 8pt;padding-left:12pt;border-left:3px solid #ccc;color:#444}hr{border:0;border-top:1px solid #ccc;margin:12pt 0}
-a{color:#111}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}`
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>${draftLabel}${content}<div class="disclaimer">Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations and conclusions before reliance.</div></body></html>`
+a{color:#111}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>${draftLabel}${content}</body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const printFrame = document.createElement('iframe')
