@@ -33,8 +33,12 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
         fullText += chunk
         setOutput(fullText)
       }
-      setDone(true)
-      if (onComplete) onComplete(fullText)
+      if (!fullText.trim()) {
+        setError(new Error('The analysis returned no text. Please try again.'))
+      } else {
+        setDone(true)
+        if (onComplete) onComplete(fullText)
+      }
     } catch (err) {
       setError(err)
     }
@@ -65,8 +69,8 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   function downloadPDF() {
     // Create a clean document for print-to-PDF
     const content = output.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const privilege = skillType === 'fto' ? '<div style="text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px">ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL</div>' : ''
-    const html = `<!DOCTYPE html><html><head><title>Markman ${skillType} Analysis</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;max-width:8.5in;margin:1in auto;color:#111}pre{white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:12pt}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}</style></head><body>${privilege}<pre>${content}</pre><div class="disclaimer">This analysis was generated with AI assistance and does not constitute legal advice. All citations and conclusions should be verified by licensed counsel.</div></body></html>`
+    const draftLabel = '<div style="text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px">DRAFT FOR ATTORNEY REVIEW</div>'
+    const html = `<!DOCTYPE html><html><head><title>Markman ${skillType} Analysis</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;max-width:8.5in;margin:1in auto;color:#111}pre{white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:12pt}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}</style></head><body>${draftLabel}<pre>${content}</pre><div class="disclaimer">Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations and conclusions before reliance.</div></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const printFrame = document.createElement('iframe')
@@ -93,7 +97,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
           {disabled ? 'Loading patent details...' : 'Run Claude Analysis'}
         </button>
         <p className={`mt-2 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-          Public demo: do not paste confidential client information.
+          Do not paste confidential client information into the public demo.
         </p>
       </div>
     )
@@ -106,7 +110,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
         <div className="flex items-center gap-2">
           <Sparkles className={`w-4 h-4 ${running ? 'animate-pulse' : ''} ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
           <span className={`mono text-[13px] font-bold ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
-            {running ? 'Streaming...' : done ? 'Complete' : ''}
+            {running ? 'Streaming...' : done ? 'Draft complete' : ''}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -124,11 +128,13 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
                 className={`flex items-center gap-1 mono text-[11px] px-2.5 py-1.5 rounded transition ${dark ? 'text-ink-400 hover:text-ink-200 hover:bg-ink-700' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
                 <Download className="w-3 h-3" /> PDF
               </button>
-              <button onClick={run} title="Each run counts toward the public demo's daily limit."
-                className={`flex items-center gap-1 mono text-[11px] px-2.5 py-1.5 rounded transition ${dark ? 'text-ink-400 hover:text-ink-200 hover:bg-ink-700' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
-                <RefreshCw className="w-3 h-3" /> Re-run
-              </button>
             </>
+          )}
+          {!running && (done || error) && (
+            <button onClick={run} title="In the public demo, each run counts toward the daily limit."
+              className={`flex items-center gap-1 mono text-[11px] px-2.5 py-1.5 rounded transition ${dark ? 'text-ink-400 hover:text-ink-200 hover:bg-ink-700' : 'text-ink-500 hover:text-ink-700 hover:bg-ink-100'}`}>
+              <RefreshCw className="w-3 h-3" /> {done ? 'Re-run' : 'Try again'}
+            </button>
           )}
           {running && <Loader2 className="w-3.5 h-3.5 animate-spin text-blu-400" />}
         </div>
@@ -151,6 +157,11 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
           {output}
           {running && <span className="inline-block w-2 h-5 bg-blu-400 animate-pulse ml-0.5" />}
         </pre>
+        {done && (
+          <p className={`mt-4 pt-3 border-t text-[12px] ${dark ? 'border-ink-800 text-ink-400' : 'border-ink-200 text-ink-500'}`}>
+            Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney.
+          </p>
+        )}
       </div>
     </div>
   )
