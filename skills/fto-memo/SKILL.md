@@ -1,6 +1,6 @@
 ---
 name: fto-memo
-description: Structure a freedom-to-operate analysis with technology description, relevant claims, non-infringement arguments, design-around options, and risk rating. Triggers on FTO, freedom to operate, infringement risk, or clearance analysis discussions.
+description: Draft a freedom-to-operate analysis for attorney review, with technology description, relevant claims, non-infringement arguments, design-around options, and risk rating. Triggers on FTO, freedom to operate, infringement risk, or clearance analysis discussions.
 ---
 
 # Freedom-to-Operate Memo
@@ -65,7 +65,7 @@ FREEDOM-TO-OPERATE ANALYSIS
 Date: [date]
 Prepared for: [client/matter]
 Re: [technology description]
-Confidential / Attorney Work Product
+DRAFT FOR ATTORNEY REVIEW
 
 1. EXECUTIVE SUMMARY
    Overall Risk Rating: [HIGH / MEDIUM / LOW]
@@ -98,7 +98,7 @@ Confidential / Attorney Work Product
 
 ## Important
 
-- Mark all FTO memos as Attorney Work Product / Privileged
+- Label every FTO memo as a draft for attorney review. Do not add privilege, confidentiality, or work-product labels; the reviewing attorney decides how to label and protect the document
 - Never provide a definitive "freedom to operate" conclusion; frame as risk assessment
 - If the playbook specifies additional jurisdictions, note that this analysis covers U.S. patents only unless international patents are also analyzed
 - Reference prosecution history when available via USPTO connector
@@ -106,7 +106,7 @@ Confidential / Attorney Work Product
 ## Required Disclaimers
 
 Every output MUST begin with:
-"ATTORNEY WORK PRODUCT / PRIVILEGED AND CONFIDENTIAL
+"DRAFT FOR ATTORNEY REVIEW
 This AI-assisted FTO analysis does not constitute legal advice. It is a preliminary risk assessment that must be reviewed and validated by a licensed patent attorney before any business decision is made."
 
 Every output MUST end with:

@@ -1,6 +1,6 @@
 ---
 name: tm-clearance
-description: Run a trademark clearance screen for a proposed mark. Searches identical and similar marks, analyzes likelihood of confusion, and identifies jurisdiction coverage gaps.
+description: Draft a preliminary trademark clearance screen for attorney review. Links to USPTO Trademark Search for the knockout search, analyzes likelihood of confusion against marks found, and identifies jurisdiction coverage gaps.
 command: /ip:tm-clearance
 arguments:
   - name: mark
@@ -49,7 +49,7 @@ The user provides:
 
 ## Output
 
-A complete trademark clearance screen including:
+A draft trademark clearance screen for attorney review, including:
 - Mark assessment (type, distinctiveness, registrability concerns)
 - Identical marks table
 - Similar marks table with similarity scores

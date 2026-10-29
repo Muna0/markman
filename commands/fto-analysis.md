@@ -1,6 +1,6 @@
 ---
 name: fto-analysis
-description: Run a freedom-to-operate analysis for a described technology. Searches for relevant patents, maps claims, assesses infringement risk, and outputs a structured FTO memo.
+description: Run a freedom-to-operate analysis for a described technology. Searches for relevant patents, maps claims, assesses infringement risk, and drafts a structured FTO analysis for attorney review.
 command: /ip:fto-analysis
 arguments:
   - name: technology
