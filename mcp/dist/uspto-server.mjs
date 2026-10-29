@@ -15344,13 +15344,16 @@ var StdioServerTransport = class {
 };
 
 // lib/patent-query.js
+function numberQueryDigits(query) {
+  const num = /^(?:US\s*)?(\d[\d,\/]*)(?:[A-Z]\d?)?$/i.exec(String(query).trim());
+  if (!num) return null;
+  const digits = num[1].replace(/\D/g, "");
+  return digits.length >= 6 ? digits : null;
+}
 function toPatentQuery(query) {
   const q = String(query).trim();
-  const num = /^(?:US\s*)?(\d[\d,\/]*)(?:[A-Z]\d?)?$/i.exec(q);
-  if (num) {
-    const digits = num[1].replace(/\D/g, "");
-    if (digits.length >= 6) return digits;
-  }
+  const digits = numberQueryDigits(q);
+  if (digits) return digits;
   if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
   return q.split(/\s+/).join(" AND ");
 }
