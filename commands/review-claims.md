@@ -28,7 +28,7 @@ The user provides one of:
 
 2. **Run the patent-analysis skill** on the retrieved or provided claims
 
-3. **If the USPTO record was retrieved**, use its transaction history (which lists office actions, responses, and maintenance fee events by date) for context. It does not include the documents themselves or cited references; recommend reviewing the file wrapper in USPTO Patent Center
+3. **If the USPTO record was retrieved**, use its transaction history (which lists office actions, responses, and maintenance fee events by date) for context. It does not include the documents themselves or cited references; recommend reviewing the full file wrapper (USPTO Patent Center requires sign-in)
 
 4. **Present the analysis** using the output format from the patent-analysis skill
 

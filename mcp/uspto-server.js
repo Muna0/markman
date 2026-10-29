@@ -111,6 +111,8 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
 // Plain multi-word queries match ANY word by default; require ALL words unless the user wrote their own syntax
 function toPatentQuery(query) {
   const q = String(query).trim();
+  // A patent or application number ("US11,234,567", "17/988,084") matches only as bare digits
+  if (/^(US)?[\d,\/\s]+$/i.test(q) && /\d{6}/.test(q.replace(/\D/g, ""))) return q.replace(/\D/g, "");
   if (/["():]|\b(AND|OR|NOT)\b/.test(q)) return q;
   return q.split(/\s+/).join(" AND ");
 }
@@ -201,7 +203,7 @@ function mapFileWrapper(wrapper) {
 }
 
 const CLAIMS_NOTE =
-  "This USPTO endpoint does not return claim text or an abstract. Get the claims from the published patent (for example USPTO Patent Center or the patent PDF) and paste them in. Expiration is not computed here; check term, terminal disclaimers, and maintenance fee status before relying on any date.";
+  "This USPTO endpoint does not return claim text or an abstract. Get the claims from the published patent (for example on Google Patents, https://patents.google.com, or the patent PDF) and paste them in. Expiration is not computed here; check term, terminal disclaimers, and maintenance fee status before relying on any date.";
 
 async function getPatentDetails(number) {
   const raw = String(number).trim();

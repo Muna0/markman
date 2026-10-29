@@ -5,6 +5,14 @@ import { api } from '../store/api'
 import { localHistory } from '../store/localHistory'
 import ClaudeAnalysis from '../components/ClaudeAnalysis'
 
+// USPTO Patent Center now requires sign-in, so link to Google Patents, which finds
+// U.S. application numbers and compact PCT numbers (e.g. PCTUS2025041341) publicly.
+// Slashed PCT numbers (PCT/US2025/041341) return no results there, so strip separators.
+function googlePatentsUrl(number) {
+  const compact = String(number || '').replace(/[\s,/]/g, '')
+  return `https://patents.google.com/?q=(${encodeURIComponent(compact)})`
+}
+
 function SeverityBadge({ severity, dark }) {
   const styles = {
     HIGH: dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700',
@@ -259,13 +267,18 @@ export default function PatentAnalysis() {
         </div>
 
         {inputType === 'number' ? (
+          <>
           <input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
-            placeholder="e.g., US11,234,567 or PCT/US2024/012345"
+            placeholder="e.g., US11,234,567 or 17/123,456"
             className={`w-full rounded-[8px] border px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blu-500/30 focus:border-blu-500 placeholder:text-ink-400 ${dark ? 'border-ink-700 bg-ink-800' : 'border-ink-200 bg-white'}`}
           />
+          <p className={`mt-1.5 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
+            Search USPTO patent data by keywords, patent number, or application number.
+          </p>
+          </>
         ) : (
           <textarea
             value={input}
@@ -319,7 +332,7 @@ export default function PatentAnalysis() {
                 {liveResults.results.slice(page * perPage, (page + 1) * perPage).map((p, i) => (
                   <tr key={i} className={`border-b last:border-0 ${dark ? 'border-white/10 hover:bg-ink-800/50' : 'border-ink-100 hover:bg-ink-50'} transition-colors cursor-pointer`} onClick={() => selectPatent(p)}>
                     <td className="py-2.5 pr-4">
-                      <a href={`https://patentcenter.uspto.gov/applications/${p.applicationNumber}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                      <a href={googlePatentsUrl(p.applicationNumber)} target="_blank" rel="noopener noreferrer" title="View on Google Patents" onClick={e => e.stopPropagation()}
                         className={`mono text-[12px] underline decoration-dotted underline-offset-2 transition ${dark ? 'text-blu-400 hover:text-blu-300' : 'text-blu-500 hover:text-blu-400'}`}>
                         {p.applicationNumber}
                       </a>
@@ -385,10 +398,10 @@ export default function PatentAnalysis() {
                 <h2 className={`text-lg font-semibold ${dark ? 'text-ink-50' : 'text-ink-950'}`}>{selectedPatent.applicationNumber}</h2>
                 <p className={`text-[14px] mt-1 ${dark ? 'text-ink-300' : 'text-ink-600'}`}>{selectedPatent.title}</p>
               </div>
-              <a href={`https://patentcenter.uspto.gov/applications/${selectedPatent.applicationNumber}`}
+              <a href={googlePatentsUrl(selectedPatent.applicationNumber)}
                 target="_blank" rel="noopener noreferrer"
                 className={`mono text-[11px] px-3 py-1.5 rounded border transition ${dark ? 'border-ink-700 text-blu-400 hover:border-blu-500' : 'border-ink-200 text-blu-500 hover:border-blu-400'}`}>
-                View on USPTO →
+                View on Google Patents →
               </a>
             </div>
             <div className="flex flex-wrap gap-4 text-[14px]">
