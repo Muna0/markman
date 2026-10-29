@@ -160,4 +160,4 @@ Fork the repo and edit `playbooks/ip-playbook.md` to match your firm's standards
 
 ## License
 
-Apache-2.0
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
