@@ -69,6 +69,24 @@ function writeJSON(fp, data) {
   fs.writeFileSync(fp, JSON.stringify(data, null, 2), "utf-8");
 }
 
+// ─── Error messages for visitors ───
+// Full upstream errors go to the server log only; clients get a plain message.
+const MSG_USPTO = "USPTO data is temporarily unavailable. Please try again later.";
+const MSG_ANALYSIS_UNAVAILABLE = "The analysis service is temporarily unavailable. Please try again later.";
+const MSG_ANALYSIS_FAILED = "Something went wrong running the analysis. Please try again.";
+const MSG_EXPORT_FAILED = "Something went wrong creating the document. Please try again.";
+const UNAVAILABLE_TYPES = new Set(["authentication_error", "permission_error", "billing_error", "overloaded_error", "rate_limit_error"]);
+
+function logError(where, err) {
+  console.error(`[${where}]`, err?.status ? `status ${err.status}:` : "", err?.message || String(err));
+}
+
+function analysisErrorMessage(err) {
+  const type = err?.error?.error?.type || err?.error?.type;
+  if (UNAVAILABLE_TYPES.has(type) || [401, 402, 403, 429, 529].includes(err?.status)) return MSG_ANALYSIS_UNAVAILABLE;
+  return MSG_ANALYSIS_FAILED;
+}
+
 // ─── USPTO fetch helper ───
 async function usptoFetch(url) {
   if (!USPTO_API_KEY) throw new Error("USPTO_API_KEY not configured");
@@ -147,7 +165,8 @@ app.post("/api/patents/search", async (req, res) => {
 
     res.json({ totalResults: data.count || results.length, query, results });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError("patents/search", err);
+    res.status(500).json({ error: MSG_USPTO });
   }
 });
 
@@ -249,7 +268,8 @@ app.post("/api/patents/details", async (req, res) => {
       eventCount: events.length,
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError("patents/details", err);
+    res.status(500).json({ error: MSG_USPTO });
   }
 });
 
@@ -267,7 +287,8 @@ app.post("/api/trademarks/search", async (req, res) => {
       results: [],
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError("trademarks/search", err);
+    res.status(500).json({ error: MSG_USPTO });
   }
 });
 
@@ -286,7 +307,8 @@ app.post("/api/trademarks/status", localOnly, async (req, res) => {
     const data = await tsdrRes.json();
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError("trademarks/status", err);
+    res.status(500).json({ error: MSG_USPTO });
   }
 });
 
@@ -574,7 +596,8 @@ app.post("/api/export", async (req, res) => {
     });
     res.send(buffer);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    logError("export", err);
+    res.status(500).json({ error: MSG_EXPORT_FAILED });
   }
 });
 
@@ -688,7 +711,8 @@ Important:
     }
 
   } catch (err) {
-    res.write(`data: ${JSON.stringify({ error: err.message })}\n\n`);
+    logError("analyze", err);
+    res.write(`data: ${JSON.stringify({ error: analysisErrorMessage(err) })}\n\n`);
     res.end();
   }
 });
@@ -714,8 +738,8 @@ if (fs.existsSync(DIST)) {
 }
 
 // ─── Start ───
-app.listen(PORT, () => {
-  console.log(`Markman API server running on http://localhost:${PORT}`);
+const httpServer = app.listen(PORT, () => {
+  console.log(`Markman API server running on http://localhost:${httpServer.address().port}`);
   console.log(`  Mode:         ${PUBLIC ? "public demo" : "local"}`);
   console.log(`  Model:        ${MODEL}`);
   console.log(`  USPTO API:    ${USPTO_API_KEY ? "configured" : "NOT SET"}`);
