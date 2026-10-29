@@ -61,3 +61,8 @@ test("export converts Markdown into Word formatting", async () => {
   assert.match(xml, /DRAFT FOR ATTORNEY REVIEW/);
   assert.match(xml, /DISCLAIMER/);
 });
+
+test("single newlines inside a paragraph become line breaks", async () => {
+  const xml = await exportXml("**Title:** Widget\n**Filing Date:** 2020-01-01");
+  assert.match(xml, /Widget<\/w:t><\/w:r><w:r>(<w:rPr>[\s\S]*?<\/w:rPr>)?<w:br\/>/);
+});

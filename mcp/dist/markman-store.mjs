@@ -39750,7 +39750,7 @@ function markdownToDocx(markdown, docx, opts = {}) {
     }
     return out;
   }
-  return blocks(O.lex(String(markdown || ""), { gfm: true }));
+  return blocks(O.lex(String(markdown || ""), { gfm: true, breaks: true }));
 }
 
 // mcp/markman-store.js
