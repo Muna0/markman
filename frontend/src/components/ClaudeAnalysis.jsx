@@ -1,7 +1,10 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, lazy, Suspense } from 'react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
 import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
+
+// Loaded on demand so the Markdown renderer stays out of the main bundle
+const MarkdownBody = lazy(() => import('./MarkdownBody'))
 
 /**
  * ClaudeAnalysis: streams a real Claude analysis using Markman skills.
@@ -28,6 +31,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   const [exporting, setExporting] = useState(false)
   const [stopReason, setStopReason] = useState(null)
   const controllerRef = useRef(null)
+  const bodyRef = useRef(null)
 
   // Stop any in-flight stream when the component unmounts (e.g. switching patents)
   useEffect(() => () => controllerRef.current?.abort(), [])
@@ -93,10 +97,20 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
   }
 
   function downloadPDF() {
-    // Create a clean document for print-to-PDF
-    const content = output.replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const draftLabel = '<div style="text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px">DRAFT FOR ATTORNEY REVIEW</div>'
-    const html = `<!DOCTYPE html><html><head><title>Markman ${skillType} Analysis</title><style>body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.6;max-width:8.5in;margin:1in auto;color:#111}pre{white-space:pre-wrap;font-family:'Times New Roman',serif;font-size:12pt}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}</style></head><body>${draftLabel}<pre>${content}</pre><div class="disclaimer">Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations and conclusions before reliance.</div></body></html>`
+    // Print the formatted draft. The HTML comes from the rendered Markdown above,
+    // which React has already escaped; raw HTML in the output is never rendered.
+    const content = bodyRef.current?.innerHTML || ''
+    const title = `Markman ${skillType} Analysis`.replace(/[<>&"]/g, '')
+    const draftLabel = '<div class="draft">DRAFT FOR ATTORNEY REVIEW</div>'
+    const css = `body{font-family:'Times New Roman',serif;font-size:12pt;line-height:1.55;max-width:7in;margin:0.75in auto;color:#111}
+.draft{text-align:center;font-size:10pt;color:#666;border-bottom:1px solid #ccc;padding-bottom:12px;margin-bottom:24px}
+h1{font-size:18pt;margin:18pt 0 8pt}h2{font-size:15pt;margin:16pt 0 6pt}h3,h4{font-size:13pt;margin:12pt 0 4pt}
+p{margin:0 0 8pt}ul,ol{margin:0 0 8pt;padding-left:24pt}li{margin:2pt 0}
+table{border-collapse:collapse;width:100%;margin:8pt 0 12pt;font-size:11pt}th,td{border:1px solid #999;padding:4pt 6pt;text-align:left;vertical-align:top}th{background:#eee}
+code{font-family:'Courier New',monospace;font-size:10.5pt}pre{background:#f4f4f4;padding:8pt;white-space:pre-wrap}
+blockquote{margin:0 0 8pt;padding-left:12pt;border-left:3px solid #ccc;color:#444}hr{border:0;border-top:1px solid #ccc;margin:12pt 0}
+a{color:#111}.disclaimer{font-style:italic;color:#666;font-size:9pt;border-top:1px solid #ccc;padding-top:12px;margin-top:36px}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title><style>${css}</style></head><body>${draftLabel}${content}<div class="disclaimer">Draft for attorney review. Markman does not provide legal advice. This draft was prepared with AI assistance and must be reviewed by a licensed attorney. Verify all citations and conclusions before reliance.</div></body></html>`
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const printFrame = document.createElement('iframe')
@@ -184,10 +198,12 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
             )}
           </p>
         )}
-        <pre className={`text-[15px] leading-[1.8] whitespace-pre-wrap font-sans ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
-          {output}
-          {running && <span className="inline-block w-2 h-5 bg-blu-400 animate-pulse ml-0.5" />}
-        </pre>
+        <div ref={bodyRef} className={`md-body ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
+          <Suspense fallback={<p className="whitespace-pre-wrap">{output}</p>}>
+            <MarkdownBody text={output} />
+          </Suspense>
+        </div>
+        {running && <span className="inline-block w-2 h-5 bg-blu-400 animate-pulse ml-0.5 align-middle" />}
         {done && (
           <p className={`mt-4 pt-3 border-t text-[12px] ${dark ? 'border-ink-800 text-ink-400' : 'border-ink-200 text-ink-500'}`}>
             Markman does not provide legal advice. Output is a draft and must be reviewed by a licensed attorney.
