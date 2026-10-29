@@ -300,7 +300,7 @@ export default function TrademarkClearance() {
           <div className={`rounded-[14px] border p-6 ${dark ? 'bg-ink-900 border-white/10' : 'bg-white border-ink-200'}`}>
             <h2 className={`text-lg font-semibold mb-2 ${dark ? 'text-ink-50' : 'text-ink-950'}`}>Jurisdiction Coverage</h2>
             <p className={`text-[13px] mb-5 ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
-              Click "Search" to open each trademark office database directly. First-to-file jurisdictions require registration for priority. First-to-use jurisdictions recognize rights from commercial use.
+              Click "Search" to open each trademark office database directly. First-to-file jurisdictions generally require registration for priority. First-to-use jurisdictions recognize rights from commercial use.
             </p>
             <div className="space-y-2">
               {result.jurisdictions.map(j => (
@@ -330,7 +330,7 @@ export default function TrademarkClearance() {
 
           {/* Claude Full Analysis */}
           <ClaudeAnalysis
-            query={`Run a full trademark clearance analysis for the mark "${result.mark}" for goods/services: "${result.selectedGoods}". Target jurisdictions: ${selectedJurisdictions.join(', ')}. The mark appears to be ${result.distinctiveness}. Nice classes: ${result.niceClasses.join(', ')}. Provide DuPont factor analysis, likelihood of confusion assessment, and a CLEAR / CLEAR WITH RISK / DO NOT USE recommendation per jurisdiction.`}
+            query={`Run a full trademark clearance analysis for the mark "${result.mark}" for goods/services: "${result.selectedGoods}". Target jurisdictions: ${selectedJurisdictions.join(', ')}. The mark appears to be ${result.distinctiveness}. Nice classes: ${result.niceClasses.join(', ')}. Provide DuPont factor analysis, likelihood of confusion assessment, and a preliminary conflict risk rating (LOW / MEDIUM / HIGH) per jurisdiction.`}
             skillType="trademark"
             context={`Mark: ${result.mark}\nGoods: ${result.selectedGoods}\nDistinctiveness: ${result.distinctiveness}\nNice Classes: ${result.niceClasses.join(', ')}\nJurisdictions: ${selectedJurisdictions.join(', ')}\nPhonetic variants: ${result.variants.map(v => v.mark).join(', ')}`}
           />

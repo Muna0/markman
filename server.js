@@ -281,7 +281,7 @@ app.post("/api/trademarks/status", localOnly, async (req, res) => {
     const tsdrRes = await fetch(`https://tsdrapi.uspto.gov/ts/cd/casestatus/sn${normalized}/info.json`, {
       headers: { "Accept": "application/json", "USPTO-API-KEY": TSDR_API_KEY },
     });
-    if (tsdrRes.status === 401) throw new Error("TSDR rejected the request: set TSDR_API_KEY (from account.uspto.gov/api-manager)");
+    if (tsdrRes.status === 401) throw new Error("TSDR rejected the request. TSDR uses your USPTO key and was not responding reliably as of October 2026; check the record at tsdr.uspto.gov.");
     if (!tsdrRes.ok) throw new Error(`TSDR ${tsdrRes.status}`);
     const data = await tsdrRes.json();
     res.json(data);
@@ -653,8 +653,8 @@ Important:
     const stream = await client.messages.stream({
       model: MODEL,
       max_tokens: MAX_TOKENS,
-      // Demo model thinks by default and can spend the whole token cap before any text
-      ...(PUBLIC ? { thinking: { type: "between_tools" } } : {}),
+      // This model thinks by default and can spend the whole token cap before any text
+      ...(MODEL === "claude-sonnet-5-5" ? { thinking: { type: "between_tools" } } : {}),
       system: systemPrompt,
       messages: [{ role: "user", content: query }],
     });
@@ -667,7 +667,7 @@ Important:
 
     // Final message
     const finalMessage = await stream.finalMessage();
-    res.write(`data: ${JSON.stringify({ done: true, usage: finalMessage.usage })}\n\n`);
+    res.write(`data: ${JSON.stringify({ done: true, usage: finalMessage.usage, stop_reason: finalMessage.stop_reason })}\n\n`);
     res.end();
 
     // Log to history

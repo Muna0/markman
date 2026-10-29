@@ -44,12 +44,14 @@ export const api = {
   },
 
   // Claude Analysis (streaming)
-  // Returns an async generator that yields text chunks
-  analyze: async function* (query, skillType, context) {
+  // Returns an async generator that yields text chunks.
+  // Options: signal (AbortSignal to cancel the request), onDone({ stopReason, usage }) called when the stream finishes.
+  analyze: async function* (query, skillType, context, { signal, onDone } = {}) {
     const res = await fetch(`${BASE}/analyze`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, skillType, context }),
+      signal,
     })
 
     if (!res.ok) {
@@ -78,7 +80,10 @@ export const api = {
             const data = JSON.parse(line.slice(6))
             if (data.error) throw new Error(data.error)
             if (data.text) yield data.text
-            if (data.done) return
+            if (data.done) {
+              if (onDone) onDone({ stopReason: data.stop_reason || null, usage: data.usage || null })
+              return
+            }
           } catch (e) {
             if (e.message !== 'Unexpected end of JSON input') throw e
           }

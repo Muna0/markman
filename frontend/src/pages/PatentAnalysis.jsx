@@ -28,7 +28,7 @@ function buildAnalysisQuery(patent, details) {
   const d = details
   const parts = [
     `Analyze patent application ${patent.applicationNumber}: "${d.title || patent.title}".`,
-    `\nAPPLICATION DATA FROM USPTO (VERIFIED):`,
+    `\nAPPLICATION DATA RETRIEVED FROM USPTO:`,
     `Filing Date: ${d.filingDate || patent.filingDate}`,
     d.effectiveFilingDate ? `Effective Filing Date: ${d.effectiveFilingDate}` : null,
     `Type: ${patent.type}`,
@@ -71,7 +71,7 @@ function buildAnalysisQuery(patent, details) {
   parts.push(`\nGrant Date: ${d.grantDate || 'Not yet granted'}`)
   parts.push(`Expiration Date: ${d.expirationDate || 'N/A'}`)
 
-  parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. You have VERIFIED USPTO data above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application; clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
+  parts.push(`\nINSTRUCTIONS: Provide a full patent analysis. Data retrieved from USPTO is above. ${d.claims ? 'Analyze the ACTUAL claims provided.' : 'Claim text is not available from the USPTO API for this application; clearly state this limitation but still analyze all available data including prosecution history, continuity, foreign priority, and classification. Do NOT fabricate or predict claim language.'} Include claim scope assessment, prior art red flags, and actionable recommendations.`)
 
   return parts.filter(Boolean).join('\n')
 }
@@ -470,6 +470,7 @@ export default function PatentAnalysis() {
           <ClaudeAnalysis
             key={selectedPatent.applicationNumber}
             disabled={loadingDetails}
+            disabledLabel="Loading patent details..."
             query={patentDetails
               ? buildAnalysisQuery(selectedPatent, patentDetails)
               : `Analyze patent application ${selectedPatent.applicationNumber}: "${selectedPatent.title}". Filed ${selectedPatent.filingDate}. Type: ${selectedPatent.type}. Class: ${selectedPatent.class}. Inventor: ${selectedPatent.firstInventor}. Assignee: ${selectedPatent.assignee}. Provide a full patent analysis including claim scope assessment, prior art red flags, and recommendations.`}

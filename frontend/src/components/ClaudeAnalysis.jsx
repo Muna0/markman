@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
 import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
@@ -12,38 +12,64 @@ import { Sparkles, Loader2, Download, FileText, RefreshCw } from 'lucide-react'
  *   context?: string - additional context
  *   onComplete?: (text) => void - callback when done
  *   disabled?: boolean - disable the Run button (e.g. while inputs are still loading)
+ *   disabledLabel?: string - button label while disabled
  */
-export default function ClaudeAnalysis({ query, skillType, context, onComplete, disabled = false }) {
+const STOP_WARNINGS = {
+  max_tokens: 'This draft was cut off before it finished; the limitations section may be missing. Try a narrower question.',
+  refusal: 'The model declined to complete this request.',
+}
+
+export default function ClaudeAnalysis({ query, skillType, context, onComplete, disabled = false, disabledLabel = 'Loading...' }) {
   const { dark } = useTheme()
   const [output, setOutput] = useState('')
   const [running, setRunning] = useState(false)
   const [error, setError] = useState(null)
   const [done, setDone] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [stopReason, setStopReason] = useState(null)
+  const controllerRef = useRef(null)
+
+  // Stop any in-flight stream when the component unmounts (e.g. switching patents)
+  useEffect(() => () => controllerRef.current?.abort(), [])
 
   async function run() {
+    controllerRef.current?.abort()
+    const controller = new AbortController()
+    controllerRef.current = controller
     setRunning(true)
     setOutput('')
     setError(null)
     setDone(false)
+    setStopReason(null)
 
+    let reason = null
     try {
       let fullText = ''
-      for await (const chunk of api.analyze(query, skillType, context)) {
+      for await (const chunk of api.analyze(query, skillType, context, {
+        signal: controller.signal,
+        onDone: ({ stopReason }) => { reason = stopReason },
+      })) {
         fullText += chunk
         setOutput(fullText)
       }
-      if (!fullText.trim()) {
+      if (controller.signal.aborted) return
+      setStopReason(reason)
+      if (reason === 'refusal') {
+        setError(new Error(STOP_WARNINGS.refusal))
+      } else if (!fullText.trim()) {
         setError(new Error('The analysis returned no text. Please try again.'))
       } else {
         setDone(true)
         if (onComplete) onComplete(fullText)
       }
     } catch (err) {
+      if (controller.signal.aborted) return
       setError(err)
     }
     setRunning(false)
   }
+
+  const warning = STOP_WARNINGS[stopReason] && stopReason !== 'refusal' ? STOP_WARNINGS[stopReason] : null
 
   function downloadMarkdown() {
     const blob = new Blob([output], { type: 'text/markdown' })
@@ -94,7 +120,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
             dark ? 'bg-blu-500/15 text-blu-400 hover:bg-blu-500/25 border border-blu-500/20' : 'bg-blu-50 text-blu-500 hover:bg-blu-100 border border-blu-200'
           }`}>
           <Sparkles className="w-4 h-4" />
-          {disabled ? 'Loading patent details...' : 'Run Claude Analysis'}
+          {disabled ? disabledLabel : 'Run Claude Analysis'}
         </button>
         <p className={`mt-2 text-[12px] ${dark ? 'text-ink-400' : 'text-ink-500'}`}>
           Do not paste confidential client information into the public demo.
@@ -110,7 +136,7 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
         <div className="flex items-center gap-2">
           <Sparkles className={`w-4 h-4 ${running ? 'animate-pulse' : ''} ${dark ? 'text-blu-400' : 'text-blu-500'}`} />
           <span className={`mono text-[13px] font-bold ${dark ? 'text-ink-200' : 'text-ink-700'}`}>
-            {running ? 'Streaming...' : done ? 'Draft complete' : ''}
+            {running ? 'Streaming...' : warning ? 'Draft incomplete' : done ? 'Draft complete' : ''}
           </span>
         </div>
         <div className="flex items-center gap-1">
@@ -142,6 +168,11 @@ export default function ClaudeAnalysis({ query, skillType, context, onComplete, 
 
       {/* Output */}
       <div className="p-5 max-h-[700px] overflow-y-auto">
+        {warning && (
+          <p role="alert" className={`text-[14px] mb-3 font-semibold ${dark ? 'text-amb-400' : 'text-amb-700'}`}>
+            {warning}
+          </p>
+        )}
         {error && (
           <p className="text-red-400 text-[14px] mb-3">
             Error: {error.message}
