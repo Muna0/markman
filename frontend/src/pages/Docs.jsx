@@ -186,12 +186,12 @@ RELEVANT PATENTS
 ┌──────────────────┬───────────┬────────┬──────────┐
 │ Patent           │ Assignee  │ Risk   │ Expires  │
 ├──────────────────┼───────────┼────────┼──────────┤
-│ US 10,456,789    │ HealthAI  │ MEDIUM │ 2037-06  │
-│ US 11,234,567    │ MedConvert│ LOW    │ 2040-02  │
+│ US X,XXX,XXX     │ Company A │ MEDIUM │ 20XX-XX  │
+│ US Y,YYY,YYY     │ Company B │ LOW    │ 20XX-XX  │
 └──────────────────┴───────────┴────────┴──────────┘
 
 CLAIM-BY-CLAIM ANALYSIS
-US 10,456,789 Claim 1:
+US X,XXX,XXX Claim 1:
   "recurrent neural network" → DOES NOT MEET
     (Our system uses transformer, not RNN)
   "remote server" → DOES NOT MEET
@@ -207,8 +207,8 @@ US 10,456,789 Claim 1:
 Claude: Retrieving patent from USPTO...
 [calls get_patent_details via MCP]
 
-PATENT ANALYSIS: US 11,987,654
-Filing Date: 2024-03-15
+PATENT ANALYSIS: US X,XXX,XXX
+Filing Date: 20XX-XX-XX
 
 CLAIM MAP
 Claim 1 (Independent, Method)    Process

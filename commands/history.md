@@ -27,13 +27,13 @@ Present results in a formatted list:
 MATTER HISTORY
 ==============
 
-[2026-04-30] Patent Analysis — US 11,987,654 Claim Review
+[2026-04-30] Patent Analysis: US X,XXX,XXX Claim Review
   Risk: MEDIUM | 6 claims parsed, 2 Alice flags
   
-[2026-04-28] Trademark Clearance — NEXAFLOW
+[2026-04-28] Trademark Clearance: NEXAFLOW
   Risk: MEDIUM | CLEAR WITH RISK (US conflict)
 
-[2026-04-25] FTO Memo — Transformer Medical NER
+[2026-04-25] FTO Memo: Transformer Medical NER
   Risk: LOW | 2 patents reviewed, strong non-infringement
 
 Found 3 results.
