@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { FlaskConical, ChevronRight, Loader2, AlertTriangle, CheckCircle2, Info } from 'lucide-react'
+import { FlaskConical, ChevronRight, Loader2 } from 'lucide-react'
 import { useTheme } from '../store/ThemeContext'
 import { api } from '../store/api'
 import { localHistory } from '../store/localHistory'
@@ -11,25 +11,6 @@ import ClaudeAnalysis from '../components/ClaudeAnalysis'
 function googlePatentsUrl(number) {
   const compact = String(number || '').replace(/[\s,/]/g, '')
   return `https://patents.google.com/?q=(${encodeURIComponent(compact)})`
-}
-
-function SeverityBadge({ severity, dark }) {
-  const styles = {
-    HIGH: dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700',
-    MEDIUM: dark ? 'bg-amb-950 text-amb-400' : 'bg-amb-100 text-amb-700',
-    LOW: dark ? 'bg-grn-950 text-grn-400' : 'bg-grn-100 text-grn-700',
-  }
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[severity]}`}>{severity}</span>
-}
-
-function BreadthBadge({ breadth, dark }) {
-  const styles = {
-    Broad: dark ? 'bg-blu-950 text-blu-400' : 'bg-blu-100 text-blu-700',
-    Medium: dark ? 'bg-vio-950 text-vio-400' : 'bg-vio-100 text-vio-700',
-    Narrow: dark ? 'bg-amb-950 text-amb-400' : 'bg-amb-100 text-amb-700',
-    Dependent: dark ? 'bg-red-950 text-red-400' : 'bg-red-100 text-red-700',
-  }
-  return <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${styles[breadth]}`}>{breadth}</span>
 }
 
 // "10000000" -> "US 10,000,000"; reissue/design numbers ("RE49123") are kept as-is
@@ -181,7 +162,6 @@ export default function PatentAnalysis() {
   const [input, setInput] = useState('')
   const [inputType, setInputType] = useState('number')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
   const [selectedPatent, setSelectedPatent] = useState(null)
   const [claims, setClaims] = useState([])
 
@@ -222,7 +202,6 @@ export default function PatentAnalysis() {
     e.preventDefault()
     if (!input.trim()) return
     setLoading(true)
-    setResult(null)
     setLiveResults(null)
     setSelectedPatent(null)
     setClaims([])
@@ -262,7 +241,6 @@ export default function PatentAnalysis() {
 
   async function selectPatent(patent) {
     setSelectedPatent(patent)
-    setResult(null)
     setPatentDetails(null)
     setClaims([
       { num: 1, type: 'Method', indDep: 'Independent', dependsOn: '', category: 'Process', notes: '' },
